@@ -1,0 +1,85 @@
+Package: make-package
+Version: 1.5.0
+Maintainer: rock <shirock.tw@gmail.com>
+Architecture: all
+Debian_Depends: python (>= 2.6), coreutils, findutils, file, tar, dpkg
+Debian_Section: misc
+Priority: optional
+Description: Package Make Utility.
+make-package Copyright (C) 2012 rock <shirock.tw@gmail.com>.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or 
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+You should see https://rocksources.googlecode.com/ to get more 
+information about this.
+
+An utility to help you make a package.
+
+Usage:
+ make-package [arguments ...] [commands ...]
+
+Arguments:
+  --directory=where
+    Change to directory.
+  --dest=where
+    The destination directory to put package.
+    The default destination directory is 'dist'.
+  --head=file
+    Specify the package head file. Default is 'README'.
+  --rule=file
+    Specify the install rule. Default is 'INSTALL-rule'.
+
+Commands:
+* show-package-name 
+  Show package name.
+* show-package-version 
+  Show package version.
+* show-arch 
+  Show architecture name.
+* show-revision 
+  Show revision.
+* generate
+  Generate a set of package information files.
+  There are two information files.
+  1. README: The descriptions of package.
+  2. INSTALL-rule: The packing actions.
+* debian 
+  According to the actions of 'INSTALL-rule' to make a Debian package.
+
+INSTALL-rule:
+* The line that begins with # or ; will be thought as comment.
+* Support variables interpolation. For example,
+  WWWDIR=var/www
+  pack homepage $WWWDIR/service
+* If you want to copy file or pack folder to package's control folder, 
+  using $CONTROLS instead of 'DEBIAN'.
+* Provides the following actions:
+  * pack directory [dist_target_directory]
+    default is root of dist directory.
+  * mkdir directory
+  * copy file dist_target [mode]
+  * chmod mode file
+  * symlink target link_name
+  * remove dist_file
+  * replace dist_file [from] [to]
+
+Debian's control:
+* It will add 'Installed-Size' field.
+* It will add 'Architecture' field if you don't specify.
+* If there is a %r in 'Version' field, that will be substitute 
+  as revision number.
+
+Example: To make a debian package file of make-package.
+ $ make-package generate debian
+
