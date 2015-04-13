@@ -62,19 +62,16 @@ class Controller
                         if (!empty($filepath))
                             $files[$field][] = file_get_contents($filepath);
                     }
-                }
-                else {
+                } else {
                     if (!empty($_FILES[$field]['tmp_name']))
                         $files[$field] = file_get_contents($_FILES[$field]['tmp_name']);
                 }
-            }
-            elseif (isset($_POST[$field]) and !empty($_POST[$field])) {
+            } elseif (isset($_POST[$field]) and !empty($_POST[$field])) {
                 if (is_array($_POST[$field])) {
                     foreach ($_POST[$field] as $encoded_text) {
                         $files[$field][] = base64_decode($encoded_text);
                     }
-                }
-                else {
+                } else {
                     $files[$field] = base64_decode($_POST[$field]);
                 }
             }
@@ -304,7 +301,7 @@ function url_root_path()
 
 class CommonGateway 
 {
-    const Default_Homepage = 'views/index.phtml';
+    const DEFAULT_HOMEPAGE = 'views/index.phtml';
 
     protected $app_name = null;
     protected $control = null;
@@ -360,22 +357,19 @@ class CommonGateway
             if ($content_type == 'application/x-www-form-urlencoded') {
                 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $request_vars = &$_POST;
-                }
-                else { // PUT
+                } else { // PUT
                     $request_vars = json_decode($this->raw_request_data, true);
                     $_POST= &$request_vars;
                     $_REQUEST = array_merge($_GET, $request_vars); 
                     # only contains $_GET and $_POST, due to security concerns.
                 }
-            }
-            elseif ($content_type == 'application/json') {
+            } elseif ($content_type == 'application/json') {
                 $request_vars = json_decode($this->raw_request_data, true);
                 //if ($_SERVER['REQUEST_METHOD'] == 'POST')
                     $_POST = &$request_vars; // 兼容傳統格式。
                 $_REQUEST = array_merge($_GET, $request_vars); 
                 # only contains $_GET and $_POST, due to security concerns.
-            }
-            else {
+            } else {
                 $request_vars = &$_POST;
             }
             break;
@@ -454,8 +448,7 @@ class CommonGateway
         $config_path = dirname(__FILE__) . '/etc/app_config.php';
         if (file_exists($config_path)) {
             @include_once $config_path;
-        }
-        else {
+        } else {
             $config_path = dirname(__FILE__) . '/etc/app_config.json';
             if (file_exists($config_path)) {
                 $config = json_decode(file_get_contents($config_path));
@@ -533,10 +526,9 @@ class CommonGateway
 
     function index() 
     {
-        if (file_exists(self::Default_Homepage)) {
-            include_once self::Default_Homepage;
-        }
-        else {
+        if (file_exists(self::DEFAULT_HOMEPAGE)) {
+            include_once self::DEFAULT_HOMEPAGE;
+        } else {
             echo '<p>index.php/{control_name}/{object_id}.</p>';
             echo '<p>You may put your controller class in controllers/{class_name}.php.</p>';
         }
@@ -551,8 +543,7 @@ class CommonGateway
 
         if ( empty($this->segments) and $_SERVER['REQUEST_METHOD'] == 'GET') { // Without parameter
             $method = 'index';
-        }
-        else {
+        } else {
             $method = strtolower($_SERVER['REQUEST_METHOD']);
         }
 
@@ -567,8 +558,7 @@ class CommonGateway
                     $method_exists = true;
                 }
             }
-        }
-        else {
+        } else {
             $method_exists = true;
         }
 
@@ -591,8 +581,7 @@ class CommonGateway
         // 其他情形則一律展開參數後傳入，此時函數內部可透過參數列名稱或 func_get_arg() 取得參數內容。
         if (isset($method_parameters[0]) and $method_parameters[0]->isArray()) {
             $model = $this->control->$method($arguments);
-        }
-        else {
+        } else {
             if (count($arguments) < $ref_method->getNumberOfRequiredParameters())
                 HttpResponse::bad_request();
             $model = call_user_func_array(array($this->control, $method), $arguments);
@@ -612,27 +601,26 @@ class CommonGateway
         if ((is_object($model) or is_array($model)) and !isset(${$this->app_name}))
             ${$this->app_name} = &$model; // 指派此資料模型給控制項同名的變數
         if ($this->request_document_type == 'json' or 
-            $this->request_document_type == 'javascript')
-        {
+            $this->request_document_type == 'javascript'
+        ) {
             $_ext_name = 'js';
-        }
-        else 
-        {
+        } else {
             $_ext_name = $this->request_document_type;
         }
 
         // RoR style's view name.
         $_view_filepath = "views/{$this->app_name}/{$this->action}.p{$_ext_name}";
 
-        if (file_exists($_view_filepath))
+        if (file_exists($_view_filepath)) {
             include_once $_view_filepath;
-        elseif ($_ext_name == 'js')
+        } elseif ($_ext_name == 'js') {
             // 如果未指定配對的view，但要求傳回的文件型態是json，就自動傳回整份 $model 內容。
             // 在我的使用經驗上，九成傳回json的view，內容都只有一行 json_encode($model) 。
             // 故將此規則寫入 Common Gateway ，減少空泛的 json view 。
             echo json_encode($model);
-        else
+        } else {
             echo "Template is missing. Missing $_view_filepath.";
+        }
     }
 
     function load_view_helper() 
