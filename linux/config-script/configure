@@ -1,0 +1,110 @@
+#!/bin/sh
+PKGNAME=package-name
+PREFIX="\/usr\/local"
+
+
+REQUIREDS="libc6-dev libglib2.0-dev libdbus-1-dev libdbus-glib-1-dev python"
+echo "check required packages: $REQUIREDS"
+
+for REQUIRED in $REQUIREDS ; do
+    echo -n "checking required package $REQUIRED ... "
+    dpkg -l $REQUIRED | grep ^ii > /dev/null
+    if [ $? -ne 0 ]; then
+        echo "[no]"
+        echo "Please install required packages."
+        exit 1
+    fi
+    echo "[yes]"
+done
+
+
+echo -n "checking machine hardware ... "
+MACHINE=`uname -m`
+if [ "_$MACHINE" = "_x86_64" ]; then
+    ARCHITECTURE=amd64
+else
+    ARCHITECTURE=i386
+fi
+echo "[$ARCHITECTURE]"
+
+
+SDKROOT=/opt/3rdSDK
+SDKINC=$SDKROOT/include
+SDKLIB=$SDKROOT/Linux/lib/$LIBARCH
+
+ #### 
+ # case 1.
+ # If you have SDK of 3rd party, you want developer manual install it.
+ # Are required files existence?
+#SDK_REQUIREDS="$SDKINC/sdk.h $SDKINC/sdk2.h $SDKLIB/sdk.so"
+#for REQUIRED in $SDK_REQUIREDS ; do
+#    echo -n "checking $REQUIRED ... "
+#    if [ -e $REQUIRED ]; then
+#        echo "[yes]"
+#    else
+#        echo "[no]"
+#        echo "Please install 3rd SDK."
+#        exit 1
+#    fi
+#done
+
+
+extract_tarball ()
+{
+    # $1: tarball_filepath, $2: target_dir
+    SDKTARBALL=$1
+    if [ "_$2" = "_" ]; then
+        TARGET_ARG=""
+    else
+        TARGET_ARG="-C $2"
+    fi
+    EXTRACT_CMD="tar xzf $SDKTARBALL $TARGET_ARG"
+    echo -n "extracting $SDKTARBALL ... "
+    if [ -f $SDKTARBALL ]; then
+        #echo $EXTRACT_CMD
+        $EXTRACT_CMD
+        if [ $? -ne 0 ]; then
+            echo "[no]"
+            echo "Is $SDKTARBALL a valid tar-gz file?"
+            exit 1
+        fi
+        echo "[yes]"
+    else
+        echo "[no]"
+        echo "$SDKTARBALL does not exist."
+        exit 1
+    fi
+}
+
+ #### 
+ # case 2.
+ # If you have SDK of 3rd party, you want download and extract it automatically.
+ # Download and extract it.
+#wget http://localhost/3rdsdk/sdk.tar.gz
+#extract_tarball sdk.tar.gz src/sdk
+
+# Write variables to files.
+WRITEFILES="Makefile"
+for WRITEFILE in $WRITEFILES ; do
+    echo -n "writting $WRITEFILE ... "
+    cat ${WRITEFILE}.in \
+        | sed "s,@PKGNAME@,$PKGNAME,g" \
+        | sed "s,@ARCHITECTURE@,$ARCHITECTURE,g" \
+        | sed "s,@MACHINE@,$MACHINE,g" \
+        | sed "s,@PREFIX@,$PREFIX,g" \
+        > ${WRITEFILE}
+    if [ $? -ne 0 ]; then
+        echo "[no]"
+        echo "Write ${WRITEFILE} failure."
+        exit 1
+    else
+        echo "[yes]"
+    fi
+done
+
+echo 
+echo "Configure ok."
+echo "Now you can run 'make' to build this software."
+echo 
+
+exit 0
