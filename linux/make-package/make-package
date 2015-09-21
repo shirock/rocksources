@@ -4,7 +4,7 @@ make-package Copyright (C) 2012 rock <shirock.tw@gmail.com>.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or 
+the Free Software Foundation, either version 3 of the License, or
 any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -15,7 +15,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-You should see https://rocksources.googlecode.com/ to get more 
+You should see https://github.com/shirock/rocksources to get more
 information about this.
 
 An utility to help you make a package.
@@ -35,20 +35,20 @@ Arguments:
     Specify the install rule. Default is 'INSTALL-rule'.
 
 Commands:
-* show-package-name 
+* show-package-name
   Show package name.
-* show-package-version 
+* show-package-version
   Show package version.
-* show-arch 
+* show-arch
   Show architecture name.
-* show-revision 
+* show-revision
   Show revision.
 * generate
   Generate a set of package information files.
   There are two information files.
   1. README: The descriptions of package.
   2. INSTALL-rule: The packing actions.
-* debian 
+* debian
   According to the actions of 'INSTALL-rule' to make a Debian package.
 
 INSTALL-rule:
@@ -56,8 +56,13 @@ INSTALL-rule:
 * Support variables interpolation. For example,
   WWWDIR=var/www
   pack homepage $WWWDIR/service
-* If you want to copy file or pack folder to package's control folder, 
+* If you want to copy file or pack folder to package's control folder,
   using $CONTROLS instead of 'DEBIAN'.
+* Auto-rule for Debain (you don't need to write these rules):
+  * It will copy ChangeLog to DEBIAN/changelog.
+  * It will copy conffiles/preinst/prerm/postinst/postrm in
+    base dir or 'data' sub-dir to 'DEBIAN' dir.
+  * It will copy install.sh to postinst, uninstall.sh to prerm.
 * Provides the following actions:
   * pack directory [dist_target_directory]
     default is root of dist directory.
@@ -71,7 +76,7 @@ INSTALL-rule:
 Debian's control:
 * It will add 'Installed-Size' field.
 * It will add 'Architecture' field if you don't specify.
-* If there is a %r in 'Version' field, that will be substitute 
+* If there is a %r in 'Version' field, that will be substitute
   as revision number.
 
 Example: To make a debian package file of make-package.
@@ -87,7 +92,7 @@ PkgType = 'deb'
 PkgCtrlDir = 'DEBIAN'
 
 README_Tmpl = '''Package: make-package
-Version: 1.5.0
+Version: 1.5.2
 Maintainer: rock <shirock.tw@gmail.com>
 Architecture: all
 Debian_Depends: python (>= 2.6), coreutils, findutils, file, tar, dpkg
@@ -202,7 +207,7 @@ def change_file_mode(mode, target):
 
 def replace_var_in_file(target, from_str=None, to_str=None):
     '''
-    If there is no from_str and to_str, it will apply shell script's 
+    If there is no from_str and to_str, it will apply shell script's
     environment variables role to replace the content of file.
     For example, replace '$HOME' to the value of environ HOME.
     There are four extra variables could be replaced. They are
@@ -267,7 +272,7 @@ def make_debian_meta_file():
             continue
         k2 = k[7:]
         deb_option_fields[k2] = fields[k]
-        
+
     #print fields
     #print deb_required_fields
     #print deb_option_fields
@@ -290,7 +295,7 @@ def make_debian_meta_file():
             continue
         f_control.write("%s: %s\n" % (k, fields[k]))
 
-    disk_usage = Popen("du -sk --exclude=deb/DEBIAN dist/deb".split(), 
+    disk_usage = Popen("du -sk --exclude=deb/DEBIAN dist/deb".split(),
                     stdout=PIPE).communicate()[0].strip()
     f_control.write("Installed-Size: %s\n" % disk_usage.split()[0])
 
@@ -298,6 +303,37 @@ def make_debian_meta_file():
     for s in long_desc:
         f_control.write(" %s\n" % s)
     f_control.close()
+
+    # Auto-rule
+
+    # GNU code standard save change log as ChangeLog.
+    # So make-package will copy ChangeLog as debian's changelog.
+    if os.access("ChangeLog", os.R_OK):
+        copy_file_to_dist("ChangeLog", "DEBIAN/changelog")
+
+    # debian meta files.
+    # if there is one of meta_files, make_package will copy it to DEBIAN folder.
+    meta_files = {
+        # filename       control name, attr
+        "conffiles":    ["conffiles", "0644"],
+        "postinst":     ["postinst", "0755"],
+        "install.sh":   ["postinst", "0755"],
+        "prerm":        ["prerm", "0755"],
+        "uninstall.sh": ["prerm", "0755"],
+        "preinst":      ["preinst", "0755"],
+        "postrm":       ["postrm", "0755"]
+    }
+
+    for meta_file in meta_files:
+        alter = "data/%s" % meta_file  # also check data/???
+        dst_name = "DEBIAN/%s" % meta_files[meta_file][0]
+        dst_attr = meta_files[meta_file][1]
+
+        if os.access(meta_file, os.R_OK): # check base dir
+            copy_file_to_dist(meta_file, dst_name, dst_attr)
+        elif os.access(alter, os.R_OK):   # check data subdir.
+            copy_file_to_dist(alter, dst_name, dst_attr)
+
 
 def set_arg_file(arg):
     (_, filepath) = arg.split("=")
@@ -353,9 +389,13 @@ if __name__ == "__main__":
             with open(head_file, "w") as fh:
                 fh.write(README_Tmpl)
                 fh.write(__doc__)
+        else:
+            print "README is existence, skip."
         if not os.access(rule_file, os.R_OK):
             with open(rule_file, "w") as fh:
                 fh.write(INSTALL_RULE_Tmpl % os.path.realpath(__file__))
+        else:
+            print "INSTALL-rule is existence, skip."
 
     if not os.access(head_file, os.R_OK):
         print("%s not found." % head_file)
@@ -413,7 +453,7 @@ if __name__ == "__main__":
             'pack'  : pack_data,
             'mkdir' : make_dist_dir,
             'copy'  : copy_file_to_dist,
-            'remove': remove_dist_file, 
+            'remove': remove_dist_file,
             'chmod' : change_file_mode,
             'symlink': create_symbolic_link,
             'replace': replace_var_in_file
