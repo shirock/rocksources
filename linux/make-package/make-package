@@ -343,6 +343,8 @@ def set_arg_file(arg):
     return filepath
 
 if __name__ == "__main__":
+    unknown_command = True
+
     if len(sys.argv) < 2:
         print(__doc__)
         quit(0)
@@ -373,6 +375,7 @@ if __name__ == "__main__":
     Install_Vars['ARCH'] = ARCH
     if "show-arch" in sys.argv:
         print ARCH
+        unknown_command = False
 
     try:
         output = Popen(["svnversion", "-n"], stdout=PIPE).communicate()[0].strip()
@@ -383,8 +386,10 @@ if __name__ == "__main__":
     Install_Vars['REVISION'] = REVISION
     if "show-revision" in sys.argv:
         print REVISION
+        unknown_command = False
 
     if "generate" in sys.argv:
+        unknown_command = False
         if not os.access(head_file, os.R_OK):
             with open(head_file, "w") as fh:
                 fh.write(README_Tmpl)
@@ -436,6 +441,7 @@ if __name__ == "__main__":
     Install_Vars['PACKAGE_NAME'] = PACKAGE_NAME
     if "show-package-name" in sys.argv:
         print(PACKAGE_NAME)
+        unknown_command = False
 
     PACKAGE_VERSION = fields['Version'].strip()
     if "%r" in PACKAGE_VERSION:
@@ -443,8 +449,10 @@ if __name__ == "__main__":
     Install_Vars['PACKAGE_VERSION'] = PACKAGE_VERSION
     if "show-package-version" in sys.argv:
         print(PACKAGE_VERSION)
+        unknown_command = False
 
     if "debian" in sys.argv:
+        unknown_command = False
         PkgType = 'deb'
         call("rm -rf dist".split())
         make_dist_dir("DEBIAN")
@@ -491,5 +499,9 @@ if __name__ == "__main__":
         if rc != 0:
             print("Build debian file failed.")
             quit(1)
+
+    if unknown_command:
+        print(__doc__)
+
     quit(0)
 
