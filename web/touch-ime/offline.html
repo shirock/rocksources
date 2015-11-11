@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html manifest="touch-ime.manifest">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=no;"/>
+
+<script src="touch-ime.js" type="text/javascript">
+</script>
+<script>
+TouchInputMethod.enable_engines(['array30', 'en', 'email', 'zhuyin', 'quick', 'pinyin', 'cangjie3']);
+document.addEventListener('DOMContentLoaded', function(){
+    document.getElementById('entry').focus();
+}, false);
+</script>
+
+<style type='text/css'>
+#input_method_keyboard {
+    clear:both;
+}
+
+#input_method_show_input_keys {
+    height: 1em;
+}
+
+#input_method_candidate {
+    clear: both;
+    height: 3em;
+    min-height: 3.5em;
+    max-height: 3.5em;
+    overflow: auto;
+}
+
+.input_method_inputkey {
+    width: 2em;
+    height: 2em;
+}
+
+.input_method_candidates {
+    /*border: none;*/
+}
+
+.input_method_auto_clear_input_keys_on {
+    border-color: red;
+    background-color: red;
+}
+
+.input_method_capital_toggle_on {
+    background-color: red;
+}
+</style>
+
+<title>Touch Input Method Demo</title>
+
+<!-- readonly will disable for triggering off system's virtual keyboard. -->
+<textarea id='entry' cols='30' rows='4' readonly='readonly'>
+</textarea>
+<br/>
+
+<div id="ime_area">
+
+<div id='input_method_candidate'><!-- required -->
+</div>
+
+<div id='input_method_show_input_keys'><!-- required -->
+</div>
+
+<div id="input_method_keyboard"><!-- required -->
+</div>
+
+<div><!-- optional -->
+    <div>
+        <button class="input_method_back_input_key">退一字根</button>
+        <button class="input_method_clear_input_keys">清除字根</button>
+        <select class="input_method_select_engine"></select>
+        <button class="input_method_capital_toggle">Caps</button>
+    </div>
+    <div>
+        <button class="input_method_backspace_output_texts">回刪一字</button>
+        <button class="input_method_add_newline_output_texts">換行</button>
+        <button class="input_method_add_space_output_texts">空格</button>
+        <button class="input_method_select_output_texts">Select</button>
+    </div>
+    <div>
+        <button class="input_method_clear_output_texts">清除輸入內容</button>
+        <button class="input_method_goto_next">下一欄位</button>
+        <button class="input_method_goto_previous">上一欄位</button>
+    </div>
+</div>
+
+</div>
+
+<button onclick="TouchInputMethod.clean_local_table();">clean local table</button>
+
+</html>
+

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<!--
+行列30輸入法網頁點取版 Copyright (C) 2012 遊手好閒的石頭成 <shirock.tw@gmail.com>
+
+    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+    This is free software, and you are welcome to redistribute it
+    under certain conditions; type `show c' for details.
+
+The hypothetical commands `show w' and `show c' should show the appropriate
+parts of the General Public License.  Of course, your program's commands
+might be different; for a GUI interface, you would use an "about box".
+
+  You should also get your employer (if you work as a programmer) or school,
+if any, to sign a "copyright disclaimer" for the program, if necessary.
+For more information on this, and how to apply and follow the GNU GPL, see
+<http://www.gnu.org/licenses/>.
+-->
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+<script type="text/javascript">
+var output = false;
+var install_progress = false;
+
+function doc_init() {
+    output = document.getElementById('output');
+    install_progress = document.getElementById('install_progress');
+    var data;
+
+    data = localStorage.getItem('ar30web_table_w');
+    if (data)
+        document.getElementById('w_edit').value = data.trim();
+
+    data = localStorage.getItem('ar30web_table_s');
+    if (data)
+        document.getElementById('s_edit').value = data.trim();
+
+}
+
+function start_install(btn) {
+    btn.disabled = true;
+    btn.textContent = '安裝中...';
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'tbl/list', false);
+    xhr.setRequestHeader('X-Test', '111');
+    xhr.send('11');
+
+    if (xhr.status >= 300) {
+        output.textContent = '載入字表清單失敗，無法安裝。';
+        return false;
+    }
+
+    var tbls = xhr.responseText.split('\n');
+    install_progress.value = 0;
+    install_progress.max = tbls.length;
+    install_progress.textContent = '0 / ' + tbls.length;
+
+    if (localStorage.ar30web_version == undefined) {
+        localStorage.ar30web_version = 100;
+    }
+
+    var text_table_name = false;
+
+    var tab_req = false;
+    var tab_reqs = [
+        {'working': false, 'xhr': new XMLHttpRequest()},
+        {'working': false, 'xhr': new XMLHttpRequest()},
+        {'working': false, 'xhr': new XMLHttpRequest()},
+        {'working': false, 'xhr': new XMLHttpRequest()}
+    ];
+    var tab_reqs_working = 0;
+    var tbl_idx = 0;
+
+    output.textContent = '預計將載入 ' + tbls.length + ' 份字表。\n安裝中...\n';
+    var dispatcher = window.setInterval(function(){
+        if (tbl_idx >= tbls.length) {
+            window.clearInterval(dispatcher);
+            install_progress.value = install_progress.max;
+            output.textContent += '結束\n';
+            btn.textContent = '安裝完成.';
+            return false;
+        }
+        if (tab_reqs_working >= tab_reqs.length) {
+            return true; // all busy.
+        }
+        if (tbls[tbl_idx].length < 4) { // not a table file.
+            ++tbl_idx;
+            return true;
+        }
+
+        text_table_name = 'tbl/' + tbls[tbl_idx].trim();
+        tab_reqs.every(function(req, idx){
+            if (req.working)
+                return true;
+            ++tab_reqs_working;
+            tab_reqs[idx].working = true;
+            req.xhr.onload = (function(table_name, idx){
+                return function() {
+                    if (tab_reqs[idx].xhr.status >= 300) {
+                        //alert("載入字表清單失敗，無法安裝。");
+                        output.textContent += '載入字表 ' + table_name + ' 失敗。\n';
+                        return false;
+                    }
+                    localStorage.setItem('ar30web_table_' + table_name, tab_reqs[idx].xhr.responseText.trim());
+                    //output.textContent = tab_reqs[idx].xhr.responseText;
+                    ++install_progress.value;
+                    install_progress.textContent = install_progress.value + ' / ' + tbls.length;
+                    tab_reqs[idx].working = false;
+                    --tab_reqs_working;
+                }
+            })(tbls[tbl_idx].split('.')[0], idx);
+            req.xhr.open('GET', text_table_name, true);
+            req.xhr.send();
+            return false;
+        });
+        ++tbl_idx;
+        return true;
+    }, 200);
+
+    /*
+    tbls.every(function(v, idx){
+        text_table_name = 'tbl/' + v.trim();
+        xhr.open('GET', text_table_name, false);
+        xhr.send();
+
+        if (xhr.status >= 300) {
+            output.textContent = '載入字表 ' + text_table_name + ' 失敗，中止安裝。';
+            return false;
+        }
+        //localStorage.ar30web.table['1-1-1-x']
+        localStorage.ar30web.table[v.split('.')[0]] = xhr.responseText.trim();
+
+        return true;
+    });
+    */
+    return true;
+}
+
+function start_uninstall() {
+    localStorage.clear();
+    alert('本地儲存區已清空。');
+    output.textContent = '本地儲存區已清空。';
+}
+
+function update_ar30web_table(tbl_name) {
+    var ta = document.getElementById(tbl_name + '_edit');
+    if (!ta)
+        return;
+    localStorage.setItem('ar30web_table_' + tbl_name, ta.value.trim());
+}
+
+function revert_ar30web_table(tbl_name) {
+    var ta = document.getElementById(tbl_name + '_edit');
+    if (!ta)
+        return;
+    var data = localStorage.getItem('ar30web_table_' + tbl_name);
+    if (data)
+        ta.value = data;
+}
+
+</script>
+
+<title>行列30輸入法網頁點取版</title>
+
+<body onload='doc_init();'>
+<p>
+參考「<a href="http://dev-test.nemikor.com/web-storage/support-test/">Web Storage Support Test</a>」，測試你的瀏覽器提供的本地儲存區容量。
+</p>
+
+<div>
+    <div>
+    <button onclick='start_install(this);'>安裝字表到本地儲存區。</button>
+    <progress id='install_progress' value=0></progress>
+    </div>
+
+    <div>
+    <button onclick='start_uninstall(this);'>清除本地儲存區。</button>
+    </div>
+
+    <div>
+    <fieldset>
+        <legend>詞編輯區</legend><br/>
+        <textarea id='s_edit' cols=40 rows=4>
+        </textarea>
+        <button onclick='update_ar30web_table("s");'>更新</button>
+        <button onclick='revert_ar30web_table("s");'>回復</button>
+    </fieldset>
+    </div>
+
+    <div>
+    <fieldset>
+        <legend>符號編輯區</legend><br/>
+        <textarea id='w_edit' cols=40 rows=4>
+        </textarea>
+        <button onclick='update_ar30web_table("w");'>更新</button>
+        <button onclick='revert_ar30web_table("w");'>回復</button>
+    </fieldset>
+    </div>
+
+</div>
+
+<div id='output'>
+</div>
+
+</body>
+</html>
+

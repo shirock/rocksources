@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<!--
+行列30輸入法網頁點取版 Copyright (C) 2012 遊手好閒的石頭成 <shirock.tw@gmail.com>
+
+    This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
+    This is free software, and you are welcome to redistribute it
+    under certain conditions; type `show c' for details.
+
+The hypothetical commands `show w' and `show c' should show the appropriate
+parts of the General Public License.  Of course, your program's commands
+might be different; for a GUI interface, you would use an "about box".
+
+  You should also get your employer (if you work as a programmer) or school,
+if any, to sign a "copyright disclaimer" for the program, if necessary.
+For more information on this, and how to apply and follow the GNU GPL, see
+<http://www.gnu.org/licenses/>.
+-->
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+<script type="text/javascript">
+var output = false; // dom cache
+var candidate = false; // dom cache
+var show_input_keys = false; // dom cache
+var embedded_word_tab = false; // PHP replace
+
+var auto_clear_input_keys = true;
+var input_keys = []; 
+
+var candidate_xhr = new XMLHttpRequest();
+candidate_xhr.overrideMimeType('text/plain');
+candidate_xhr.onload = function() {
+    if (candidate_xhr.status >= 300)
+        return false;
+    data = candidate_xhr.responseText;
+    update_candidates(data);
+};
+
+var code_map = [
+    'p;/P:?',
+    'qazQAZ',
+    'wsxWSX',
+    'edcEDC',
+    'rfvRFV',
+    'tgbTGB',
+    'yhnYHN',
+    'ujmUJM',
+    'ik,IK<',
+    'ol.OL>'
+];
+
+var code_map_tmp = {};
+for (var i = 0; i < code_map.length; ++i) {
+    for (var j = 0; j < code_map[i].length; ++j) {
+        code_map_tmp[code_map[i].charCodeAt(j)] = i;
+    }
+}
+code_map = code_map_tmp;
+//alert(code_map[112]);
+
+function doc_init() {
+    output = document.getElementById('output');
+    candidate = document.getElementById('candidate');
+    show_input_keys = document.getElementById('show_input_keys');
+
+    if (auto_clear_input_keys)
+        document.getElementById('auto_clear_input_keys_mode').classList.add('auto_clear_input_keys_on');
+        //$('#auto_clear_input_keys_mode').toggleClass('auto_clear_input_keys_on', true);
+
+    for (var elms = document.getElementsByClassName('inputkey'), i = 0;
+         i < elms.length;
+         ++i)
+    {
+        elms[i].onclick = function() {
+            input_code(this.value);
+        };
+    }
+    
+    document.onkeypress = function(event) {
+        //console.log("event.charCode: %s", event.charCode);
+        if (event.charCode in code_map) {
+            //console.log("input code: %s", code_map[event.charCode]);
+            input_code(code_map[event.charCode]);
+        }
+        return true;
+    }
+    
+    document.onkeyup = function(event) {
+        if (event.keyCode == 8) {
+            back_input_key();
+        }
+        return true;
+    }
+    
+    alert('行列30輸入法網頁點取版\nCopyright (c) 2012 遊手好閒的石頭成 (shirock.tw@gmail.com)\nLicensed by GPL.');
+}
+
+function input_code(v) {
+    if (v === undefined || v < 0 || v > 9)
+        return false;
+    if (input_keys.length >= 4)
+        return false;
+    if (input_keys.length < 3)
+        input_keys.push(v);
+    else
+        input_keys.push('x');
+    refresh_show_input_keys();
+    refresh_candidates();
+    return true;
+}
+
+function select_output_texts() {
+    output.select();
+    //console.log(output.isContentEditable);
+    if (document.queryCommandSupported('copy'))
+        document.execCommand('copy', 'text/plain', null);
+}
+
+function clear_output_texts() {
+    output.value = '';
+    clear_input_keys();
+}
+
+function backspace_output_texts() {
+    if (output.value.length >= 1)
+        output.value = output.value.substring(0, output.value.length - 1);
+}
+
+function add_space_output_texts() {
+    output.value += ' ';
+}
+
+function back_input_key() {
+    input_keys.pop();
+    refresh_show_input_keys();
+    refresh_candidates();
+}
+
+function clear_input_keys() {
+    input_keys = [];
+    refresh_show_input_keys();
+    refresh_candidates();
+}
+
+function switch_auto_input_keys() {
+    //$('#auto_clear_input_keys_mode').toggleClass('auto_clear_input_keys_on', auto_clear_input_keys);
+    var mode_elm = document.getElementById('auto_clear_input_keys_mode');
+    mode_elm.classList.toggle('auto_clear_input_keys_on');
+    auto_clear_input_keys = mode_elm.classList.contains('auto_clear_input_keys_on');
+}
+
+function refresh_show_input_keys() {
+    show_input_keys.value = input_keys.join(',');
+}
+
+function trim(s) {
+    var h, t;
+    for (h = 0; h < s.length; ++h) {
+        if (s.charCodeAt(h) > 32)
+            break;
+    }
+    for (t = s.length; t > h; --t) {
+        if (s.charCodeAt(t) > 32)
+            break;
+    }
+    //console.log("h:%d, t:%d", h, t);
+    return s.substring(h, t+1);
+}
+
+function update_candidates(data) {
+    var candidates = data.split(',');
+    candidate.innerHTML = ''
+    //$.each(candidates, function(idx, v){
+    candidates.forEach(function(v, idx, ot) {
+        if (v.length < 1)
+            return;
+        //v = v.replace(/^\s+|\s+$/g, '', ''); // trim non-printable
+        v = trim(v);
+        if (v.length < 1)
+            return;
+        candidate.insertAdjacentHTML('beforeend', '<button class=candidates>'+ v + '</button>');
+    });
+    for (var elms = document.getElementsByClassName('candidates'), i = 0; 
+         i < elms.length; 
+         ++i) 
+    {
+        elms[i].onclick = function() {
+            //output.value += $(this).text();
+            output.value += this.textContent;
+            if (auto_clear_input_keys)
+                clear_input_keys();
+        }
+    }
+}
+
+function refresh_candidates() {
+    if (input_keys.length < 1) {
+        //$(candidate).html('');
+        candidate.innerHTML = '';
+        return true;
+    }
+
+    var table_key = input_keys.join('-');
+    var table_name = 'ar30web_table_' + table_key;
+    var data;
+    if (embedded_word_tab) {
+        data = embedded_word_tab[table_key];
+        if (data) {
+            // console.log(data);
+        }
+        else {
+            // console.log('no such table, skip'); // key: 4-3-2
+            return false;
+        }
+    }
+    else {
+        data = localStorage.getItem(table_name);
+        //console.log('localStorage: %s', data);
+    }
+
+    if (data) {
+        update_candidates(data);
+        return true;
+    }
+
+    var text_table_name = 'tbl/' + input_keys.join('-') + '.tab';
+    //console.log("table_name: %s", text_table_name);
+    candidate_xhr.open('GET', text_table_name, true);
+    try {
+        candidate_xhr.send();
+    }
+    catch (e) {
+        // ignore.
+    }
+    return true;
+}
+
+</script>
+
+<style type='text/css'>
+.inputkey {
+    font-size: 1.5em
+}
+.auto_clear_input_keys_on {
+    border-color: red;
+    background-color: red;
+}
+.candidates {
+}
+#output {
+    float: left;
+}
+#output_toolbar {
+    clear: right;    
+}
+#candidate {
+    clear: both;
+}
+</style>
+
+<title>行列30輸入法網頁點取版</title>
+
+<body onload='doc_init();'>
+
+<div>
+    <button class='inputkey' value='1'>1</button>
+    <button class='inputkey' value='2'>2</button>
+    <button class='inputkey' value='3'>3</button>
+    <button class='inputkey' value='4'>4</button>
+    <button class='inputkey' value='5'>5</button>
+    <button class='inputkey' value='6'>6</button>
+    <button class='inputkey' value='7'>7</button>
+    <button class='inputkey' value='8'>8i</button>
+    <button class='inputkey' value='9'>9</button>
+    <button class='inputkey' value='0'>0</button>
+    <button class='inputkey' value='w'>符</button>
+    <button class='inputkey' value='s'>詞</button>
+    <button class='inputkey' value='jp'>あ</button>
+    <button class='inputkey' value='en'>英</button>
+</div>
+
+<div>
+    <input id='show_input_keys' type='text' readonly style='width:6em' />
+</div>
+<div>
+    <button onclick='back_input_key();'>退字根</button>
+    <button onclick='clear_input_keys();'>清除字根</button>
+    <button id='auto_clear_input_keys_mode' onclick='switch_auto_input_keys();'>自動清除字根</button>
+</div>
+
+<textarea id='output' cols='40' rows='3' contenteditable='true'>
+</textarea>
+<div id='output_toolbar'>
+    <button onclick='select_output_texts();'>選取輸入內容</button>
+    <button onclick='clear_output_texts();'>清除輸入內容</button>
+    <button onclick='backspace_output_texts();'>回刪一字</button>
+    <button onclick='add_space_output_texts();'>空格</button>
+</div>
+
+<div id='candidate'>
+</div>
+
+</body>
+</html>
+

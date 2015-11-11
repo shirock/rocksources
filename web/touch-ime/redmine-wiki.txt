@@ -1,0 +1,470 @@
+{{toc}}
+
+h2. Touch 輸入法
+
+!http://www.gnu.org/graphics/lgplv3-147x51.png!
+
+source repo: https://rocksources.googlecode.com/svn/trunk/web_input_method
+
+源碼安裝: 你需要下載所有的 .js 文件。
+
+範例:
+
+* index.html - 一般使用範例。由頁面設計者安排輸入法控制項的位置。
+* offline.html - 離線使用範例。如何透過 Cache 機制，在不連接網路的狀態下使用 touch-ime 。
+* on-screen-keyboard-demo.html - 配合 touch-ime 的 OnScreenKeyboard 範例。
+
+deb安裝: 安裝 touch-ime 。檔案將被安裝在 /usr/share/javascript/touch-ime 。
+以瀏覽器開啟範例文件，例如 file:///usr/share/javascript/touch-ime/index.html 。
+
+註: 部份瀏覽器不允許開啟 file:// 協定。
+
+h3. 用例
+
+<pre>
+<script src="touch-ime.js" type="text/javascript">
+</script>
+
+<input type="text" />
+<input type="email" />
+<textarea>
+</textarea>
+
+<div><!-- optional -->
+    <button class="input_method_back_input_key">退一字根</button>
+    <button class="input_method_clear_input_keys">清除字根</button>
+    <button class="input_method_auto_clear_input_keys_mode">自動清除字根</button>
+    <button class="input_method_capital_toggle">Caps Lock</button>
+    <button class="input_method_backspace_output_texts">回刪一字</button>
+    <button class="input_method_clear_output_texts">清除輸入內容</button>
+    <button class="input_method_add_space_output_texts">空格</button>
+    <button class="input_method_add_newline_output_texts">換行</button>
+    <button class="input_method_switch_engine">切換</button>
+    <button class="input_method_end_composition">結束輸入法</button>
+</div>
+
+<div id="input_method_keyboard"><!-- required -->
+</div>
+
+<div id='input_method_show_input_keys'><!-- required -->
+</div>
+
+<div id='input_method_candidate'><!-- required -->
+</div>
+
+</pre>
+
+h3. 基本說明
+
+# 載入 Touch 輸入法的程式: touch-ime.js (以下稱 touch-ime)。
+# 提供三個 touch-ime 要用的 div 。
+# 以 style class 指定其他輸入法控制項。
+
+touch-ime 必要的 div 預設 id:
+* input_method_keyboard
+  輸入法鍵盤區。
+* input_method_candidate
+  輸入法候選字區。
+* input_method_show_input_keys
+  輸入法已輸入字根的顯示區。
+
+touch-ime 選用性的輸入控制項預設的 style class :
+* input_method_inputkey
+  字根鍵盤外觀。
+* input_method_candidates
+  候選字外觀。
+* input_method_back_input_key
+  指定「退一字根」控制項與外觀。
+* input_method_clear_input_keys
+  指定「清除字根」控制項與外觀。
+* input_method_auto_clear_input_keys_mode
+  指定「自動清除字根」控制項與外觀。
+* input_method_auto_clear_input_keys_on
+  自動清除功能鈕啟動時外觀。
+* input_method_capital_toggle
+  指定「Caps」控制項與外觀。
+* input_method_capital_toggle_on
+  Caps 啟動時外觀。
+* input_method_backspace_output_texts
+  指定「回刪一字」控制項與外觀。
+* input_method_clear_output_texts
+  指定「清除輸入內容」控制項與外觀。
+* input_method_select_output_texts
+  指定「選取輸入內容」控制項與外觀。
+* input_method_add_space_output_texts
+  指定「空白」控制項與外觀。
+* input_method_add_newline_output_texts
+  指定「換行」控制項與外觀。
+* input_method_switch_engine
+  指定「切換輸入法」控制項與外觀。
+* input_method_select_engine
+  指定「選擇輸入法」控制項與外觀。這必須是 select 控制項。
+* input_method_goto_next
+  指定「移到下一欄位」控制項與外觀。
+* input_method_goto_previous
+  指定「移到上一欄位」控制項與外觀。
+* input_method_end_composition
+  指定「結束輸入法」控制項與外觀。
+
+h3. 進階自訂
+
+h4. 指定輸入法控制項 set_controls
+
+touch-ime 提供 TouchInputMethod.set_controls() 方法讓設計者指定自己的控制項 id 和 style class 。
+
+<pre>
+TouchInputMethod.set_controls(custom_keyboard_id, custom_candidate_id, 
+    custom_show_input_keys_id, optional_classes);
+</pre>
+
+三個必要的 div id ，若給 null 表示用預設值。
+
+optional_classes 為 Hash table，用於指定選用性的輸入法控制項的 style class 名稱。可用的參數項如下列:
+* inputkey
+  字根鍵盤外觀的 style class 名稱。
+* candidates
+  候選字外觀的 style class 名稱。
+* back_input_key
+  指定「退一字根」控制項與外觀的 style class 名稱。
+* clear_input_keys
+  指定「清除字根」控制項與外觀的 style class 名稱。
+* auto_clear_input_keys_mode
+  指定「自動清除字根」控制項與外觀的 style class 名稱。
+* auto_clear_input_keys_on
+  自動清除功能鈕啟動時外觀的 style class 名稱。
+* capital_toggle
+  指定「Caps」控制項與外觀的 style class 名稱。
+* capital_toggle_on
+  Caps 啟動時外觀的 style class 名稱。
+* backspace_output_texts
+  指定「回刪一字」控制項與外觀的 style class 名稱。
+* clear_output_texts
+  指定「清除輸入內容」控制項與外觀的 style class 名稱。
+* select_output_texts
+  指定「選取輸入內容」控制項與外觀的 style class 名稱。
+* add_space_output_texts
+  指定「空白」控制項與外觀的 style class 名稱。
+* add_newline_output_texts
+  指定「換行」控制項與外觀的 style class 名稱。
+* switch_engine
+  指定「切換輸入法」控制項與外觀的 style class 名稱。
+* select_engine
+  指定「選擇輸入法」控制項與外觀的 style class 名稱。這必須是 select 控制項。
+* goto_next
+  指定「移到下一欄位」控制項與外觀的 style class 名稱。
+* goto_previous
+  指定「移到上一欄位」控制項與外觀的 style class 名稱。
+* end_composition
+  指定「結束輸入法」控制項與外觀的 style class 名稱。
+
+h4. get_controls
+
+get css selector (id and class) of controls.
+
+
+h4. 指定組字結果的輸出目標控制項 set_target
+
+TouchInputMethod.set_target() 方法可指定組字結果的輸出目標控制項。
+
+<pre>
+TouchInputMethod.set_target(dom);
+</pre>
+
+參數 dom 必須是一個 DOMInputElement 。
+
+touch-ime 在載入時會自動綁定頁面上已有的輸入控制項，以偵測輸出目標。
+但是，若設計者在頁面載入後才透過 JavaScript 新增輸入控制項，這些後來才增加的輸入控制項就不會為 touch-ime 所知。
+此時設計者需要自行呼叫 set_target() 方法告知 touch-ime 將組字結果輸出到哪個控制項。
+
+h4. 取得目前的輸出目標控制項 get_target
+
+TouchInputMethod.get_target() 方法可取得目前的輸出目標控制項。
+
+<pre>
+TouchInputMethod.get_target();
+</pre>
+
+回傳一個 DOMInputElement 。
+
+注: 不要用這個方法取得目前焦點所在的控制項，結果可能不同你預期。
+
+h4. 指定資源目錄路徑 set_resources_path
+
+<pre>
+TouchInputMethod.set_resources_path(resources_folder_path);
+</pre>
+
+預設是從 touch-ime.js 相同目錄下載入字根表等內容。
+
+請注意瀏覽器的相同來源政策，如果你的字表資源放在不同來源伺服器，那麼你必須按照
+W3 CORS 的建議，設置跨來源資源分享規則。
+若未設置 CORS ，那麼你在此只能指定資源目錄的路徑。例如 '/js/touch-ime/' 。
+
+See: 
+* http://www.w3.org/TR/cors/
+* http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
+
+
+h4. 啟用輸入法引擎 enable_engines
+
+指定啟用哪些輸入法引擎。
+
+<pre>
+TouchInputMethod.enable_engines(engine_code_list);
+</pre>
+
+參數 engine_code_list 是一個列出輸入法引擎代碼名的陣列。
+
+目前有效的代碼名:
+* zhuyin 注音
+* pinyin 拼音
+* en 英數
+* enShift 英數大寫
+* email 電子郵件
+* array30 行列30
+* cangjie3 倉頡第三代
+* cangjie5 倉頡第五代
+* quick 倉頡速成
+
+預設啟用 zhuyin, en, email, pinyin, quick, array30 。
+
+h4. 改變目前的輸入法引擎 change_engine
+
+改變目前的輸入法引擎。
+
+<pre>
+TouchInputMethod.change_engine(engine_code);
+</pre>
+
+參數 engine_code 必須是一個有效的輸入法引擎代碼名。
+如果無法切換指定的輸入法引擎，則回傳 false 。
+
+h4. 指定控制項自動適用的輸入法引擎 specify_control_with_engine
+
+<pre>
+TouchInputMethod.specify_control_with_engine(control_class, engine_code);
+</pre>
+
+control_class 表示控制項的 class 或 type 。
+若 engine_code 為 false ，則移除適用規則。
+
+touch-ime 預設下列 type 控制項適用對象:
+
+* 'password': 'en'
+* 'datetime': 'en'
+* 'date': 'en'
+* 'month': 'en'
+* 'week': 'en'
+* 'time': 'en'
+* 'localdatetime': 'en'
+* 'number': 'en'
+* 'range': 'en'
+* 'email': 'email'
+
+除此之外，設計者可利用 specify_control_with_engine() 指定控制項的適用輸入法。
+其規則為:
+
+# 如果控制項的 class 清單中 *包含* 了 control_class ，則適用指定的輸入法。
+  大部份設計者使用這個規則。
+# 如果控制項的 type *等於* control_class ，則適用指定的輸入法。
+  基本上 touch-ime 預設的適用表已符合使用情境，不需要使用此規則改變。
+# 以上皆非，則適用使用者手動選擇的輸入法。
+  手動選擇是指使用者透過「切換輸入法」、「選擇輸入法」或調用 change_engine() 
+  選擇輸入法的行為。
+
+h4. 清除本地儲存的特殊字表 clean_local_table
+
+<pre>
+TouchInputMethod.clean_local_table();
+</pre>
+
+自本地儲存區(localStorage)中清除下列特殊字表的內容。
+* en.tab (localStorage 名稱 input_method_en)
+* s.tab (localStorage 名稱 input_method_s)
+* w.tab (localStorage 名稱 input_method_w)
+
+touch-ime 會讀取特殊字表檔的內容並保存在本地儲存區。
+如果你修改了特殊字表檔的內容，則你必須調用 clean_local_table() 清除已儲存的內容，
+touch-ime 才會重新讀取新的特殊字表檔內容(並再次保存於本地儲存區)。
+
+h4. 組字事件 oncomposition
+
+TouchInputMethod.oncomposition 屬性可指定組字時的處理行為。
+
+當使用者點取可以輸入文字的頁面控制項時，就會觸發此事件。
+
+
+h4. 結束組字事件 oncompositionend
+
+TouchInputMethod.oncompositionend 屬性可指定結束組字時的處理行為。
+
+只有使用者按下 end_composition 控制項時才會觸發此事件。
+
+h4. 大寫變換模式事件 oncapitalization
+
+此事件會傳入一個參數告知目前的大寫變換模式狀態。
+
+
+h4. 進階用例
+
+在載入 touch-ime.js 後，加上 JavaScript 程式碼。
+
+<pre>
+<script src="touch-ime.js" type="text/javascript">
+</script>
+<script>
+TouchInputMethod.set_resources_path('/js/touch-ime/');
+// 指定字表檔的路徑。
+
+TouchInputMethod.set_controls(
+    'my_ime_keyboard', 
+    'my_ime_candidate', 
+    'my_ime_show_codes',
+    {
+        'clear_input_keys': 'my_ime_clear_input_codes',
+        'backspace_output_texts': 'my_ime_backspace',
+        'add_space_output_texts': 'my_ime_add_space',
+        'add_newline_output_texts': 'my_ime_add_newline',
+        'end_composition': 'my_ime_end_composition'
+    });
+
+TouchInputMethod.enable_engines(["en", "enShift", "zhuyin", "quick"]);
+// 啟用英數、注音和倉頡速成。
+
+TouchInputMethod.specify_control_with_engine("phone_number", "en");
+// 指定 class 包含 'phone_number' 的控制項適用 en 輸入。
+
+TouchInputMethod.oncomposition = function() {
+    console.log("show TouchInputMethod");
+    document.getElementById('my_ime_area').style.visibility = "visible";
+}
+
+TouchInputMethod.oncompositionend = function() {
+    console.log("hide TouchInputMethod");
+    document.getElementById('my_ime_area').style.visibility = "hidden";
+}
+</script>
+
+<input type="text" />
+<input class="phone_number" type="text" />
+<input type="email" />
+<textarea>
+</textarea>
+
+<div id="my_ime_area" style="visibility:hidden;">
+    <div><!-- optional -->
+        <button class="my_ime_clear_input_codes">清除字根</button>
+        <button class="my_ime_backspace">回刪一字</button>
+        <button class="my_ime_add_space">空格</button>
+        <button class="my_ime_add_newline">換行</button>
+        <button class="my_ime_end_composition">結束輸入法</button>
+    </div>
+
+    <div id="input_method_keyboard"><!-- required -->
+    </div>
+
+    <div id='input_method_show_input_keys'><!-- required -->
+    </div>
+
+    <div id='input_method_candidate'><!-- required -->
+    </div>
+</div>
+
+</pre>
+
+h3. 輸入法表格
+
+分成 $PREFIX-tbl.js 和 $PREFIX-keyboard.js 。皆為 JSON 格式。
+
+h4. 字根表 tbl.js
+
+字根為鍵，候選字為值，多個候選字間以逗號','分隔。
+
+範例:
+<pre>
+{
+    "1": "!,~",
+    "2": "@",
+    .
+    .(省略)
+    .
+    "enter": "\n"
+}
+</pre>
+
+h4. 鍵盤表 keyboard.js
+
+需具備三個鍵:
+* max_input_keys
+  型態為整數，指定此輸入法引擎最長的字根長度。預設為 4 。
+* key_sym_map
+  型態為  hash table，指定字根值與鍵盤上顯示的符號。
+* keyboard_layout
+  型態為陣列，表示鍵盤排列方式。以字根值為主，"\n" 表示換行排列。
+
+範例:
+<pre>
+{
+"max_input_keys": 1,
+
+"key_sym_map": {
+  "1": "!",
+  "2": "@",
+  .
+  .(省略)
+  .
+  "enter": "↙"
+}
+
+},
+
+"keyboard_layout": [
+  "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "minus", "\n",
+  "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "plus", "\n",
+  "a", "s", "d", "f", "g", "h", "j", "k", "l", "slash", "\n",
+  "z", "x", "c", "v", "b", "n", "m", "<", ">", "enter"
+]
+}
+</pre>
+
+h4. 特殊字表
+
+以下三個字表檔與輸入法引擎無關，屬於通用項目。
+
+* en.tab
+  英數字元表。字根為 '~en' 。
+* s.tab
+  自定的常用詞表。字根為 '~s' 。
+* w.tab
+  標點符號表。字根為 '~w' 。
+
+字根若為 '~' 開頭者，就視為特殊字表用字根。
+輸入法引擎製表時請勿使用此字元作為字根。
+
+h3. 離線應用
+
+若需要離線應用，請參考 touch-ime.manifest ，將其列出的檔名內容，加入你的快取清單中。
+
+欲使快取清單生效，需要下列條件配合:
+
+1. 以 Apache http server 為例，需要在 mime.types 中加入下列設置:
+
+<pre>
+text/cache-manifest  manifest
+</pre>
+
+註: mime.types 的路徑，依你的 Apache 設置而定。可能位在 /etc/httpd/mime.types 、 /etc/apache2/mime.types 、或 /etc/mime.types 。
+
+2. 在你的網頁的 html 標籤中，增加  manifest 屬性，指出你的快取清單檔名。例如:
+
+<pre>
+
+<html manifest="app.manifest">
+ .
+ . (省略)
+ .
+</html>
+
+</pre>
+
+

@@ -1,0 +1,8 @@
+INSTDIR=/usr/share/javascript/touch-ime
+mkdir $INSTDIR
+copy *.js $INSTDIR
+copy *.tab $INSTDIR
+copy *.html $INSTDIR
+copy touch-ime.manifest $INSTDIR
+copy README $INSTDIR
+

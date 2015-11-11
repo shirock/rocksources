@@ -1,0 +1,31 @@
+CACHE MANIFEST
+
+# version: 20130809
+#
+# server config:
+#  add 'text/cache-manifest  manifest' in your mime.types.
+#
+# page:
+#  add '<html manifest="touch-ime.manifest">
+#
+
+touch-ime.js
+ascii.tab
+en.tab
+s.tab
+w.tab
+en-tbl.js
+en-keyboard.js
+enShift-tbl.js
+enShift-keyboard.js
+pinyin-tbl.js
+pinyin-keyboard.js
+quick-tbl.js
+quick-keyboard.js
+zhuyin-tbl.js
+zhuyin-keyboard.js
+array30-tbl.js
+array30-keyboard.js
+email-tbl.js
+email-keyboard.js
+
