@@ -1,0 +1,5 @@
+<book>
+    <ISBN><?=$book->isbn?></ISBN>
+    <title><?=$book->title?></title>
+    <author><?=$book->author?></author>
+</book>

@@ -1,0 +1,25 @@
+修改檔名以滿足 PEAR2 的 Class-to-file 慣例。
+參考 http://pear.php.net/manual/en/pear2cs.rules.php
+
+原先的命名方式是因為 Windows 系統不分辨名稱大小寫，所以
+一律用小寫再配合底線字元分隔單字。
+這樣在 Windows 和 Unix* 平台間轉換時，就不會找不到檔案了。
+(因為程序員在寫 require 時，檔名參數沒留意大小寫)
+
+但經過這三、四年的時間，PEAR的命名慣例普遍了。
+所以調整過去配合 PEAR 。
+
+-- rock <shirock.tw@gmail.com>  2012-11-06 15:30:00
+
+去除類別名稱中的 _ 。
+
+近來大多數 PHP 設計者的命名慣例會將類別名稱中的 _ 視為對應到檔案路徑的 / 。
+為了避免使用困擾，調整本案的類別名稱命名法則。
+
+更動的內容:
+* Database_Query => DatabaseQuery.
+* Database_Row => DatabaseRow.
+* Database_Help => DatabaseHelp.
+
+-- rock <shirock.tw@gmail.com>  2012-11-06 14:00:00
+

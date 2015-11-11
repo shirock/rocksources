@@ -1,0 +1,64 @@
+<html>
+<style type="text/css">
+.notice {
+    display: none;
+}
+</style>
+<script type="text/javascript">
+<?php echo file_get_contents('formHelper.js') ?>
+
+function show_notice(fieldId, validness) {
+    var notice_id = fieldId + '_notice';
+    var notice_div = document.getElementById(notice_id);
+    if (!notice_div)
+        return;
+
+    if (validness) {
+        notice_div.innerHTML = "";
+        notice_div.style.display = "none";
+    }
+    else {
+        notice_div.innerHTML = "Invalid!";
+        notice_div.style.display = "inline";
+    }
+}
+
+function check_field(fieldId, formId) {
+    var result = formChecker.fieldCheck(fieldId, formId);
+    show_notice(fieldId, result);
+}
+
+formChecker.callback = show_notice;
+formChecker.schema = <?php echo file_get_contents('schema.js') ?>;
+
+formReset.values = <?=json_encode($book)?>;
+
+function form_init() {
+    formReset.fill('books');
+}
+</script>
+
+<body onload="form_init()">
+
+<form id="books" name="books" onsubmit="return formChecker.submitCheck()">
+    <div>
+        <label>ISBN</label> <input type="text" id="isbn" name="isbn" onchange="check_field('isbn', 'books')"/>
+        <p id="isbn_notice" class="notice"></p>
+    </div>
+    <div>
+        <label>Title</label> <input type="text" id="title" name="title" />
+        <p id="title_notice" class="notice"></p>
+    </div>
+    <div>
+        <label>Author</label> <input type="text" id="author" name="author" />
+        <p id="author_notice" class="notice"></p>
+    </div>
+    
+    <div>
+    <button type="button" onclick="formReset.fill('books')">Reset</button>
+    <button type="submit">Submit</button>
+    </div>
+</form>
+
+</body>
+</html>
