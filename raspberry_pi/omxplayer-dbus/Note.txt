@@ -1,0 +1,10 @@
+http://elinux.org/Omxplayerhttp://elinux.org/Omxplayer
+
+LD_LIBRARY_PATH=/opt/vc/lib:/usr/lib/omxplayer
+
+omxplayer 不會 flush stdout/stderr buffer ，所以基本上，我的程式不會在播放中讀到任何訊息。
+只在 omxplayer 結束時，才可以讀到訊息。 'have a nice day ;)'
+
+omxplayer 直接利用 GPU 繪製影像。不需 X ，可以在 terminal console 上直接播放影片。
+故 dbus 可以接 system type 。
+

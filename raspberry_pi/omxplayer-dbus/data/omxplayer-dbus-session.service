@@ -1,0 +1,4 @@
+[D-BUS Service]
+Name=raspberry.pi.OMXPlayer
+Exec=/usr/bin/omxplayer-dbus-service -q --session
+

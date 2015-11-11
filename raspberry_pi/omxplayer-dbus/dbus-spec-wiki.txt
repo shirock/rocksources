@@ -1,0 +1,214 @@
+<wiki:toc max_depth="3" />
+
+= omxplayer-dbus D-Bus Interface Specification =
+
+Version 0.1.3
+
+D-Bus Service of omxplayer
+
+Copyright (C) 2013 Shih Yuncheng <shirock.tw@gmail.com>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+<img src="http://www.gnu.org/graphics/gplv3-127x51.png" alt="GPLv3"/>
+
+== Interfaces ==
+
+    * [OMXPlayerDbus#raspberry.pi.OMXPlayerList raspberry.pi.OMXPlayerList]
+    * [OMXPlayerDbus#raspberry.pi.OMXPlayer raspberry.pi.OMXPlayer]
+    * org.freedesktop.DBus.Properties
+
+= raspberry.pi.OMXPlayerList =
+
+object */raspberry/pi/OMXPlayer* implements this interface.
+
+== Methods: ==
+
+=== Play(s: mrl, i: x, i: y, i: width, i: height, b: keepratio, s: options) → o ===
+
+Play the media of mrl. Position of visual area is (x,y). Size of visual area is (width, height).
+
+If keepratio is true, it will keep the ratio of video.
+
+options is the the arguments to pass to omxplayer.
+
+==== Parameters ====
+
+mrl is the Media Rsource Locator. It may be a local file path like '/home/pi/Video/demo.mp4', or a network video stream.
+
+==== Returns ====
+
+Object path of player.
+
+
+=== Queue(s: mrl, i: x, i: y, i: width, i: height, b: keepratio, s: options) → o ===
+
+Like Play(), but just queue the player to the list (open media then pause).
+
+==== Parameters ====
+
+mrl is the Media Rsource Locator. It may be a local file path like '/home/pi/Video/demo.mp4', or a network video stream.
+
+==== Returns ====
+
+Object path of player.
+
+
+=== List() → a(os) ===
+
+Get the list of current players.
+
+==== Returns ====
+
+List of player path and mrl.
+
+
+== Signals: ==
+
+=== Event(o: player_path, s: event) ===
+
+Player raise event:
+
+    * playering.
+    * queueing.
+    * pause.
+    * resume.
+    * closed.
+
+
+
+= raspberry.pi.OMXPlayer =
+
+== Methods: ==
+
+=== Stop() ===
+
+Stop media playing. Player will be closed.
+
+=== Pause() ===
+
+Pause.
+
+=== Resume() ===
+
+Resume.
+
+=== Volumn(s: tick) ===
+
+Change volumn.
+
+tick: + or -. one tick to +/- 3db.
+For example: '++' to increase 6 db, '-----' to decrease 15 db.
+
+=== !SeekForward(s: distance) ===
+
+distance:
+
+    * small: 30 seconds (default)
+    * large: 600 seconds
+
+Alias: !SeekAhead().
+
+=== !SeekBack(s: distance) ===
+
+distance:
+
+    * small: 30 seconds (default)
+    * large: 600 seconds
+
+=== !PreviousAudioStream() ===
+
+注意，切換音軌的動作，不會自動循環。
+
+=== !NextAudioStream() ===
+
+注意，切換音軌的動作，不會自動循環。
+
+=== !PreviousChapter() ===
+
+Because omxplayer has bug, this action may not work. (#6)
+
+=== !NextChapter() ===
+
+Because omxplayer has bug, this action may not work. (#6)
+
+=== !ToggleSubtitle() ===
+
+Toggle subtitle On or Off.
+If you specify option '--subtitles', subtitle initial state is On.
+However, if you play mkv embed ssa/ass, subtitle initial state is Off.
+
+Subtitle: mkv embed ssa/ass or mp4 with external srt.
+Notice: subtitle will be rendered on fixed position (bottom of display),
+not on the bottom of video. (#7)
+
+=== !PreviousSubtitle() ===
+
+Previous subtitle.
+
+=== !NextSubtitle() ===
+
+Next subtitle.
+
+
+== Properties: ==
+
+=== MRL - s - (read) ===
+
+Media Resource Locator.
+
+=== paused - b - (read) ===
+
+Is player paused?
+
+=== volumn - i - (read) ===
+
+Volumn. Unit is db.
+
+=== videoWidth - i - (read) ===
+
+Video original width.
+
+=== videoHeight - i - (read) ===
+
+Video original height.
+
+=== visualTop - i - (read) ===
+
+Top position of visual area.
+
+=== visualLeft - i - (read) ===
+
+Left position of visual area.
+
+=== visualBottom - i - (read) ===
+
+Bottom position of visual area.
+
+=== visualRight - i - (read) ===
+
+Right position of visual area.
+
+=== audioStreamList - a(ss) - (read) ===
+
+Audio stream List: (track : track details).
+
+=== currentAudioStream - i - (read) ===
+
+Index number of current audio stream. Base on 1.
+
+=== subtitle - b - (read) ===
+
+subtitle on or off.
+
