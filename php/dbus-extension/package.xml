@@ -1,0 +1,279 @@
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>[svn] Log of /pecl/dbus/trunk/package.xml</title>
+<meta name="generator" content="ViewVC 1.1.10" />
+<link rel="stylesheet" href="/docroot/styles.css" type="text/css" />
+<link rel="stylesheet" href="https://static.php.net/www.php.net/styles/site.css" />
+<link rel="stylesheet" href="https://static.php.net/www.php.net/styles/phpnet.css" />
+<link rel="shortcut icon" href="https://static.php.net/www.php.net/favicon.ico" />
+<style type="text/css">
+.paddinghack { margin-left: 5px; margin-top: 5px; }
+</style>
+
+</head>
+<body bgcolor="#ffffff" text="#000000" link="#000099" alink="#0000ff" vlink="#000099">
+<div>
+<table border="0" cellspacing="0" cellpadding="0" width="100%">
+<tr bgcolor="#9999cc">
+<td align="left" rowspan="2"><a href="/"><img src="https://static.php.net/www.php.net/images/php.gif" alt="PHP" width="120" height="67" hspace="3" /></a></td>
+<td>&nbsp;</td>
+</tr>
+<tr bgcolor="#9999cc">
+<td align="right" valign="bottom">
+<a style="font-size: 0.8em;" href="http://www.php.net/svn.php">SVN Instructions</a> &nbsp;
+</td>
+</tr>
+<tr bgcolor="#666699" class="phphead">
+<td style="padding:2px;"><strong><a href="/viewvc?view=roots"><span class="pathdiv">/</span></a><a href="/viewvc/">[svn]</a><span class="pathdiv">/</span><a href="/viewvc/pecl/">pecl</a><span class="pathdiv">/</span><a href="/viewvc/pecl/dbus/">dbus</a><span class="pathdiv">/</span><a href="/viewvc/pecl/dbus/trunk/">trunk</a><span class="pathdiv">/</span>package.xml</strong></td>
+<td align="right" valign="top" class="quicksearch">
+Common trees:
+&nbsp;
+<a href="/viewvc/pecl/">PECL</a> |
+<a href="/viewvc/phpdoc/">PHP Docs</a>
+&nbsp;
+</td>
+</tr>
+</table>
+</div>
+<div class="paddinghack">
+
+<p style="margin:0;">
+
+<a href="/viewvc/pecl/dbus/trunk/"><img src="/docroot/images/back_small.png" class="vc_icon" alt="Parent Directory" /> Parent Directory</a>
+
+| <a href="/viewvc/pecl/dbus/trunk/package.xml?view=log"><img src="/docroot/images/log.png" class="vc_icon" alt="Revision Log" /> Revision Log</a>
+
+
+
+
+</p>
+
+<hr />
+<table class="auto">
+
+
+
+<tr>
+<td>Links to HEAD:</td>
+<td>
+(<a href="/viewvc/pecl/dbus/trunk/package.xml?view=markup">view</a>)
+(<a href="/viewvc/pecl/dbus/trunk/package.xml?view=co">download</a>)
+(<a href="/viewvc/pecl/dbus/trunk/package.xml?view=co&amp;content-type=text%2Fplain">as text</a>)
+(<a href="/viewvc/pecl/dbus/trunk/package.xml?view=annotate">annotate</a>)
+</td>
+</tr>
+
+
+
+<tr>
+<td>Sticky Revision:</td>
+<td><form method="get" action="/viewvc" style="display: inline">
+<div style="display: inline">
+<input type="hidden" name="orig_pathtype" value="FILE"/><input type="hidden" name="orig_view" value="log"/><input type="hidden" name="orig_path" value="pecl/dbus/trunk/package.xml"/><input type="hidden" name="view" value="redirect_pathrev"/>
+
+<input type="text" name="pathrev" value="" size="6"/>
+
+<input type="submit" value="Set" />
+</div>
+</form>
+
+</td>
+</tr>
+</table>
+ 
+
+
+
+
+
+
+
+
+
+<div>
+<hr />
+
+<a name="rev312190"></a>
+
+
+Revision <a href="/viewvc?view=revision&amp;revision=312190"><strong>312190</strong></a> -
+
+
+(<a href="/viewvc/pecl/dbus/trunk/package.xml?revision=312190&amp;view=markup">view</a>)
+
+
+(<a href="/viewvc/pecl/dbus/trunk/package.xml?revision=312190&amp;view=co">download</a>)
+(<a href="/viewvc/pecl/dbus/trunk/package.xml?view=co&amp;revision=312190&amp;content-type=text%2Fplain">as text</a>)
+(<a href="/viewvc/pecl/dbus/trunk/package.xml?annotate=312190">annotate</a>)
+
+
+
+- <a href="/viewvc/pecl/dbus/trunk/package.xml?r1=312190&amp;view=log">[select for diffs]</a>
+
+
+
+
+<br />
+
+Modified
+
+<em>Wed Jun 15 11:37:08 2011 UTC</em>
+(19 months, 1 week ago)
+by <em>derick</em>
+
+
+
+
+
+
+
+
+
+<br />File length: 1616 byte(s)
+
+
+
+
+
+
+
+<br />Diff to <a href="/viewvc/pecl/dbus/trunk/package.xml?r1=297443&amp;r2=312190">previous 297443</a>
+
+
+
+
+
+
+
+<pre class="vc_log">- Update package XML for 0.1.1.
+</pre>
+</div>
+
+
+
+<div>
+<hr />
+
+<a name="rev297443"></a>
+
+
+Revision <a href="/viewvc?view=revision&amp;revision=297443"><strong>297443</strong></a> -
+
+
+(<a href="/viewvc/pecl/dbus/trunk/package.xml?revision=297443&amp;view=markup">view</a>)
+
+
+(<a href="/viewvc/pecl/dbus/trunk/package.xml?revision=297443&amp;view=co">download</a>)
+(<a href="/viewvc/pecl/dbus/trunk/package.xml?view=co&amp;revision=297443&amp;content-type=text%2Fplain">as text</a>)
+(<a href="/viewvc/pecl/dbus/trunk/package.xml?annotate=297443">annotate</a>)
+
+
+
+- <a href="/viewvc/pecl/dbus/trunk/package.xml?r1=297443&amp;view=log">[select for diffs]</a>
+
+
+
+
+<br />
+
+Added
+
+<em>Sun Apr  4 01:05:09 2010 UTC</em>
+(2 years, 9 months ago)
+by <em>derick</em>
+
+
+
+
+
+
+
+<br />File length: 1600 byte(s)
+
+
+
+
+
+
+
+
+
+
+
+<pre class="vc_log">- Preparing for the first release.
+</pre>
+</div>
+
+ 
+
+
+
+
+ <hr />
+<p><a name="diff"></a>
+This form allows you to request diffs between any two revisions of this file.
+For each of the two "sides" of the diff,
+
+enter a numeric revision.
+
+</p>
+<form method="get" action="/viewvc/pecl/dbus/trunk/package.xml" id="diff_select">
+<table cellpadding="2" cellspacing="0" class="auto">
+<tr>
+<td>&nbsp;</td>
+<td>
+<input type="hidden" name="view" value="diff"/>
+Diffs between
+
+<input type="text" size="12" name="r1"
+value="312190" />
+
+and
+
+<input type="text" size="12" name="r2" value="297443" />
+
+</td>
+</tr>
+<tr>
+<td>&nbsp;</td>
+<td>
+Type of Diff should be a
+<select name="diff_format" onchange="submit()">
+<option value="h" selected="selected">Colored Diff</option>
+<option value="l" >Long Colored Diff</option>
+<option value="f" >Full Colored Diff</option>
+<option value="u" >Unidiff</option>
+<option value="c" >Context Diff</option>
+<option value="s" >Side by Side</option>
+</select>
+<input type="submit" value=" Get Diffs " />
+</td>
+</tr>
+</table>
+</form>
+
+
+
+
+
+<hr />
+<table>
+<tr>
+<td><address><a href="mailto:systems@php.net">systems@php.net</a></address></td>
+<td style="text-align: right;"><strong><a href="/docroot/help_log.html">ViewVC Help</a></strong></td>
+</tr>
+<tr>
+<td>Powered by <a href="http://viewvc.tigris.org/">ViewVC 1.1.10</a></td>
+<td style="text-align: right;">&nbsp;</td>
+</tr>
+</table>
+</body>
+</html>
+
+
