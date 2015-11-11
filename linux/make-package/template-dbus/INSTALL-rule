@@ -1,0 +1,11 @@
+#!/bin/sh
+BUSNAME=com.my.company.Sample
+DAEMON_NAME=mydbus
+BINDIR=/usr/local/bin
+
+pack deb-scripts $CONTROLS
+copy data/$DAEMON_NAME.conf /etc/
+copy data/$DAEMON_NAME-logrotate /etc/logrotate.d/$DAEMON_NAME
+copy data/$BUSNAME.conf /etc/dbus-1/system.d/
+copy data/$BUSNAME.service /usr/share/dbus-1/system-services/
+

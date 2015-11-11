@@ -1,0 +1,5 @@
+BINDIR=/usr/local/bin
+pack deb-scripts $CONTROLS
+copy data/mydaemon-rc /etc/init.d/mydaemon
+copy data/mydaemon-logrotate /etc/logrotate.d/mydaemon
+copy data/mydaemon.conf /etc

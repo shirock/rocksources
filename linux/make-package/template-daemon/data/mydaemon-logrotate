@@ -1,0 +1,14 @@
+/var/log/mydaemon.log {
+	monthly
+	missingok
+	rotate 12
+	compress
+	delaycompress
+	notifempty
+	create 640 root adm
+	sharedscripts
+	postrotate
+		/etc/init.d/mydaemon restart > /dev/null
+	endscript
+}
+

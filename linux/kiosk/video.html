@@ -1,0 +1,131 @@
+<html>
+<meta charset="UTF-8">
+<style type="text/css">
+evideo {
+    border: 5px outset hsla(210,100%,50%,0.3);
+}
+
+#display{
+  background:hsla(210,100%,50%,0.5);
+  height:60px;
+  width:1450px;
+  overflow:hidden;
+  position:relative;
+}
+#text{
+  font-size: 36px;
+  /*background:hsla(90,100%,50%,.5);*/
+  cursor:pointer;
+  overflow:hidden;
+  position:absolute;
+  left:10px;
+  margin-right:10px;
+  top:5px;
+}
+</style>
+
+<script src="evideo-mplayer.js">
+</script>
+<!--
+<script src="evideo-html5.js">
+</script>
+-->
+
+<script type='text/javascript' src='http://code.jquery.com/jquery-1.8.3.js'></script>
+<script type='text/javascript' src='marquee.js'></script>
+
+<script>
+$(document).ready(function() {
+    marquee($('#display'), $('#text'));  //Enter name of container element & marquee element
+});
+
+var playlist_1 = {
+  current: 0,
+  videos: [
+    //'1080p/big_buck_bunny_1080p_h264.mov',
+    '720p/Nissin_CM_Samurai 720p.mp4',
+    '720p/Volvo_Trucks_The_Epic_Split_hd720.mp4',
+    '720p/Nissin_CM_Globalization 720p.mp4',
+    '1080p/World Order - Have a nice day 1080p.mp4',
+    '1080p/PSY_GANGNAM_STYLE_hd1080.mp4',
+    '720p/IKEA_Start_Something_New_hd720.mp4',
+    '720p/Microsoft_Cebit_2011.mp4'
+  ]
+};
+
+var playlist_2 = {
+  current: 0,
+  videos: [
+    '720p/Nissin_CM_Globalization 720p.mp4',
+    '720p/Volvo_Trucks_The_Epic_Split_hd720.mp4',
+    '720p/Nissin_CM_Samurai 720p.mp4',
+    '720p/IKEA_Start_Something_New_hd720.mp4',
+    '720p/Microsoft_Cebit_2011.mp4'
+  ]
+};
+
+var bg_list = {
+  current: 0,
+  color: [
+    'black',
+    'gray',
+    'orange',
+    'gold',
+    'white'
+  ]
+}
+
+function play_next_1(node)
+{
+    ++playlist_1.current;
+    if (playlist_1.current >= playlist_1.videos.length)
+        playlist_1.current = 0;
+    var v = new EVideo(node, playlist_1.videos[playlist_1.current]);
+    v.play();
+
+    if (bg_list.current >= bg_list.color.length)
+        bg_list.current = 0;
+    else
+        ++bg_list.current;
+    document.getElementsByTagName('body')[0].style.backgroundColor = bg_list.color[bg_list.current];
+}
+
+function play_next_2(node)
+{
+    if (playlist_2.current >= playlist_2.videos.length)
+        playlist_2.current = 0;
+    else
+        ++playlist_2.current;
+    new EVideo(node, playlist_2.videos[playlist_2.current]);
+}
+</script>
+
+<body>
+
+<div align="center">
+
+<evideo src='720p/Nissin_CM_Samurai 720p.mp4' 
+  width="1440" height="810"
+  _width="80%" _height="70%"
+  keepaspect="true"
+  onended='play_next_1(this)'>
+    <!--
+    chrome doesn't allow put <source> in the <evideo>.
+    <source src='720p/Nissin_CM_Samurai 720p.mp4' type='video/mp4'>
+    -->
+</evideo>
+
+<div id="display">
+  <div id="text">Raspberry Pi. 廣告播放 HD 1080P OK! 跑馬燈</div>
+</div>
+
+</div>
+<!--
+<_evideo src='720p/Nissin_CM_Globalization 720p.mp4' 
+  width="360" height="198" autoplay='true'
+  onended="play_next_2(this);">
+</_evideo>
+-->
+
+</body>
+</html>

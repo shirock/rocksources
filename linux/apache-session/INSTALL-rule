@@ -1,0 +1,8 @@
+# install rule file
+BINDIR=/usr/local/bin
+CONFDIR=/etc/apache2/session
+
+copy apache-session.sh $BINDIR/apache-session a+x
+copy apache*.conf $CONFDIR/
+copy manual.html /usr/local/share/doc/apache-session/
+

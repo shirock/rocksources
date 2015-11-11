@@ -1,0 +1,9 @@
+/var/log/omxplayer-dbus/session.log {
+	weekly
+	missingok
+	rotate 5
+	compress
+	delaycompress
+	notifempty
+}
+

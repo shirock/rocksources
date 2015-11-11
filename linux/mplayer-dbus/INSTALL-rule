@@ -1,0 +1,13 @@
+# install rule file
+copy data/post-install.sh $CONTROLS/postinst
+copy data/pre-remove.sh $CONTROLS/prerm
+
+BINDIR=/usr/local/bin
+
+copy mplayer-dbus-service.py $BINDIR/mplayer-dbus-service 755
+
+mkdir /var/log/omxplayer-dbus
+
+copy data/mplayer-dbus.service /usr/share/dbus-1/services/raspberry.pi.OMXPlayer.service
+copy data/mplayer-dbus-logrotate /etc/logrotate.d/mplayer-dbus
+

@@ -1,0 +1,5 @@
+[D-BUS Service]
+Name=com.my.company.Sample
+Exec=/usr/local/bin/my-dbus-service
+User=root
+

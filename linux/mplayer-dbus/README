@@ -1,0 +1,37 @@
+Package: mplayer-dbus
+Version: 0.1.5
+Maintainer: rock <shirock.tw@gmail.com>
+Architecture: all
+Depends: python (>= 2.6), mplayer, libav-tools
+Section: video
+Priority: optional
+Description: dbus service of mplayer.
+DBus type: system
+Service name: raspberry.pi.OMXPlayer
+
+Object path of List: /raspberry/pi/OMXPlayer
+Interface: raspberry.pi.OMXPlayerList
+    * Play(mrl, x, y, width, height, keepratio, options)
+    * Queue(mrl, x, y, width, height, keepratio, options)
+    * List()
+    * signal Event(player_path, event)
+
+Object path of Player: /raspberry/pip/OMXPlayer/{id}
+Interface: raspberry.pi.OMXPlayer
+    * Stop()
+    * Pause()
+    * Resume()
+    * Volume(tick)
+    * SeekForward(distance)/SeekAhead
+    * SeekBack(distance)
+    * PreviousAudioStream()
+    * NextAudioStream()
+    * ToggleSubtitle()
+    * PreviousSubtitle()
+    * NextSubtitle()
+    * PreviousChapter()
+    * NextChapter()
+Interface: org.freedesktop.DBus.Properties
+    * GetAll('')
+    * Get('', property_name)
+

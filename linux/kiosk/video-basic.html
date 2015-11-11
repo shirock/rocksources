@@ -1,0 +1,66 @@
+<html>
+<meta charset="UTF-8">
+<style type="text/css">
+#video {
+    border: 3px outset red;
+    width: 70%;
+    height: 60%;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    var node = document.getElementById('video');
+    var video_src = node.getAttribute('src');
+
+    var xhr = new XMLHttpRequest();
+    if (xhr.overrideMimeType)
+        xhr.overrideMimeType('text/plain');
+
+    xhr.onreadystatechange = function() {
+        //console.info(this.status);
+        if (this.status >= 300) {
+            if (this.readyState == 4) {
+                window.alert('Could not load file');
+            }
+            return false;
+        }
+
+        if (this.status == 200 && this.readyState == 4) { // DONE
+            window.alert('video ended');
+        }
+    };
+
+    var screen_top = 0, screen_left = 0;
+    if (window.mozInnerScreenY) { // Firefox only.
+        screen_top = window.mozInnerScreenY;
+        screen_left = window.mozInnerScreenX;
+    }
+    
+    var mrl = [
+        'mplayer.php',
+        '?src=', video_src,
+        '&width=', node.clientWidth, 
+        '&height=', node.clientHeight, 
+        '&top=', node.offsetTop + node.clientTop + screen_top,
+        '&left=', node.offsetLeft + node.clientLeft + screen_left,
+        '&keep_aspect=true'
+    ].join('');
+    console.debug(mrl);
+
+    xhr.open('GET', mrl, true); // async call
+    xhr.send();
+}, false);
+</script>
+
+<body>
+
+<p>
+OMXPlayer play video.
+</p>
+
+<div id='video' src='1080p/big_buck_bunny_1080p_h264.mov'>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,33 @@
+PKGNAME=@PKGNAME@
+PREFIX=@PREFIX@
+
+build:
+	make -C src build
+
+check:
+	echo "Not implemented."
+
+install: build
+	echo "Not implemented."
+
+uninstall:
+	echo "Not implemented."
+
+dist: build
+	./make-package debian
+
+clean:
+	make -C src clean
+	rm -rf dist
+	rm -f *.deb
+
+help:
+	@echo "The following tasks available:"
+	@echo "  build     - Build program and data."
+	@echo "  check     - Run unit tests."
+	@echo "  dist      - Pack the distribution's package."
+	@echo "  clean     - Clean artifacts."
+	@echo "  install   - Manual install program and data without package manager."
+	@echo "  uninstall - Uninstall manual installing files."
+	@echo ""
+

@@ -1,0 +1,94 @@
+<html>
+<meta charset="utf-8">
+
+<title>Apache session</title>
+
+<h1>
+摘要
+</h1>
+
+<p>
+apache-session [ start | stop | reload ]
+</p>
+
+<h1>
+說明
+</h1>
+<p>
+apache-session 是一個命令工具，用以在使用者登入期間，提供屬於此期間的 Apache http 服務。必須在使用者登入後，以一般使用者身份執行。在此期間的 Apache http 行程及其調用的 PHP 程式，都將以登入者的身份運行，故可使用一些僅在登入期間可用的資源。例如使用者登入 X 視窗環境，則此期間的 Apache http 行程將可調用影像播放程式等 X 應用程式。
+</p>
+
+<p>
+apache-session 使用的網路埠號與 Apache 系統服務不同，故兩者可並存，不會互相干擾。 apache-session 預設的埠號是 1080 ，預設的文件目錄是 $HOME/Public 。啟用 apache-session 後，可用瀏覽器開啟 http://localhost:1080/ 查看。
+</p>
+
+<h1>
+選項
+</h1>
+
+<ul>
+    <li>
+    start<br/>
+    啟動服務。可將此動作寫在 $HOME/.xsessionrc 、 $HOME/.config/autostart 或 $HOME/.kde/Autostart 。具體內容請參考你的桌面環境的自動啟動程式的設定方式。
+    
+    <li>
+    stop<br/>
+    停止服務。
+
+    <li>
+    reload<br/>
+    重新載入組態內容。
+</ul>
+
+<h1>
+自訂組態
+</h1>
+
+<h2>
+$HOME/.config/apache-envvars
+</h2>
+
+<p>
+在家目錄的 .config 資料夾內，編輯一份名叫 apache-envvars 的文件，可設定下列內容。範例是預設值。
+</p>
+
+<pre>
+export APACHE_LISTEN_PORT="1080"
+export APACHE_LOG_DIR="$HOME/log"
+export APACHE_LOG_LEVEL="error"
+export APACHE_DOC_DIR="$HOME/Public"
+</pre>
+
+<ul>
+    <li>
+    APACHE_LISTEN_PORT 是服務聆聽的網路埠號，預設為 1080 。注意，apache-session 只綁定 127.0.0.1 網路介面。只讓使用者指定網路埠號，不讓其指定網路介面。
+
+    <li>
+    APACHE_LOG_DIR 是 apache-session 服務運行時的儲存各種記錄內容的資料夾。包含 apache2.pid, error.log, access.log 。預設放置在家目錄的 log 資料夾內。
+
+    <li>
+    APACHE_LOG_LEVEL 指定 error.log, access.log 的記錄詳細度。在程式開發階段通常指定 warn 或 notice (很多資訊) ，在產品公開階段通常指定 error 或 crit (幾乎不會有資訊)。
+
+    <li>
+    APACHE_DOC_DIR 是 apache-session 公開瀏覽的文件根目錄。預設是家目錄的 Public 資料夾。使用者可以在目錄下，以 .htaccess 文件設定額外的控管內容。
+
+</ul>
+
+<h2>
+/etc/apache2/session/apache*.conf
+</h2>
+
+<p>
+在 /etc/apache2/session 資料夾中，含有 apache22.conf 和 apache24.conf 兩份組態文件。按名稱分別適用 Apache 2.2 和 Apache 2.4 版。 apache-session 指令會自動判別系統安裝的 Apache httpd 版本。
+</p>
+
+<p>
+apache-session 就是讓 Apache httpd 專門載入這裡的組態文件，在系統的 Apache 服務之外，提供依附於使用者登入期間運作的 Apache 服務。
+</p>
+
+<p>
+基本上，不建議使用者修改此處的內容。
+</p>
+
+</html>
+

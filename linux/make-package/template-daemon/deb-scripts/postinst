@@ -1,0 +1,13 @@
+#!/bin/sh
+DAEMON_NAME=mydaemon
+INITD=/etc/init.d/mydaemon
+
+if [ -x /sbin/insserv ]; then
+  insserv ${DAEMON_NAME}
+else
+  update-rc.d ${DAEMON_NAME} defaults 90
+fi
+
+$INITD restart
+
+exit 0
