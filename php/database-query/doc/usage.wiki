@@ -1,0 +1,246 @@
+#summary 快速使用說明
+#labels Featured,Phase-Implementation
+<wiki:toc max_depth="1" />
+
+= 初始動作 =
+
+首先，建立一個 PDO 實體。Schema-Database 只支援 PDO 。
+
+{{{
+$db = new PDO($dsn);
+}}}
+
+其次，建立一個 [intro_schema Schema] 實體。你可以用 array 定義內容。
+
+{{{
+$schema = new Schema(array(
+    'Company' => array(
+        '@primaryKey' => 'id',
+        '@unique' => 'name',
+        'id' => array(
+            'type' => 'int',
+            'default' => true
+        ),
+        'name' => array(
+            'type' => 'string',
+            'default' => false,
+        ),
+        'email' => array(
+            'type' => 'string'
+        ),
+        'password' => array(
+            'type' => 'string',
+            'default' => false,
+            'encoder' => 'Php::md5'
+        )
+    )
+));
+}}}
+
+你也可以用 JSON 文件定義。
+
+{{{
+$schema = new Schema('Schema_Test.js');
+}}}
+
+
+= Query =
+
+== require ==
+{{{
+require_once 'database_query.php';
+}}}
+
+使用你已經準備好的 `$db` 和 `$schema` 建立新的 Database_Query 實體。
+它提供了類似 Active Record 或 LINQ 的查詢語法。
+
+{{{
+$query = new Database_Query( array(
+    'db' => $db,
+    'schema' => $schema
+));
+}}}
+
+=== 範例 ===
+{{{
+$results = $query->from('Test')->select();
+
+$results = $query->from('Test')->select('id');
+
+$query->from('Test')
+      ->where(array('id' => 10))
+      ->select(array('id', 'name'));
+
+$query->from('Test')
+      ->where(array('password' => '123')) //it will encode '123' by your schema.
+      ->select();
+
+$total_qty_expr = $query->prepare('SUM(:qty)', array('qty' => ''));
+
+$query->from('Order')
+      ->where(array('qty >' => 30))
+      ->group_by('id')
+      ->order_by('total_qty')
+      ->select(array('id', 'total_qty' => $total_qty_expr));
+}}}
+
+更多使用範例請參考 [http://code.google.com/p/schema-database/source/browse/trunk/test/DatabaseQueryTest.php DatabaseQueryTest.php]。
+
+= Row =
+
+== require ==
+
+{{{
+require_once 'database_row.php';
+}}}
+
+使用你已經準備好的 `$db` 和 `$schema` 建立新的 Database_Row 實體。
+它提供了基本的 ORM 能力。
+
+{{{
+$row = new Database_Row( array(
+    'db' => $db,
+    'schema' => $schema,
+    'table' => $tableName
+));
+}}}
+
+=== 範例 ===
+{{{
+$data = array(
+    'id'  => 1,
+    'name'    => 'admin',
+    'password' => '123',
+    'permission'    => 0,
+    'email'     => 'admin@abc.com'
+);
+
+$row->assign($data);
+
+$row->insert();
+
+//You can use array index to access field.
+echo $row['name'];
+
+//Also you can use object property to access field.
+echo $row->permission;
+
+$row->email = 'rock@abc.com';
+
+$row->update();
+
+$id = $row->id;
+
+$result = $row->get($id);
+
+$this->assertEquals('rock@abc.com', $result->name);
+
+$row->delete();
+
+$result = $row->get($id);
+
+$this->assertTrue( empty($result) );
+}}}
+
+它也會自動採用你定義在 schema 中的樣式(pattern)檢查資料內容。
+
+{{{
+
+$schema = new Schema( array(
+    'Table1' => array(
+        '_primaryKey' => 'id',
+        
+        'id' => array(
+            'pattern' => 'ctype_digit'  // invoke ctype_digit()
+        ),
+        'name' => array(
+            'pattern' => '\\w{1,10}'    // REGEX: /^\w{1,10}$/
+        ),
+        'email' => array(
+            'pattern' => 'pattern_email'    //predefined pattern
+        )
+    )
+));
+
+$data->id = 100; //valid
+$data->name = 'abcdefghijklmnopeql'; //too long
+$data->email = 'abc'; //invalid email address.
+
+$valid = $row->assign($data, $invalids);
+if ( !$valid ) {
+    echo 'Following fileds are invalid: ', implode(', ', $invalids);
+}
+
+}}}
+
+更多使用範例請參考 [http://code.google.com/p/schema-database/source/browse/trunk/test/DatabaseRowTest.php DatabaseRowTest.php]。
+
+
+= Query and Row =
+
+我將資料庫的操作動作劃分成兩個類別，一個主要負責查詢，另一個負責新增、更新與刪除。
+
+在應用系統中，大約有八成以上的資料庫操作動作是查詢。
+*Database_Query* 針對這種情形提供了簡便的查詢語法，產生查詢句並執行之，取代我們自行組織 SQL 查詢句。
+*Database_Query* 的查詢結果集只是一組含有記錄個體的普通陣列。我們讀取這些結果集的方法，與使用其他 Database library 時的方式並無差異。
+
+當我們需要更新或刪除查詢結果集的其中一筆記錄時，這時就輪到 *Database_Row* 發揮功用。
+我們取出這筆記錄包入 *Database_Row* ，利用它的方法異動此筆記錄。
+
+{{{
+$row->assign($admin);
+
+$results = $query
+            ->from($table)
+            ->where(array('name' => 'rock'))
+            ->select();
+
+//echo $this->query->getLastQueryString(), "\n";
+
+//If your $row had assigned, your could invoke factory() to new
+//another instance of Row assigned with other data.
+
+$rock = $row->factory( $results[0] );
+
+$rock['email'] = 'new_rock@abc.com';
+
+$rock->update();
+
+}}}
+
+在小型應用系統中，我們幾乎不會批次異動整個資料結果集，*Database_Row* 只提供恰到好處的處理功能。
+
+對於來自 Java 世界的朋友們，如果你習慣了重度的 ORM 操作，你也可以結合 Query 與 Row 來做事。
+
+{{{
+class PowerQuery extends Database_Query {
+    public function select($args, $decode) {
+        $table = $this->statments['from'];
+        $row = new Database_Row(array(
+            'db' => $this->db,
+            'schema' => $this->schema,
+            'table' => $table
+        ));
+
+        $results = parent::select($args, $decode);
+
+        $rows = array();
+        foreach ($results as $result) {
+            $rows[] = $row->factory($result);
+        }
+        return $rows; //現在回傳的將會是一個 Row object 陣列。
+    }
+}
+
+$results = $query->from($table)->select();
+
+$results[0]->update();
+$results[1]->update();
+...
+
+}}}
+
+不幸的是，這會造成低落的效能。在實務上，我們查詢出來的資料項，超過九成以上不會被異動，我們只使用了它們的取值功能(getter)。就結果而言，我們只是把包覆資料的 model object 當成一個比較高級的結構(struct)或雜湊表(hash table, assocation array)。在 PHP 的世界中，我們還是保持簡單的作法吧。
+
+
+更多使用範例請參考 [http://code.google.com/p/schema-database/source/browse/trunk/test/DatabaseCompanyTest.php DatabaseCompanyTest.php]。

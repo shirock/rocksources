@@ -1,0 +1,113 @@
+#summary Schema 簡介
+#labels Featured,Phase-Design
+<wiki:toc/>
+
+= Schema =
+
+Schema 類別採用關聯陣列或 JSON 文件組織資料表格與欄位的 schema 。
+其定義格式如下所示 (JSON格式)。
+
+{{{
+
+{
+    "tableName1": {
+        "_attribute1": "...",
+        "@attribute2": "another way to define attribute",
+
+        "fieldName": {
+            "type": "string",
+            "pattern": false,
+            "encoder": "Php::md5",
+            "decoder": "MyClass::decode1|MyClass::decode2|MyClass::decode3",
+            "default": false,
+            "notice": false
+        }
+    }
+}
+
+}}}
+
+Schema 內包含了多個 Schema_Table 。 Schema_Table 負責表格定義。 Schema_Table 再包含了多個 Schema_Table_Column ，它負責欄位定義。
+
+我們可以透過 Schema 的方法 `table()` 或屬性提值方法取得 Schema 內指定的表格定義內容。
+
+{{{
+$schema = new Schema('schema.js');
+
+$table_order_schema = $schema->table('order');
+//or
+$table_order_schema = $schema->order;
+}}}
+
+= !Schema_Table =
+
+表格定義的內容分成兩類，一種稱為 *attribute* ，另一種就是資料欄位(column)。
+
+*attribute* 是表格的特徵。凡是內容定義的鍵值是底線 (`_`) 或 @ 符號開頭者，就是 *attribute*。目前有用的 *attribute* 是:
+
+ * primaryKey - 主鍵欄位名稱。
+ * union - 唯一值欄位名稱。
+
+我們可以透過 Schema_Table 的方法 `attribute()` 或以屬性提值方法去取得底線(`_`) 開頭的屬性，都會得到指定的 *attribute* 內容。
+
+{{{
+$primaryKey = $table->attribute('primaryKey');
+$primaryKey = $table->_primaryKey;
+}}}
+
+資料欄位則是 Schema_Table_Column 的集合。
+我們可以透過 `columnList()` 方法取得欄位名稱清單。透過 `column()` 或屬性提值方法取得欄位定義內容。
+
+{{{
+$column_list = $table->columnList();
+echo implode(', ', $column_list);
+foreach ($column_list as $column_name) {
+    echo "Type of $column_name is ", $table->$column_name->type, "\n";
+}
+
+echo $table->column('name')->type, "\n";
+}}}
+
+
+= !Schema_Table_Column =
+
+Schema_Table_Column 目前有 6 種屬性設定:
+
+ * type: 資料型態。
+ * pattern: 資料形式、樣式。
+ * encoder: 編碼器。
+ * decoder: 解碼器。
+ * default: 是有有預設值，預設值為何？
+ * notice: 提示訊息。用於 client 端說明欄位的輸入格式或提示使用者輸入錯誤的原因。
+
+== type ==
+
+int, string (for SQL data type: varchar, char...), bit, timestamp, numeric, float.
+
+== pattern ==
+
+ # REGEX pattern - 全字串匹配，不需要加 / 括起.
+ # `ctype_?` functions - 例如 `ctype_digit`.
+ # `is_?` functions - 例如 `is_int`, `is_string`.
+ # 自定方法 - 例如 `Account::validUserId`. 如果範圍名稱是 `Php`，表示呼叫 PHP 的函數，而不是呼叫類別方法。
+ # 預先定義的樣式 - 例如 'pattern_email', 'pattern_ip', 'pattern_domain_name', 'pattern_timestamp'.
+
+== encoder and decoder ==
+
+encoder 指示此欄位值存進資料庫前的編碼動作。 decoder 指示此欄位值自資料庫取出時的解碼動作。例如: 'IpCast::toInt|Php::long2ip' ，將會呼叫 `long2ip(IpCast::toInt($data))`.
+
+如果範圍名稱是 `Php`，表示呼叫 PHP 的函數，而不是呼叫類別方法。
+
+可以用 '|' 符號串接多個編碼動作。
+
+我們自行可以調用方法 `decode()` 或 `encode()` 進行資料編碼動作。但大多數時候， Database_Query 與 Database_Row 會處理這些事。
+
+{{{
+$encodedPassword = $table->password->encode('123');
+}}}
+
+== default ==
+
+ # *false* - 沒有預設值，這個欄位一定要填。
+ # *true* - 可以省略此欄位，省略此欄位時，會由資料庫產生預設值。
+ # 其他 - 指定的預設值。

@@ -1,0 +1,278 @@
+#summary Database Query 簡介
+#labels Featured,Phase-Design,Phase-Implementation
+<wiki:toc/>
+
+= Database Query class =
+
+Database Query 提供了類似 Active Record 或 LINQ 的查詢語法。
+
+它產生的 SQL 語法遵循 ANSI SQL Standard，並不考慮特定 SQL 產品的方言。
+如果你所選用的 SQL 產品對 ANSI SQL 支援度不佳，或者沒有啟用 ANSI 語法支援，那麼它產生的 SQL 查詢句可能不會被你選用的 SQL 產品接受。
+
+*MySQL 的使用者特別要注意這點，因為 MySQL 預設不啟用 ANSI 語法模式。MySQL 使用者請用下列方式啟用 ANSI 語法支援。*
+
+ SET GLOBAL sql_mode = 'ANSI';
+
+
+== Statment prepare ==
+
+Database Query 與其他相似產品一樣，都提供了一套查詢句的調製方法，可以替使用者產生安全合法的 SQL 查詢句，避免 SQL inject 漏洞。Database Query 所提供的調製方法為:
+
+{{{
+@param string $str
+@param array $parameters
+@return string prepared string.
+
+public function prepare($s, $parameters);
+}}}
+
+!Database_Query::prepare 使用 `:` 標記名稱參數；使用 `?` 標記資料值參數。
+
+prepare 查詢句範例::
+
+{{{
+SELECT :id FROM :table WHERE :age >= ?
+}}}
+
+parameters 範例::
+
+{{{
+array(
+    '名稱1' => 資料值,
+    '名稱2' => '',
+    .
+    .
+    .
+    '名稱n' => 資料值,
+);
+}}}
+
+=== 與 PDO prepare 的差異 ===
+
+!Database_Query::prepare 並不是使用 PDO::prepare 調製查詢句。雖然它一樣用 `:` 和 `?` 兩種標記，但是它們的標記意義與 PDO::prepare 不相同。請特別注意。其差異如下列範例所示。
+
+{{{
+require_once 'database_query.php';
+
+$db = new PDO('sqlite::memory:');
+$query = new Database_Query(array('db' => $db));
+
+$parameters = array(
+    'age'   => 10
+    );
+
+// My prepare syntax example:
+$my_st = "SELECT :id, :name, :age FROM :user WHERE :age >= ?;";
+$sql_statment = $query->prepare($my_st, $parameters);
+
+echo $sql_statment, "\n"; // it will quote field name too.
+
+
+// PDO prepare syntax example:
+$pdo_st = "SELECT id, name, age FROM user WHERE age >= :age;";
+
+$pdo_statment = $db->prepare($pdo_st, $parameters);
+
+}}}
+
+主要差異內容整理於下:
+
+ * PDO prepare 用 `:` 或 `?` 標記要資料值的替換位置。而 Database Query prepare 則一律用 `?` 作為資料值的參數標記， `:` 則是作為名稱參數的標記。
+ * PDO prepare 不處理名稱參數。Database Query prepare 則會括起名稱參數，所以可以支援如中文的表格與欄位名稱或是大小寫不同的表格與欄位名稱。
+
+
+=== 名稱參數 ===
+
+根據 ANSI SQL 規範，資料庫名稱、表格名稱、欄位名稱等各式名稱，都採用同樣的表示規則。prepare 將這些項目都稱為「名稱參數」，在查詢句中使用 `:` 接名稱。
+
+對於名稱參數，prepare 根據 ANSI SQL 規範，運用雙引號（`"`）處理。內部使用 `Database_Query::quoteName()` 負責此事。`Database_Helper::quoteName()`是相同功能的靜態方法。
+
+@see http://blog.roodo.com/rocksaying/archives/5935773.html
+
+範例::
+
+{{{
+SELECT :id, :name FROM :table WHERE :age >= 18;
+}}}
+
+=== 資料值參數 ===
+
+對於要從外部代換進查詢敘述的實際值， prepare 稱為資料值參數。在查詢敘述中使用一個 `?` 標記。 prepare 會自動根據 `?` 標記的算符左值取得名稱，再依名稱取值。取出的資料值根據 ANSI SQL 規範套用單引號(`'`)處理。內部調用 `PDO::quote()` 負責此事。
+
+只有跟在比較算符後的 `?` 才會被替換，當無法替換時，會擲出例外。
+
+接受以下比較算符: `>  <  =  <>  !=  >=  <=` 。ANSI SQL 的 not equal 算符是 `<>` ，不是 `!=` 。但是 prepare 遇到 `!=` 算符時會替使用者修正。
+
+
+=== prepare 範例 ===
+
+{{{
+$s = "where :a = ? and :b =?";
+$args = array('a' => 1, 'b' => "I'm rock")
+}}}
+
+prepared::
+
+ where "a" = '1' and "b" ='I''m rock'
+ 
+{{{
+$s = ':a > ? or :a = :b and :b !=? and :c <> abs(:d) or :dd or :d';
+$args = array('a' => 1, 'b' => "I'm rock");
+}}}
+
+prepared::
+
+ "a" > '1' or "a" = "b" and "b" <>'I''m rock' and "c" <> abs("d")  "dd" or "d"
+
+=== 更好的使用方式 ===
+
+通常你並不需要使用 prepare()，因為 Database_Query 提供更好的表達方法。
+它提供了類似 Active Record / LINQ 的表達方法，所以你不需要使用 prepare() 處理你自己撰寫 SQL 敘述。例如:
+{{{
+$db = new PDO($dsn);
+$query = new Database_Query(array('db'=>$db));
+
+$results = $query->from('profile')
+             ->where(array('id' => 'rock'))
+             ->select('id');
+}}}
+
+當你的查詢敘述超過 Database_Query 的 Active Record 支援範圍時，你才需要自己撰寫 SQL 敘述，再調用 prepare() 修飾內容，最後要調製後的句子交給你的資料庫引擎的查詢方法使用。
+
+例如，使用 Database Query 調製 SQL 敘述，然後交給 PDO query 方法查詢。
+{{{
+$db = new PDO($dsn);
+$query = new Database_Query(array('db'=>$db));
+
+$sql = $query->prepare('select * from profile where :id = ?', array('id' => 'rock'));
+
+$pdo_stat = $db->query($sql);
+}}}
+
+== Active Record / LINQ 表達方法 == 
+
+ * from($table) - string $table 表格名稱。
+ * where($conditions), or_where($conditions), like($conditions), or_like($conditions)
+ * group_by($fields) - string $field, or array $fields.
+ * order_by($fields) - string $field, or array $fields.
+ * select($fields, ..., $decode, $fetch_style) - string $field, or array $fields. 如果 $field 省略，表示選取所有欄位。 $decode 指示查詢結果集的內容是否要根據 Schema 調用 decoder 解碼；預設為 true 。
+
+Query 表達方法基本上以 `from` 起始，串接 `where`, `group`, `order` 句子，最後以 `select` 執行查詢動作，回傳結果集。Query 只有把 `select` 放在句子最後這一點，跟我們習慣的 SQL 敘述不一樣。
+
+=== select() ===
+
+string $field, or array $fields. 如果 $field 省略，表示選取所有欄位。可以連續多個字串參數表示要取出的欄位，或是用一個陣列參數容納。如下兩種表達方式，其意義相等。
+
+{{{
+$query->select('id', 'title', 'qty');
+
+$query->select(array('id', 'title', 'qty'));
+}}}
+
+bool $decode 指示查詢結果集的內容是否要根據 Schema 調用 decoder 解碼；預設為 true 。
+
+int $fetch_style - PDO::FETCH_OBJ (default), PDO::FETCH_ASSOC, PDO::FETCH_NUM, PDO::FETCH_CLASS.
+
+最後兩個 $decode 與  $fetch_style 的順序可以對調。只要它們在最後兩個位置即可。
+
+以下寫法都可用。
+
+{{{
+$query->select('id', 'title', 'qty', false);
+
+$query->select(array('id', 'title', 'qty'), PDO::FETCH_CLASS);
+
+$query->select('id', 'title', 'qty', true, PDO::FETCH_CLASS);
+
+$query->select('id', 'title', 'qty', PDO::FETCH_CLASS, true);
+
+$query->select(array('id', 'title', 'qty'), true, PDO::FETCH_CLASS);
+
+$query->select(array('id', 'title', 'qty'), PDO::FETCH_CLASS, true);
+
+}}}
+
+=== 一般範例 ===
+
+{{{
+$results = $query->from('Test')->select();
+
+$results = $query->from('Test')->select('id');
+
+$query->from('Test')
+      ->where(array('id' => 10))
+      ->select('id', 'name');
+
+$query->from('Test')
+      ->where(array('password' => '123')) //it will encode '123' by your schema.
+      ->select();
+}}}
+
+=== SELECT 欄位使用 SQL function ===
+
+SQL 提供了許多通用的函數處理欄位值，例如 `abs()`, `sum()`, `count()`。要使用這些函數，請先利用 prepare 調製出運算式。再將運算式指派為欄位的式子。
+
+{{{
+$total_qty_expr = $query->prepare('SUM(:qty)', array('qty' => ''));
+
+$query->from('Order')
+      ->where(array('qty >' => 30))
+      ->group_by('id')
+      ->order_by('total_qty')
+      ->select(array('id', 'total_qty' => $total_qty_expr));
+}}}
+
+如果你的名稱參數並不需要修飾，你也可以略過這個動作，直接寫出。如下所示。但此時你必須自己確認名稱的合法性與安全性。
+
+{{{
+$query->from('Order')
+      ->where(array('qty >' => 30))
+      ->group_by('id')
+      ->order_by('total_qty')
+      ->select(array('id', 'total_qty' => 'SUM(qty)'));
+}}}
+
+NOTICE: 嗯，我自己也覺得這個寫法還有改進空間。或許 select 中的名稱參數應該要自動修飾。
+
+=== $conditions ===
+
+$conditions 支援三種表達方式。
+
+ # `欄位` => 比較值
+ # `欄位 >|<|!=|<=|>=` => 比較值
+ # prepare_string => prepare_parameters
+
+範例::
+{{{
+array(
+    'id' => 1,
+    'id >' => 1,
+    'id !=' => 1,
+    ':id = ?' => array('id' => 1)
+)
+}}}
+
+當 $conditions 的欄位鍵不包含比較算符時，預設為 `=` 。
+當你需要進行大於、小於、不等於這些比較時，則用第二種表達方式，在欄位鍵的欄位名稱後加上 `>`, `<`, 或 `<>` 算符。
+
+=== 使用 prepare 標記作為 $conditions ===
+
+你可以直接在 $conditions 中使用 prepare 標記定義較複雜的條件式，而且可以和一般的 $conditions 參數併用。
+
+where方法會保留 prepare 標記條件式中的 AND, OR 內容。
+
+{{{
+$query->from('Test')
+      ->like(array(
+          'email' => 'abc.com',
+          ':id != ? OR :name <> ?' => array('id' => 10, 'name' => 'rock')))
+      ->select(array('id', 'name'));
+}}}
+
+上述查詢，實際上會產生下列的 SQL 敘述，並回傳此敘述的查詢結果。
+
+{{{
+SELECT "id", "name" FROM "Test" WHERE "email" LIKE '%abc.com%' AND "id" <> '10' OR "name" <> 'rock';
+}}}
+
+更多使用範例請參考 [http://code.google.com/p/schema-database/source/browse/trunk/test/DatabaseQueryTest.php DatabaseQueryTest.php]。

@@ -1,0 +1,77 @@
+#summary Database Row 使用案例
+<wiki:toc/>
+
+= 新增記錄 =
+
+{{{
+$db = new PDO($dsn);
+$schema = new Schema($schema_filepath);
+
+$parameters = array(
+    'db'        => $db;
+    'schema'    => $schema;
+    'table'     => 'books';
+);
+
+$book = new Database_Row($parameters);
+
+$book->isbn     = '12345678';
+$book->title    = 'Database Row Examples';
+$book->author   = 'rock';
+
+$book->insert();
+}}}
+
+= 讀取指定的一筆記錄 =
+
+設此為一個 Web 應用項目。伺服端的控制器自資料庫讀取 ISBN 為 12345678 的書籍資料後，交給呈現器(viewer)顯示使用者看到的頁面。
+
+*Controler*
+{{{
+$book = new Database_Row($parameters);
+
+$book->get('12345678');  // isbn is the primary key.
+
+require_once 'book_detail.html.tpl';
+}}}
+
+*Viewer*
+{{{
+<html>
+    <body>
+        <h1><?=$book->title?></h1>
+        <p>Author: <?=$book->author?></p>
+    </body>
+</html>
+}}}
+
+= 以使用者在表單中編輯的內容更新記錄 =
+
+設此為一個 Web 應用項目。使用者在資料編輯的表單中，修改了書籍資料。
+表單送回伺服端後，寫回資料庫。
+
+{{{
+$book = new Database_Row($parameters);
+
+$rc = $book->assign($_POST['book'], $invalid_fields);
+
+if ($rc) {
+    $book->update();
+    
+    echo 'Update ok.';
+}
+else {
+    $view->invalid = $invalid_fields;
+
+    echo 'Failed. The following value of fields are invalid: <br/>';
+    foreach ($invalid_fields as $name) {
+        echo $name, ': ', $book->schema()->$name->notice, '<br/>';
+    }
+}
+
+}}}
+
+以此為例，更新動作做了下列工作:
+
+ # assign() 時，將會根據 Schema 的內容，檢查來自表單的輸入資料是否合適(格式正確)。若輸入資料合適，則 assign() 回傳 true；否則回傳 false。
+ # update() 時，根據主鍵欄位 isbn 之值，將其他欄位的內容寫回資料庫的指定記錄中。

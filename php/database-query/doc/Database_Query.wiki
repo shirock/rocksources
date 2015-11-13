@@ -1,0 +1,1 @@
+請閱讀 [http://code.google.com/p/schema-database/wiki/intro_database_query Database Query 簡介] 。

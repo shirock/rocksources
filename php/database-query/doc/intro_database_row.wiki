@@ -1,0 +1,180 @@
+#summary Database Row 簡介
+#labels Featured,Phase-Design,Phase-Implementation
+<wiki:toc/>
+
+= Database Row class =
+
+它提供了簡便的 ORM 能力。它會依照 Schema 會設置的內容，自動處理 Create/Read/Update/Delete 所需的 SQL 指令動作。我們僅需要調用 insert()/get()/update()/delete() 等方法即可。
+
+一個 !Database_Row 實體，實際上就是一個新的映射體，你可以透過屬性存取運算符或陣列索引運算符，讀寫記錄欄位的內容。然後再進行 CRUD 的四個動作。
+
+{{{
+$row = new Database_Row($parameters);
+
+$row->name = 'rock';    //以屬性存取運算符設定 name 欄位
+$row->password = '321'; //以屬性存取運算符設定 password 欄位
+$row['email'] = 'rock@abc.com'; //以陣列索引運算符設定 email 欄位
+
+$row->update();
+//如果 password schema 設置了 encoder ， update()在存入資料庫表格時，會
+//自動編碼。
+
+}}}
+
+除此之外，它還提供了多種繫結個體與資料庫關連的方式。你透過 !Database_Row::get() 自表格中讀取資料；或是透過 !Database_Query::select() 撈出記錄後，再以 !Database_Row::factory() 繫結起來。接著將會說明這些方法的差異與使用場合。
+
+== assign() ==
+
+當資料源自使用者輸入者時，我們通常使用 assign() 將資料個體指派給一個 !Database_Row 實體。
+
+assign() 預期的資料來源是由使用者輸入的(未經編碼)，所以會對資料欄位進行格式檢查。同時影嚮 insert() 與 update() 於儲存具有編碼動作的欄位時，會對其執行編碼動作。
+
+{{{
+
+$params->db = $db;
+$params->schema = new Schema('Schema_TestSchema.js');
+$params->table = $table;
+
+$row = new Database_Row($params);
+
+$data = $_POST;
+
+if (false == $row->assign($data, $invalidFields)) {
+    echo 'These fields's value are invalid: ', implode(',', $invalidFields);
+    exit;
+}
+$row->insert();
+
+$row->email = 'abc@com';
+
+$row->update();
+
+echo 'New email address is : ', $row['email'];
+
+}}}
+
+
+當表格中具有非對稱編碼動作的欄位時，一般而言，儲存動作應該略過那些欄位。作法有二:
+
+ # query 時，不取出那些欄位。
+ # unchange() 那些欄位。
+
+{{{
+
+$results = $query->select();
+
+$row = new Database_Row($params);
+
+$row->assign( $results[0] ); //WARNING, you should use factory().
+
+$row->email = 'abc@com';
+$row->unchange('password');
+//To avoid encoding an encoded content.
+
+$row->update();
+
+}}}
+
+== factory() ==
+
+當資料源自我們從資料庫中讀取者時，我們應該使用 factory() 產生一個 !Database_Row 實體。透過 !Database_Query::select() 所取出的記錄，屬於此類情境。
+
+factory() 預期的資料來源是自資料庫中讀取的，因此不會檢查資料欄位的格式。同時， update() 時也不會再次執行編碼動作。insert() 通常會失敗(因為已存在)。
+
+{{{
+
+$results = $query->select();
+
+$row_base = new Database_Row($params);
+
+$row = $row_base->factory( $results[0] );
+
+$row->email = 'abc@com';
+//Unlike assign() way, you don't need set 'Unchange' field
+//to avoid encoding an encoded content.
+
+$row->update();
+
+}}}
+
+== get() ==
+
+除了 !Database_Query::select() 方法，我們也可以直接利用 !Database_Row::get() 方法自資料庫表格中讀取指定的記錄內容。其影嚮近似於 factory() 。
+
+下列範例使用 get() 方法讀取指定使用者 rock 的記錄，然後根據使用者在表單內輸入的資料設定新的密碼，最後更新記錄。不同以往的是，你不必再撰寫檢查使用者輸入資料與密碼編碼的程式。當 update() 時，它會自動根據 schema 設置的內容檢查密碼格式與編碼。
+
+{{{
+
+$newPassword = $_POST['new_password'];
+
+$row = new Database_Row($params);
+
+$row->get('rock');
+
+$row->password = $newPassword;
+
+//update() will check the pattern of new passowrd and encode it.
+if ($row->update() == false) {
+    echo 'Update failed. New password may be invalid.';
+}
+
+}}}
+
+
+== insert() and autoincrement id ==
+
+許多主流的 SQL DBMS 皆提供 id 自動增長的資料型態或附加屬性，用以產生記錄的流水號。例如 PostgreSQL 的 serial datatype，MS SQL Server 的 IDENTITY 屬性， SQLite 的 AUTOINCREMENT 屬性等。參考 [http://blog.roodo.com/rocksaying/archives/6223035.html 新增資料時自動產生識別代號的一些方法]。
+
+當你使用這種方法產生記錄的流水號欄位時，你通常需要告訴 !Database_Row 如何取回新增記錄的流水號。!Database_Row::insert() 提供了一個回呼函數的參數，可以讓我們指定取回新增記錄流水號的方法。
+
+insert() 在執行 SQL 的新增動作後，會將本身的參照作為參數，調用回呼參數 {{{$callback(&$this)}}}。在回呼函數內部，我們通常使用 !Database_Query::select() 取出我們剛才新增的記錄內容，然後再將該記錄回傳，讓 insert() 接續完成欄位值的指派動作。或者直接在回呼函數內部指派欄位值。
+
+{{{
+class Account extends Database_Row {
+    .
+    .
+    .
+    
+    public function assignIdBack(&$row) {
+        $schema = $row->schema();
+
+        $results = $this->query
+                ->from($this->table)
+                ->where(array('name' => $row->name))
+                ->select();
+
+        if ($results) {
+            $row->id = $results[0]->id;
+        }
+    }
+}
+
+
+$data = $_POST;
+
+$account->assign($data);
+$account->insert( array($account, 'assignIdBack') );
+
+}}}
+
+== update() ==
+
+根據主鍵更新記錄。
+
+{{{
+$row->update();
+}}}
+
+== delete() ==
+
+根據主鍵刪除記錄。
+
+{{{
+$row->delete();
+}}}
+
+= 範例 =
+
+[http://code.google.com/p/schema-database/wiki/Database_Row_Examples Database_Row 使用案例] 列有一些情境的使用案例。
+
+更多使用範例請參考 [http://code.google.com/p/schema-database/source/browse/trunk/test/DatabaseRowTest.php DatabaseRowTest.php] 。[http://code.google.com/p/schema-database/source/browse/trunk/test/DatabaseCompanyTest.php DatabaseCompanyTest.php] 則是專門處理 insert() and autoincrement id 項目的測試案例。
