@@ -1,0 +1,110 @@
+#labels Featured,Phase-Design
+= CommonGateway =
+
+CommonGateway (web/index.php) 是一個簡化的 MVC 控制器。按照 MVC 的設計模式，它將一個 Web 應用服務分成三個部份。資料模型(Model)、流程控制項(Controller)與視圖(View)。Model 主要就是透過 schema-database 或其他資料庫函數完成。因此程序人員需要實作的內容就是控制項與視圖。CommonGateway 為程序人員完成下列工作:
+
+  * CommonGateway 會根據 URL 路徑(PATH_INFO) 選擇 Web 應用服務的控制項。正是這「依路徑選擇目標」的行為，而它又是 Common Gateway Interface 的實作項目，故我將之命令為 Common Gateway 。<br/>
+  * 它會將客戶端送出的文件資料，預先處理成關聯式陣列結構。除了傳統的 Query string 與 Form data 外，它也能處理 HTTP PUT Method 會送出的資料。它也支援 JSON 型態的資料。<br/>
+  * 它會根據 RESTful 的原則，調用對應的控制項方法。<br/>
+  * 它會根據控制項方法的回傳結果與客戶端期望的文件回應型態，調用對應的視圖樣板。<br/>
+  * 它會儘量透過外部注入的方式，將其他資源放入控制項 (即 IoC 模式)，減少對原有程式碼的侵入性。<br/>
+
+它純粹是一個 MVC 控制器，不是框架。它不以整合性為目標，不會整合 Log, Config, Database 等等的功能。它是面向 PHP 熟練者的工具，如果你原本就有偏好的工具庫，你可以繼續使用，不必為了使用 Common Gateway 而另外學習一套方法。
+
+== 程式文件目錄結構 ==
+
+模仿 Ruby on Rails 規劃文件的目錄結構。
+
+  * 控制器: controllers. 每一個控制器應設計為一個類別。類別名稱即控制器名稱。<br/>
+  * 視圖: views. 每一個服務分配一個同名的目錄，再依動作名稱規劃視圖樣板的文件名稱。<br/>
+  * 視圖輔助器: helps. 每一個服務對應一個視圖輔助器，其中定義的函數或變數，都將成為視圖內的區域性資源。<br/>
+
+{{{
+- index.php
+ - controllers/
+  - {app_name}.php
+ - views/
+  - {app_name}/{action}.p{view_format}
+ - helpers/
+  - _global.php
+  - {app_name}.php
+}}}
+
+例如:
+
+{{{
+- index.php
+ - controllers/
+  - book.php
+ - views/
+  - book/index.phtml
+  - book/index.pxml
+  - book/get.phtml
+  - book/get.pxml
+ - helpers/
+  - _global.php
+  - book.php
+}}}
+
+== 路徑選擇策略 ==
+
+index.php 是 CommonGateway 本身。它的應用服務定址方式採用 RESTful 模式，即以 URL 路徑表示服務內容。例如有一個叫 book 的書籍服務，它的 URL 應為 http://your.host/index.php/book 。它的路徑規則是:
+
+{{{
+ index.php/{app_name}/{id or action_name}/{option_segments/...}
+}}}
+
+index.php 之後的路徑內容，會被拆成小節(segments)。第一小節的 app_name 視為控制項名稱。第二小節則為資源識別字或是動作識別字。接下來的其他小節都視為要傳給動作的參數清單。
+
+至於控制項的動作(action)，則是依循下列兩個原則選用方法:
+
+一、首先根據 RESTful 模式，以 `$_SERVER['REQUEST_METHOD']` 欄位為選用方法的目標，找尋控制項內是否有實作同名的方法。例如 `$_SERVER['REQUEST_METHOD']` 之值為 GET 時，CommonGateway 就會嘗試調用控制項的 get() - 方法名稱為小寫。`$_SERVER['REQUEST_METHOD']` 之值為 DELETE 時，CommonGateway 就會嘗試調用控制項的 delete()。
+
+注意，當 `$_SERVER['REQUEST_METHOD']` 為 GET ，但路徑沒有第二小節時，它會調用控制項的 index() 。
+
+二、如果第一個原則找不到相符的控制項方法，而且路徑還有第二段名稱時，CommonGateway 會將第二段名稱視為動作識別字，嘗試調用控制項中同名的方法。例如 URL 為 index.php/book/info ，則會調用 book 的 info()。
+
+=== 名稱慣例 ===
+
+CommonGateway 首先根據 URL 的服務名稱搜尋控制器的程式碼文件名稱。再根據找到的程式碼文件名稱決定控制器的類別名稱以及服務的應用名稱(app_name)。基本上，URL 的服務名稱全為小寫，若有多字組成時，以底線 `_` 分隔。控制器的類別名稱，首字母大寫；程式碼文件名稱應同 URL 的服務名稱。
+
+CommonGateway 結合了一些常見的名稱慣例，它的名稱可能組合與優先順序如下:
+
+  # 第一例: URL 的服務名稱為 `book` 。控制器類別名稱為 `Book`，各文件名稱組合的採用順序如下:
+    # `controllers/book.php, views/book/, helpers/book.php`.
+    # `controllers/Book.php, views/Book/, helpers/Book.php`.<br/>
+  # 第二例: URL 的服務名稱為 `Book` 。控制器類別名稱為 `Book`，各文件名稱組合的採用順序如下:
+    # `controllers/Book.php, views/Book/, helpers/Book.php`.
+    # `controllers/book.php, views/book/, helpers/book.php`.<br/>
+  # 第三例: URL 的服務名稱為 `book_profile` 。控制器類別名稱為 `Book_Profile`，各文件名稱組合的採用順序如下:
+    # `controllers/book_profile.php, views/book_profile/, helpers/book_profile.php`.
+    # `controllers/Book_Profile.php, views/Book_Profile/, helpers/Book_Profile.php`.
+    # `controllers/BookProfile.php, views/BookProfile/, helpers/BookProfile.php`.<br/>
+  # 第四例: URL 的服務名稱為 `Book_Profile` 。控制器類別名稱為 `Book_Profile`，各文件名稱組合的採用順序如下:
+    # `controllers/Book_Profile.php, views/Book_Profile/, helpers/Book_Profile.php`.
+    # `controllers/BookProfile.php, views/BookProfile/, helpers/BookProfile.php`.<br/>
+  # 第五例: URL 的服務名稱為 `bookProfile` 。控制器類別名稱為 `BookProfile`，各文件名稱組合的採用順序如下:
+    # `controllers/bookProfile.php, views/bookProfile/, helpers/bookProfile.php`.
+    # `controllers/BookProfile.php, views/BookProfile/, helpers/BookProfile.php`.<br/>
+
+Notice: PHP 不會區分類別名稱的大小寫，所以 new Book(); 與 new book(); 的結果一樣。故服務名稱的大小寫不會影響 CommonGateway 載入控制器類別的結果。
+
+== 視圖調用策略 ==
+
+控制項動作的回傳值，決定視圖的處理工作。
+
+CommonGateway 會自動根據服務名稱與 `$_SERVER['HTTP_ACCEPT']` 內容，載入對應的視圖。
+視圖的副檔名按 Ruby on Rails 型式，開頭為 p ，後接文件型態名稱。
+例如 HTML 文件的視圖，副檔名為 phtml (這正是 PHP 最早期使用的副檔名)；
+XML 文件的視為，副檔名為 pxml。
+比較特別的是 JSON 文件的視圖，其副檔名為 pjs ，不是 pjson 。
+
+CommonGateway 會根據控制項回傳資料的型態，決定傳給視圖的資料來源(model)內容為何。
+
+回傳值處理規則如後述。
+
+  # false : 視同控制項自行處理回應工作， CommonGateway 不會繼續載入視圖。<br/>遇到 false 以外的回傳值，CommonGateway 都會載入視圖。<br/>
+  # null (或無回傳值) : 大部份控制項的動作沒有函數回傳值，故這是預設行為。<br/>此時會將控制項的公開屬性當作資料來源(model)，將控制項的公開屬性內容展開成視圖活動範圍內的區域變數。例如控制項有公開屬性 title ，CommonGateway 會將此屬性指派為視圖的區域變數 `$title` 。<br/>
+  # true : 同回傳 null 的情形。<br/>
+  # array : CommonGateway 會將回傳的陣列視為資料集合，將陣列內容展開成為視圖內的區域變數。<br/>注意，若陣列為數字索引陣列，則展開後的區域變數名稱之字首為 `data_` 。例如第 0 個陣列元素展開後的區域變數名稱將會是 `$data_0` ，餘類推。<br/>
+  # object : CommonGateway 會將回傳的個體視為資料來源，直接指派為視圖內的區域變數 `$model`。<br/>此時在視圖內將可以調用該個體的方法。這可以取代視圖輔助器(helper)。<br/>
