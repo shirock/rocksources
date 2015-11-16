@@ -1,0 +1,52 @@
+#!/bin/sh
+
+REQUIREDS="libv4l-dev libglib2.0-dev libgtk2.0-dev libsdl1.2-dev libavcodec-dev libpng12-dev python python-gobject python-dbus x11-utils"
+echo "check required packages: $REQUIREDS"
+
+for REQUIRED in $REQUIREDS ; do
+    echo -n "checking required package $REQUIRED ... "
+    dpkg -l $REQUIRED | grep ^ii > /dev/null
+    if [ $? -ne 0 ]; then
+        echo "[no]"
+        echo "Please install required packages."
+        exit 1
+    fi
+    echo "[yes]"
+done
+
+
+echo -n "checking machine hardware ... "
+MACHINE=`uname -m`
+if [ "_$MACHINE" = "_x86_64" ]; then
+    ARCHITECTURE=amd64
+else
+    ARCHITECTURE=i386
+fi
+echo "[$ARCHITECTURE]"
+
+
+# Write variables to files.
+# WRITEFILES="Makefile"
+# for WRITEFILE in $WRITEFILES ; do
+#     echo -n "writting $WRITEFILE ... "
+#     cat ${WRITEFILE}.in \
+#         | sed "s,@PKGNAME@,$PKGNAME,g" \
+#         | sed "s,@ARCHITECTURE@,$ARCHITECTURE,g" \
+#         | sed "s,@MACHINE@,$MACHINE,g" \
+#         | sed "s,@PREFIX@,$PREFIX,g" \
+#         > ${WRITEFILE}
+#     if [ $? -ne 0 ]; then
+#         echo "[no]"
+#         echo "Write ${WRITEFILE} failure."
+#         exit 1
+#     else
+#         echo "[yes]"
+#     fi
+# done
+
+echo
+echo "Configure ok."
+echo "Now you can run 'make' to build this software."
+echo
+
+exit 0

@@ -1,0 +1,55 @@
+GTK UVC VIEWER (guvcview)
+*************************
+
+Basic Configuration
+===================
+
+*Data Files:
+------------
+(language files; image files; gnome menu entry)
+
+guvcview data files are stored by default to /usr/local/share
+setting a different prefix (--prefix=BASEDIR) during configuration
+will change the installation path to BASEDIR/share.
+
+Built files, src/guvcview and pixmaps/gnome.desktop, are dependent 
+on this path, so if a new prefix is set a make clean is required 
+before issuing the make command. 
+
+After running the configure script the normal, make | make install 
+should build and install all the necessary files.    
+    
+ 
+*guvcview bin:
+--------------
+(src/guvcview)
+
+The binarie file installs to the standart location,
+/usr/local/bin, to change the install path, configure
+must be executed with --prefix=DIR set, this will cause
+the bin file to be installed in DIR/bin, make sure 
+DIR/bin is set in your PATH variable, or the gnome 
+menu entry will fail.
+
+
+*guvcview.desktop:
+------------------
+
+(pixmaps/guvcview.desktop)
+
+The desktop file (gnome menu entry) is built from the
+pixmaps/Makefile.am definition and is dependent on the 
+configure --prefix setting, any changes to this, must 
+be done in pixmaps/Makefile.am, the file must be removed 
+(make clean) before building a new one with the make command.
+
+
+
+Executing guvcview
+================== 
+
+For instructions on the command line args 
+execute "guvcview --help".
+
+Detailed information will be added in future 
+versions.

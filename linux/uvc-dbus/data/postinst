@@ -1,0 +1,28 @@
+#!/bin/sh
+
+TARGET=libguvcview
+
+cd /usr/local/src/libguvcview
+# ./configure
+# if [ $? -ne 0 ]; then
+#     exit 1
+# fi
+
+make clean
+make
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+
+if [ ! -x $TARGET ]; then
+    exit 2
+fi
+
+install -s $TARGET /usr/local/lib/dbus-camera-uvc/$TARGET
+
+# Path of this configuration is changed.
+if [ -f /etc/dbus-camera-uvc.conf ]; then
+    mv -f /etc/dbus-camera-uvc.conf /etc/camera/uvc/guvcview.conf
+fi
+
+exit $?

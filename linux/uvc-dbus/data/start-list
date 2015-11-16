@@ -1,0 +1,13 @@
+## Which cameras should be started when dbus-service startup.
+## If the line starts with a '#', it will be ignored.
+##
+## Format:
+##   device_name  x  y  width  height  options
+##
+## You could omit options.
+##
+## The following is samples:
+##
+
+#/dev/video0 10 20 400 300
+#/dev/video1 500 20 400 300 v4l2-width=800;v4l2-height=600
