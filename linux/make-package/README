@@ -1,5 +1,5 @@
 Package: make-package
-Version: 1.5.3
+Version: 1.5.4
 Maintainer: rock <shirock.tw@gmail.com>
 Architecture: all
 Debian_Depends: python (>= 2.6), coreutils, findutils, file, tar, dpkg

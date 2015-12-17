@@ -48,7 +48,7 @@ Commands:
   There are two information files.
   1. README: The descriptions of package.
   2. INSTALL-rule: The packing actions.
-* debian
+* debian | dist
   According to the actions of 'INSTALL-rule' to make a Debian package.
 
 INSTALL-rule:
@@ -79,7 +79,7 @@ Debian's control:
 * If there is a %r in 'Version' field, that will be substitute
   as revision number.
 
-Example: To make a debian package file of make-package.
+Example: To make a debian package file of make-package (pack self).
  $ make-package generate debian
 
 """
@@ -88,17 +88,19 @@ from os.path import *
 from subprocess import *
 from distutils.util import subst_vars
 
+MAKE_PACKAGE_VERSION = "1.5.4"
+
 PkgType = 'deb'
 PkgCtrlDir = 'DEBIAN'
 
 README_Tmpl = '''Package: make-package
-Version: 1.5.2
+Version: %s
 Maintainer: rock <shirock.tw@gmail.com>
 Architecture: all
 Debian_Depends: python (>= 2.6), coreutils, findutils, file, tar, dpkg
 Debian_Section: misc
 Priority: optional
-Description: Package Make Utility.'''
+Description: Package Make Utility.''' % (MAKE_PACKAGE_VERSION)
 
 INSTALL_RULE_Tmpl = '''# install rule file
 BINDIR=/usr/local/bin
@@ -343,11 +345,15 @@ def set_arg_file(arg):
         quit(1)
     return filepath
 
+def usage():
+    print __doc__
+    print "make-package version: %s\n" % MAKE_PACKAGE_VERSION
+
 if __name__ == "__main__":
     unknown_command = True
 
     if len(sys.argv) < 2:
-        print(__doc__)
+        usage()
         quit(0)
 
     destination_dirpath = "dist"
@@ -452,7 +458,7 @@ if __name__ == "__main__":
         print(PACKAGE_VERSION)
         unknown_command = False
 
-    if "debian" in sys.argv:
+    if "debian" in sys.argv or "dist" in sys.argv:
         unknown_command = False
         PkgType = 'deb'
         call("rm -rf dist".split())
@@ -502,7 +508,7 @@ if __name__ == "__main__":
             quit(1)
 
     if unknown_command:
-        print(__doc__)
+        usage()
 
     quit(0)
 
