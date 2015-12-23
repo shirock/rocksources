@@ -36,9 +36,9 @@ if (PHP_SAPI == 'cli') {
     $_POST = array('name' => 'rock');
 }
 
-class Controller 
+class Controller
 {
-    public function index() 
+    public function index()
     {
         echo 'index...';
     }
@@ -51,8 +51,8 @@ class Controller
      3. 使用 JSON 文件上傳時，限定以 BASE64 處理要上傳的檔案內容。這是因為JSON
         規定採用 UTF-8 編碼。但是二進位文件內容若使用 UTF-8 編碼，則編碼後的內容
         長度會比 BASE64 長上許多。故此處限定預先以 BASE64 二進位文件內容。
-     */    
-    public static function load_uploaded_files($fields) 
+     */
+    public static function load_uploaded_files($fields)
     {
         $files = array();
         foreach ($fields as $field) {
@@ -80,7 +80,7 @@ class Controller
     }
 }
 
-class HttpResponse 
+class HttpResponse
 {
     // See http://en.wikipedia.org/wiki/List_of_HTTP_status_codes
     static $status = array(
@@ -127,6 +127,7 @@ class HttpResponse
         424 =>  'Failed Dependency',
         425 =>  'Unordered Collection',
         426 =>  'Upgrade Required',
+        451 =>  'Unavailable For Legal Reasons',
         500 =>  'Internal Server Error',
         501 =>  'Not Implemented',
         502 =>  'Bad Gateway',
@@ -190,6 +191,7 @@ class HttpResponse
     const FAILED_DEPENDENCY = 424;
     const UNORDERED_COLLECTION = 425;
     const UPGRADE_REQUIRED = 426;
+    const UNAVAILABLE_FOR_LEGAL_REASONS = 451;
     const INTERNAL_SERVER_ERROR = 500;
     const NOT_IMPLEMENTED = 501;
     const BAD_GATEWAY = 502;
@@ -200,7 +202,7 @@ class HttpResponse
     const INSUFFICIENT_STORAGE = 507;
     const BANDWIDTH_LIMIT_EXCEEDED = 509;
 
-    static function status($statusCode, $message = false, $exit_program = true) 
+    static function status($statusCode, $message = false, $exit_program = true)
     {
         if ($message == false) {
             if (isset(self::$status[$statusCode]))
@@ -216,7 +218,7 @@ class HttpResponse
         }
     }
 
-    static function exception($statusCode, $message = false) 
+    static function exception($statusCode, $message = false)
     {
         self::status($statusCode, $message, true);
     }
@@ -224,62 +226,62 @@ class HttpResponse
     /**
     以下回應方法都是回報錯誤狀態。呼叫後就會結束程式。
      */
-    static function bad_request($msg=false) 
+    static function bad_request($msg=false)
     {
         self::exception(HttpResponse::BAD_REQUEST, $msg);
     }
 
-    static function unauthorized($msg=false) 
+    static function unauthorized($msg=false)
     {
         self::exception(HttpResponse::UNAUTHORIZED, $msg);
     }
 
-    static function payment_required($msg=false) 
+    static function payment_required($msg=false)
     {
         self::exception(HttpResponse::PAYMENT_REQUIRED, $msg);
     }
 
-    static function forbidden($msg=false) 
+    static function forbidden($msg=false)
     {
         self::exception(HttpResponse::FORBIDDEN, $msg);
     }
 
-    static function not_found($msg=false) 
+    static function not_found($msg=false)
     {
         self::exception(HttpResponse::NOT_FOUND, $msg);
     }
 
-    static function method_not_allowed($msg=false) 
+    static function method_not_allowed($msg=false)
     {
         self::exception(HttpResponse::METHOD_NOT_ALLOWED, $msg);
     }
 
-    static function not_acceptable($msg=false) 
+    static function not_acceptable($msg=false)
     {
         self::exception(HttpResponse::NOT_ACCEPTABLE, $msg);
     }
 
-    static function request_timeout($msg=false) 
+    static function request_timeout($msg=false)
     {
         self::exception(HttpResponse::REQUEST_TIMEOUT, $msg);
     }
 
-    static function conflict($msg=false) 
+    static function conflict($msg=false)
     {
         self::exception(HttpResponse::CONFLICT, $msg);
     }
 
-    static function gone($msg=false) 
+    static function gone($msg=false)
     {
         self::exception(HttpResponse::GONE, $msg);
     }
 
-    static function internal_server_error($msg=false) 
+    static function internal_server_error($msg=false)
     {
         self::exception(HttpResponse::INTERNAL_SERVER_ERROR, $msg);
     }
 
-    static function not_implemented($msg=false) 
+    static function not_implemented($msg=false)
     {
         self::exception(HttpResponse::NOT_IMPLEMENTED, $msg);
     }
@@ -288,18 +290,18 @@ class HttpResponse
         self::exception(HttpResponse::BAD_GATEWAY , $msg);
     }
 
-    static function service_unavailable($msg=false) 
+    static function service_unavailable($msg=false)
     {
         self::exception(HttpResponse::SERVICE_UNAVAILABLE, $msg);
     }
 }
 
-function url_root_path() 
+function url_root_path()
 {
     return dirname($_SERVER['SCRIPT_NAME']);
 }
 
-class CommonGateway 
+class CommonGateway
 {
     const DEFAULT_HOMEPAGE = 'views/index.phtml';
 
@@ -309,13 +311,13 @@ class CommonGateway
     protected $action = null;
     protected $request_document_type = 'html';
     protected $raw_request_data = null;
-    
-    function __get($k) 
+
+    function __get($k)
     {
         return isset($this->$k) ? $this->$k : null;
     }
 
-    function __construct() 
+    function __construct()
     {
         if ( !isset($_SERVER['PATH_INFO']) or $_SERVER['PATH_INFO'] == '/') {
             // $this->control = $this->segments = false;
@@ -324,7 +326,7 @@ class CommonGateway
 
         $this->segments = explode('/', $_SERVER['PATH_INFO']);
         array_shift($this->segments); // first element always is an empty string.
-        
+
         if ($this->segments[count($this->segments)-1] == '')
             array_pop($this->segments);
 
@@ -360,14 +362,14 @@ class CommonGateway
                 } else { // PUT
                     $request_vars = json_decode($this->raw_request_data, true);
                     $_POST= &$request_vars;
-                    $_REQUEST = array_merge($_GET, $request_vars); 
+                    $_REQUEST = array_merge($_GET, $request_vars);
                     # only contains $_GET and $_POST, due to security concerns.
                 }
             } elseif ($content_type == 'application/json') {
                 $request_vars = json_decode($this->raw_request_data, true);
                 //if ($_SERVER['REQUEST_METHOD'] == 'POST')
                     $_POST = &$request_vars; // 兼容傳統格式。
-                $_REQUEST = array_merge($_GET, $request_vars); 
+                $_REQUEST = array_merge($_GET, $request_vars);
                 # only contains $_GET and $_POST, due to security concerns.
             } else {
                 $request_vars = &$_POST;
@@ -390,14 +392,14 @@ class CommonGateway
             // the content of http header of Accept looks like:
             // Accept: text/plain; q=0.9, application/xml+html; q=0.1
             $http_accept = explode(',', $_SERVER['HTTP_ACCEPT']);
-            
+
             if ($http_accept[0] != '*/*') {
                 #$this->response_content_type = $http_accept[0];
                 header('Content-Type: ' . $http_accept[0] .'; charset=utf-8');
             }
 
             list($tmp, $http_accept_ext) = explode('/', $http_accept[0]);
-            // $http_accept_ext would be the extension name of document type. 
+            // $http_accept_ext would be the extension name of document type.
             // ex: '*', 'json', 'xml', etc.
             if ($http_accept_ext != '*')
                 $this->request_document_type = $http_accept_ext;
@@ -408,17 +410,17 @@ class CommonGateway
 
     /**
     為指定個體注入指定的資源。
-    
+
     使用註記 @resource [name] 。
     name 表示資源名稱，可省略。若註記省略 name 參數時，則以屬性名稱為配對的資源名稱。
-    
+
     ps. PHP 不支援註記語法，此處的註記內容實際上應寫在屬性的 Doc 區。
-    
+
     case 1:
       @resource request
       var $form;
       // 將名稱為 request 的資源注入 $form 屬性。
-      
+
     case 2:
       @resource
       var $request
@@ -435,7 +437,7 @@ class CommonGateway
                 $res_name = isset($m[1]) ? $m[1] : $prop_name;
                 if ($res_name == $name) {
                     $prop->setAccessible(true); // only effect $prop, ignore the access modifier.
-                    $prop->setValue($target, $resource); 
+                    $prop->setValue($target, $resource);
                 }
             }
         }
@@ -457,15 +459,15 @@ class CommonGateway
         return $config;
     }
 
-    protected function _detect_app_name($path, $name) 
+    protected function _detect_app_name($path, $name)
     {
         if (!ctype_alnum(str_replace('_', '', $name))) { // invalid name.
             return false;
         }
 
-        for ($case_f = 0; $case_f < 5; ++$case_f) {        
+        for ($case_f = 0; $case_f < 5; ++$case_f) {
             switch ($case_f) {
-            case 0: 
+            case 0:
                 // case: search directly by name.
                 $app_name = $name;
                 break;
@@ -495,11 +497,11 @@ class CommonGateway
                 break;
             }
 
-            $component_filepath = $this->_make_control_filepath($app_name); 
-            if ( file_exists($component_filepath) ) { 
+            $component_filepath = $this->_make_control_filepath($app_name);
+            if ( file_exists($component_filepath) ) {
                 return $app_name;
             }
-        }        
+        }
         return false;
     }
 
@@ -508,7 +510,7 @@ class CommonGateway
         return "controllers/{$name}.php";
     }
 
-    protected function load_control($name) 
+    protected function load_control($name)
     {
         #$this->_load_component('controllers/', $name);
         $this->app_name = $this->_detect_app_name('controllers/', $name);
@@ -516,15 +518,15 @@ class CommonGateway
             HttpResponse::not_found();
         }
 
-        $control_filepath = $this->_make_control_filepath($this->app_name); 
-        
+        $control_filepath = $this->_make_control_filepath($this->app_name);
+
         require_once $control_filepath;
 
         $control_class_name = $this->app_name;
         $this->control = new $control_class_name;
     }
 
-    function index() 
+    function index()
     {
         if (file_exists(self::DEFAULT_HOMEPAGE)) {
             include_once self::DEFAULT_HOMEPAGE;
@@ -535,7 +537,7 @@ class CommonGateway
         return false;
     }
 
-    function run() 
+    function run()
     {
         if ( $this->control === null) {
             return $this->index();
@@ -600,7 +602,7 @@ class CommonGateway
         #elseif (is_object($model) and !isset(${$this->app_name}))
         if ((is_object($model) or is_array($model)) and !isset(${$this->app_name}))
             ${$this->app_name} = &$model; // 指派此資料模型給控制項同名的變數
-        if ($this->request_document_type == 'json' or 
+        if ($this->request_document_type == 'json' or
             $this->request_document_type == 'javascript'
         ) {
             $_ext_name = 'js';
@@ -623,10 +625,10 @@ class CommonGateway
         }
     }
 
-    function load_view_helper() 
+    function load_view_helper()
     {
         @include_once "helpers/_global.php"; // for all application.
-        
+
         $helper_filepath = "helpers/{$this->app_name}.php";
         @include_once $helper_filepath;
     }
