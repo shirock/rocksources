@@ -9,7 +9,7 @@ Touch 輸入法 Copyright (C) 2013 遊手好閒的石頭成 <shirock.tw@gmail.co
 
 Touch IME is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or 
+the Free Software Foundation, either version 3 of the License, or
 any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -18,17 +18,22 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with this program.  If not, see 
+along with this program.  If not, see
 <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
 
-You should see https://rocksources.googlecode.com/ to get more 
-information about Touch IME.
 
 HOW TO INSTALL
 ==============
 
 You should download *.js and *.tab.
 index.html is a demo.
+
+USER GUIDE
+==========
+
+* Introduction: http://rocksaying.tw/archives/2013/Touch%20%E8%BC%B8%E5%85%A5%E6%B3%95%20%28HTML5%20%E8%A7%B8%E6%8E%A7%E5%BC%8F%E8%BC%B8%E5%85%A5%E6%B3%95%29.html
+* Manual: https://code.google.com/p/rocksources/wiki/TouchInputMethod
+* How To Use On Screen Keyboard: http://rocksaying.tw/archives/2013/Touch%20%E8%BC%B8%E5%85%A5%E6%B3%95%E9%99%84%E5%8A%A0%20On%20Screen%20Keyboard.html
 
 Via package install
 ===================
@@ -39,3 +44,24 @@ see the demo.
 
 Notice: touch-ime.manifest is the cache manifest file.
 
+FEATURES
+========
+
+* 焦點進入輸入框時，便會出現鍵盤。一般設計時亦可採固定顯示。
+* touch-ime 會記憶最近使用的輸入框。就算使用者碰觸其他區域使焦點離開輸入框， touch-ime 還是會把輸入內容填入預期的輸入框。
+* 點擊鍵盤上的「結束輸入法」鍵(css class=input_method_end_composition)，則會收起鍵盤。
+* touch-ime 可以在失去焦點的狀態下，繼續輸入工作。所以不會以「失去焦點」為時間點自動收起浮動鍵盤。
+* 選取特定型態(password,mail)的輸入框時，會出現對應型態的鍵盤佈局。
+* touch-ime 會記憶單純文字型態(text)的輸入框使用的輸入法引擎，而不是每次都使用預設輸入法引擎。
+* 可擴展的輸入法引擎以及可自定的鍵盤佈局。
+* 可自定詞庫與常用符號表。
+
+目前本源碼庫提供下列引擎與鍵盤佈局:
+
+* 英數: en
+* 行列30: array30
+* 注音: zhuyin
+* 拼音 (漢語拼音): pinyin
+* 倉頡速成 (快速倉頡): quick
+* 倉頡三代: cangjie3
+* 電子郵件型態輸入元件適用的鍵盤佈局: email

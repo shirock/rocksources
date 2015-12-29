@@ -7,7 +7,7 @@
 </script>
 <script>
 /*
-TouchInputMethod.set_controls(null, null, null, 
+TouchInputMethod.set_controls(null, null, null,
 {
     'auto_clear_input_keys_on': function(mode) {
         //console.log("auto clean: %s", mode);
@@ -67,6 +67,17 @@ TouchInputMethod.oncompositionend = function() {
 </style>
 
 <title>Touch Input Method Demo</title>
+<p>
+點擊任何輸入元件(輸入框)，便會觸發 touch-ime 。
+</p>
+<ul>
+<li>焦點進入輸入框時，便會出現鍵盤。一般設計時亦可採固定顯示。</li>
+<li>touch-ime 會記憶最近使用的輸入框。就算使用者碰觸其他區域使焦點離開輸入框， touch-ime 還是會把輸入內容填入預期的輸入框。</li>
+<li>點擊鍵盤上的「結束輸入法」鍵，則會收起鍵盤。</li>
+<li>touch-ime 可以在失去焦點的狀態下，繼續輸入工作。所以不會以「失去焦點」為時間點自動收起浮動鍵盤。</li>
+<li>選取特定型態(password,mail)的輸入框時，會出現對應型態的鍵盤佈局。</li>
+<li>touch-ime 會記憶單純文字型態(text)的輸入框使用的輸入法引擎，而不是每次都使用預設輸入法引擎。</li>
+</ul>
 
 <textarea cols='40' rows='3' style="float:left;margin:5px;">
 </textarea>
@@ -124,6 +135,8 @@ TouchInputMethod.oncompositionend = function() {
 
 <button onclick="TouchInputMethod.clean_local_table();">clean local table</button>
 
+<hr/>
+<p>浮動式鍵盤展示: [<a href="on-screen-keyboard-demo.html">On Screen Display Keyboard Demo</a>]
+</p>
 
 </html>
-
