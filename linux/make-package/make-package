@@ -120,6 +120,13 @@ def get_architecture():
         ARCH = "i386"
     return ARCH
 
+def is_exist(dst_name):
+    target = "dist/%s/%s" % (PkgType, dst_name)
+    if os.access(target, os.R_OK):
+        return True
+    else:
+        return False
+
 def pack_data(d, dist_dir=''):
     dist_dir = dist_dir.lstrip('/')
     dist_path = "dist/" + PkgType + "/" + dist_dir
@@ -311,7 +318,7 @@ def make_debian_meta_file():
 
     # GNU code standard save change log as ChangeLog.
     # So make-package will copy ChangeLog as debian's changelog.
-    if os.access("ChangeLog", os.R_OK):
+    if os.access("ChangeLog", os.R_OK) and not is_exist("DEBIAN/changelog"):
         copy_file_to_dist("ChangeLog", "DEBIAN/changelog")
 
     # debian meta files.
@@ -332,6 +339,8 @@ def make_debian_meta_file():
         dst_name = "DEBIAN/%s" % meta_files[meta_file][0]
         dst_attr = meta_files[meta_file][1]
 
+        if is_exist(dst_name):
+            continue
         if os.access(meta_file, os.R_OK): # check base dir
             copy_file_to_dist(meta_file, dst_name, dst_attr)
         elif os.access(alter, os.R_OK):   # check data subdir.
