@@ -505,6 +505,8 @@ if __name__ == "__main__":
 
                     if args[0] in cmd_tbl:
                         cmd_tbl[args[0]](*args[1:])
+        else:
+            print "No INSTALL-rule"
 
         make_debian_meta_file()
         call("chmod -f a+x dist/deb/DEBIAN/postinst dist/deb/DEBIAN/preinst dist/deb/DEBIAN/postrm dist/deb/DEBIAN/prerm".split())
