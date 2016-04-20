@@ -16,6 +16,7 @@ uninstall:
 
 clean:
 	make -C guvcview/src clean
+	rm -f dbus/*.pyc
 	rm -rf dist export
 	rm -f *.deb
 
