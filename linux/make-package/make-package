@@ -88,7 +88,7 @@ from os.path import *
 from subprocess import *
 from distutils.util import subst_vars
 
-MAKE_PACKAGE_VERSION = "1.5.8"
+MAKE_PACKAGE_VERSION = "1.6.0"
 
 PkgType = 'deb'
 PkgCtrlDir = 'DEBIAN'
@@ -115,10 +115,10 @@ Install_Vars['CONTROLS'] = PkgCtrlDir
 def get_architecture():
     output = Popen(["uname", "-m"], stdout=PIPE).communicate()[0].strip()
     if output == "x86_64":
-        ARCH = "amd64"
+        arch = "amd64"
     else:
-        ARCH = "i386"
-    return ARCH
+        arch = "i386"
+    return arch
 
 def is_exist(dst_name):
     target = "dist/%s/%s" % (PkgType, dst_name)
@@ -160,7 +160,7 @@ def copy_file_to_dist(source, target, mode=None):
 
     make_dist_dir(dirname(target))
     output = Popen(["file", "-b", source], stdout=PIPE).communicate()[0].strip()
-    if output.startswith('ELF'):
+    if output.startswith('ELF') and 'stripped' not in output:
         cmd = "install -s %s %s" % (source, dist_target_filepath)
     else:
         cmd = "cp -af %s %s" % (source, dist_target_filepath)
@@ -271,11 +271,10 @@ def make_debian_meta_file():
     for k in deb_required_field_keys:
         deb_required_fields[k] = fields[k]
 
-    deb_required_fields['Version'] = PACKAGE_VERSION
+    deb_required_fields['Version'] = Install_Vars['PACKAGE_VERSION']
 
     if not fields.has_key('Architecture') or fields['Architecture'] == "@ARCH@" or fields['Architecture'] == "$ARCH":
-        fields['Architecture'] = ARCH
-        #deb_required_fields['Architecture'] = ARCH
+        fields['Architecture'] = Install_Vars['ARCH']
 
     for k in fields.keys():
         if not k.startswith('Debian_'):
@@ -387,21 +386,22 @@ if __name__ == "__main__":
         elif arg.startswith("--rule="):
             rule_file = set_arg_file(arg)
 
-    ARCH = get_architecture()
-    Install_Vars['ARCH'] = ARCH
+    if not Install_Vars.has_key('ARCH'):
+        Install_Vars['ARCH'] = get_architecture()
     if "show-arch" in sys.argv:
-        print ARCH
+        print Install_Vars['ARCH']
         unknown_command = False
 
     try:
         output = Popen(["svnversion", "-n"], stdout=PIPE).communicate()[0].strip()
         m = re.match(r'\d+M?', output)
-        REVISION = m.group(0)
+        revision = m.group(0)
     except:
-        REVISION = '0'
-    Install_Vars['REVISION'] = REVISION
+        revision = '0'
+    if not Install_Vars.has_key('REVISION'):
+        Install_Vars['REVISION'] = revision
     if "show-revision" in sys.argv:
-        print REVISION
+        print Install_Vars['REVISION']
         unknown_command = False
 
     if "generate" in sys.argv:
@@ -453,18 +453,18 @@ if __name__ == "__main__":
     #gir_xml_ver = get_gir_xml_version()
     #gir_magic_num = gir_xml_ver[-1]
 
-    PACKAGE_NAME = fields['Package'].strip()
-    Install_Vars['PACKAGE_NAME'] = PACKAGE_NAME
+    if not Install_Vars.has_key('PACKAGE_NAME'):
+        Install_Vars['PACKAGE_NAME'] = fields['Package'].strip()
     if "show-package-name" in sys.argv:
-        print(PACKAGE_NAME)
+        print(Install_Vars['PACKAGE_NAME'])
         unknown_command = False
 
-    PACKAGE_VERSION = fields['Version'].strip()
-    if "%r" in PACKAGE_VERSION:
-        PACKAGE_VERSION = re.sub(r'%r', REVISION, PACKAGE_VERSION)
-    Install_Vars['PACKAGE_VERSION'] = PACKAGE_VERSION
+    if not Install_Vars.has_key('PACKAGE_VERSION'):
+        Install_Vars['PACKAGE_VERSION'] = fields['Version'].strip()
+    if "%r" in Install_Vars['PACKAGE_VERSION']:
+        Install_Vars['PACKAGE_VERSION'] = re.sub(r'%r', Install_Vars['REVISION'], Install_Vars['PACKAGE_VERSION'])
     if "show-package-version" in sys.argv:
-        print(PACKAGE_VERSION)
+        print(Install_Vars['PACKAGE_VERSION'])
         unknown_command = False
 
     if "debian" in sys.argv or "dist" in sys.argv:
