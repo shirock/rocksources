@@ -3,7 +3,7 @@ Touch 輸入法 Copyright (C) 2013 遊手好閒的石頭成 <shirock.tw@gmail.co
 
 Touch IME is free software: you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or 
+the Free Software Foundation, either version 3 of the License, or
 any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -12,10 +12,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with this program.  If not, see 
+along with this program.  If not, see
 <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
 
-You should see https://rocksources.googlecode.com/ to get more 
+You should see https://rocksources.googlecode.com/ to get more
 information about Touch IME.
 */
 // $Rev: 121 $
@@ -73,20 +73,20 @@ var max_input_keys = 4;
 var compositing = false;
 var capital_mode = false;
 var auto_clear_input_keys = false;
-var input_keys = []; 
+var input_keys = [];
 
 var resources_path = ''; // see set_resources_path().
 
 var table_xhr = new XMLHttpRequest();
 if (table_xhr.overrideMimeType)
     table_xhr.overrideMimeType('text/plain');
-table_xhr.onload = function() {
+table_xhr.addEventListener('load', function(){
     if (table_xhr.status >= 300)
         return false;
     data = table_xhr.responseText;
     update_candidates(data);
     return true;
-};
+});
 
 var engine_xhr = new XMLHttpRequest();
 if (engine_xhr.overrideMimeType)
@@ -166,7 +166,7 @@ optional classes:
 * end_composition: input_method_end_composition
   指定「結束輸入法」控制項與外觀。
  */
-this.set_controls = function(custom_keyboard_id, custom_candidate_id, 
+this.set_controls = function(custom_keyboard_id, custom_candidate_id,
     custom_show_input_keys_id, optional_classes)
 {
     if (custom_keyboard_id)
@@ -222,15 +222,15 @@ this.get_target = function()
 W3 CORS 的建議，設置跨來源資源分享規則。
 若未設置 CORS ，那麼你在此只能指定資源目錄的路徑。例如 '/js/touch-ime/' 。
 
-See: 
+See:
 * http://www.w3.org/TR/cors/
 * http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
  */
-this.set_resources_path = function(path) 
+this.set_resources_path = function(path)
 {
     resources_path = path;
     if (path[path.length-1] != '/')
-        resources_path += '/'; 
+        resources_path += '/';
 }
 
 
@@ -273,7 +273,7 @@ var new_engine_info = {
 TouchInputMethod.install_engine_info(new_engine_info);
 
  */
-this.install_engine_info = function(new_engine_info) 
+this.install_engine_info = function(new_engine_info)
 {
     console.log("install engine info");
     engine_info = new_engine_info;
@@ -298,7 +298,7 @@ valid code name:
 * cangjie5 倉頡第五代
 * quick 倉頡速成
  */
-this.enable_engines = function(engine_code_list) 
+this.enable_engines = function(engine_code_list)
 {
     var next;
     if (engine_code_list.length < 1)
@@ -322,7 +322,7 @@ this.enable_engines = function(engine_code_list)
 /**
 change input engine to engine_code.
  */
-this.change_engine = function(engine_code) 
+this.change_engine = function(engine_code)
 {
     changed = try_change_engine(engine_code);
     if (changed)
@@ -353,7 +353,7 @@ this.clean_local_table = function()
     });
 }
 
-// compositionstart 
+// compositionstart
 // compositionend
 // https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent
 // http://www.w3.org/TR/DOM-Level-3-Events/#event-type-compositionstart
@@ -374,7 +374,7 @@ TouchInputMethod capital 模式改變事件。
  */
 this.oncapitalization = false;
 
-this.init = function() 
+this.init = function()
 {
     var elms, i;
 
@@ -393,7 +393,7 @@ this.init = function()
     output = document.createElement('input'); // create an unattached input control.
     // 在使用者沒有選取文字輸入控制項前，先指派一個沒掛在DOM上的文字控制項，以免發生程式錯誤。
     bind_all_text_input_focus_handler();
-    
+
     classList_supporting = !!output.classList;
     //console.log("classList supporting: " + classList_supporting);
 
@@ -415,7 +415,7 @@ this.init = function()
         "back_input_key": back_input_key,
         "clear_input_keys": clear_input_keys,
         "auto_clear_input_keys_mode": toggle_auto_clear_input_keys,
-        "capital_toggle": toggle_capital, 
+        "capital_toggle": toggle_capital,
         "backspace_output_texts": backspace_output_texts,
         "clear_output_texts": clear_output_texts,
         "select_output_texts": select_output_texts,
@@ -452,7 +452,7 @@ this.init = function()
         }
         return true;
     }
-    
+
     document.onkeyup = function(event) {
         if (event.keyCode == 8) {
             back_input_key();
@@ -505,7 +505,7 @@ function goto_next() {
 
     /*
     var kev = document.createEvent('KeyboardEvent');
-    kev.initKeyEvent('keypress', true, true, window, 
+    kev.initKeyEvent('keypress', true, true, window,
         false,  // ctrl
         false,  // alt
         false,  // shift
@@ -546,7 +546,7 @@ function refresh_select_engine_ctrls() {
 function load_input_method_engine() {
     var tmp, tmp_tbl, tmp_keyboard;
 
-    var word_table_file_name = current_input_method_engine_name.concat('-tbl.js'); 
+    var word_table_file_name = current_input_method_engine_name.concat('-tbl.js');
     console.info("get table:", resources_path, word_table_file_name);
     engine_xhr.open('GET', resources_path+word_table_file_name, false); // sync call
     try {
@@ -558,7 +558,7 @@ function load_input_method_engine() {
         return false;
     }
 
-    var keyboard_file_name = current_input_method_engine_name.concat('-keyboard.js'); 
+    var keyboard_file_name = current_input_method_engine_name.concat('-keyboard.js');
     console.info("get table:", keyboard_file_name);
     engine_xhr.open('GET', resources_path+keyboard_file_name, false);
     try {
@@ -641,8 +641,8 @@ function according_input_type_switch_engine() {
     }
 
     // Second check type.
-    if (output.type in special_input_keyboard_map && 
-        special_input_keyboard_map[output.type] in engine_info) 
+    if (output.type in special_input_keyboard_map &&
+        special_input_keyboard_map[output.type] in engine_info)
     {
         try_change_engine(special_input_keyboard_map[output.type]);
         return;
@@ -659,7 +659,7 @@ function switch_engine() {
             break;
         if (backup_name == current_input_method_engine_name) {
             console.error("touch-ime failed! All input engine's table files could not be loaded");
-            /*這是一個特殊的情況，當此條件發生時，表示走完一輪 engines_cycle 
+            /*這是一個特殊的情況，當此條件發生時，表示走完一輪 engines_cycle
             卻無法載入任何輸入法字表，這也意味著 touch-ime 無法運作。*/
             return;
         }
@@ -703,7 +703,7 @@ function input_code(v) {
     //    return false;
     // 特殊字根符號，如 ~en, ~sym
     if (v.charAt(0) == '~' ||
-        (input_keys.length > 0 && input_keys[0].charAt(0) == '~') ) 
+        (input_keys.length > 0 && input_keys[0].charAt(0) == '~') )
     {
         // 當輸入特殊字根(~)，或已輸入鍵的第一個是特殊字根時，皆直接替換整組輸入鍵
         // 1. 輸入~: 直接跳特殊字根候選字
@@ -747,9 +747,9 @@ function backspace_output_texts() {
     }
     else */
     /*
-    The selectionEnd attribute must, on getting, return the offset (in logical 
-    order) to the character that immediately follows the end of the selection. 
-    If there is no selection, then it must return the offset (in logical order) 
+    The selectionEnd attribute must, on getting, return the offset (in logical
+    order) to the character that immediately follows the end of the selection.
+    If there is no selection, then it must return the offset (in logical order)
     to the character that immediately follows the text entry cursor.
     W3 HTML5 - 4.10 Forms. */
     if (output.value.length < 1)
@@ -888,7 +888,7 @@ function toggle_capital() {
             kbs[ikb].textContent = kb_text.toLowerCase()
         /* // 減少改寫 DOM 內容的次數
         kbs[ikb].textContent = (capital_mode ?
-            kbs[ikb].textContent.toUpperCase() : 
+            kbs[ikb].textContent.toUpperCase() :
             kbs[ikb].textContent.toLowerCase());
         */
     }
@@ -947,18 +947,18 @@ function update_candidates(data) {
             return;
         if (capital_mode)
             v = v.toUpperCase();
-        candidate.insertAdjacentHTML('beforeend', 
+        candidate.insertAdjacentHTML('beforeend',
             '<button class="'.concat(control_classes['candidates'], '">', v, '</button>'));
     });
-    for (var elms = document.getElementsByClassName(control_classes['candidates']), i = 0; 
-         i < elms.length; 
-         ++i) 
+    for (var elms = document.getElementsByClassName(control_classes['candidates']), i = 0;
+         i < elms.length;
+         ++i)
     {
-        elms[i].onclick = function() {
+        elms[i].addEventListener('click', function(){
             add_char_output_texts(this.textContent);
             if (auto_clear_input_keys)
                 clear_input_keys();
-        }
+        });
     }
 } // end update_candidates()
 
@@ -1043,7 +1043,7 @@ function bind_all_text_input_focus_handler() {
     var inputs = document.querySelectorAll('input, textarea');
     for (var i = 0; i < inputs.length; ++i) {
         /*
-        if (this.type in special_input_keyboard_map && 
+        if (this.type in special_input_keyboard_map &&
             special_input_keyboard_map[this.type] == 'ignore')
         {
             continue;
@@ -1067,4 +1067,3 @@ function bind_all_text_input_focus_handler() {
 }); // end var TouchInputMethod
 
 document.addEventListener('DOMContentLoaded', TouchInputMethod.init, false);
-//window.addEventListener('load', TouchInputMethod.init, false);
