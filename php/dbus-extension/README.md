@@ -1,13 +1,15 @@
-php-dbus extension with ByteArray support
+php dbus extension with ByteArray support
 -----------------------------------------
 
 php-dbus 是來自 PECL DBus 的 PHP 擴展項目，其用途在於讓 PHP 支援 DBus 功能。
 
 我為 php-dbus 添加了一個新類別: *ByteArray* ，再讓它的 DBus 方法支援 *ByteArray* 類別。
 
+*我正準備將此項目升級支持 PHP7 。我任職公司中有許多專案使用了我維護的 php dbus 項目。配合近期專案預設系統往 Ubuntu 16 轉移的期程，這件事成為我正職工作的優先項目。我想這個月就會完成吧(2016-11)。*
+
 ### ByteArray
 
-你需要取回此處經我改寫過的 php-dbus 源碼，再按「[Write a PHP DBus client](http://rocksaying.tw/archives/2010/Write%20a%20PHP%20DBus%20client.html)」所說明的方式，安裝 php-dbus 擴展項目，才能使用 ByteArray 類別。
+你需要取回此處經我改寫過的 php-dbus 源碼，再按「[Write a PHP DBus client](http://rocksaying.tw/archives/12193781.html)」所說明的方式，安裝 php-dbus 擴展項目，才能使用 ByteArray 類別。
 
 ByteArray 可以視為 PHP 字串的 box 類別。在大多數場合可以直接當成字串運算。
 
@@ -100,8 +102,7 @@ sleep(60*5);
 
 更多相關文章請查閱石頭閒語。
 
-* [Php-dbus extension with ByteArray support](http://rocksaying.tw/archives/2013/Php-dbus%20extension%20with%20ByteArray%20support.html) 。
-* [php-dbus 0.1.0 撰寫 DBus service 的使用經驗](http://rocksaying.tw/archives/2010/php-dbus%200.1.0%20%E6%92%B0%E5%AF%AB%20DBus%20service%20%E7%9A%84%E4%BD%BF%E7%94%A8%E7%B6%93%E9%A9%97.html)。
-* [PHP D-Bus 與 Gearman 之比較](http://rocksaying.tw/archives/2010/PHP%20D-Bus%20%E8%88%87%20Gearman%20%E4%B9%8B%E6%AF%94%E8%BC%83.html)。
-* [php-dbus unboxing](http://rocksaying.tw/archives/2011/php-dbus%20unboxing.html)。
-* [Php-dbus extension with ByteArray support, r101 update](http://rocksaying.tw/archives/2013/Php-dbus%20extension%20with%20ByteArray%20support%2C%20r101_r108%20update.html)。
+* [php dbus extension with ByteArray support](http://rocksaying.tw/archives/21315764.html) 。
+* [php dbus 0.1.0 撰寫 DBus service 的使用經驗](http://rocksaying.tw/archives/13799073.html)。
+* [PHP D-Bus 與 Gearman 之比較](http://rocksaying.tw/archives/13478419.html)。
+* [php dbus unboxing](http://rocksaying.tw/archives/16404035.html)。
