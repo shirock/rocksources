@@ -444,7 +444,7 @@ void *main_loop(void *data)
         /*-------------------------- Grab Frame ----------------------------------*/
         if (uvcGrab(videoIn, format, width, height, &global->fps, &global->fps_num) < 0)
         {
-            g_printerr("Error grabbing image \n");
+            //g_printerr("Error grabbing image \n");
             continue;
         }
         else
@@ -481,8 +481,10 @@ void *main_loop(void *data)
                     AFdata->focus = AFdata->left; /*start left*/
                     focus_control->value = AFdata->focus;
                     // TODO autofocus
-                    if (set_ctrl (videoIn->fd, s->control_list, AFdata->id) != 0)
-                        g_printerr("ERROR: couldn't set focus to %d\n", AFdata->focus);
+                    if (set_ctrl (videoIn->fd, s->control_list, AFdata->id) != 0) { // couldn't to set focus
+                        global->autofocus = FALSE;
+                        AFdata->setFocus = 0;
+                    }
                     /*number of frames until focus is stable*/
                     /*1.4 ms focus time - every 1 step*/
                     AFdata->focus_wait = (int) abs(AFdata->focus-last_focus)*1.4/(1000/global->fps)+1;
@@ -503,9 +505,11 @@ void *main_loop(void *data)
                         {
                             focus_control->value = AFdata->focus;
                             // TODO autofocus
-                            if (set_ctrl (videoIn->fd, s->control_list, AFdata->id) != 0)
-                                g_printerr("ERROR: couldn't set focus to %d\n",
-                                    AFdata->focus);
+                            if (set_ctrl (videoIn->fd, s->control_list, AFdata->id) != 0) {
+                                //g_printerr("ERROR: couldn't set focus to %d\n", AFdata->focus);
+                                global->autofocus = FALSE;
+                                AFdata->setFocus = 0;
+                            }
                             /*number of frames until focus is stable*/
                             /*1.4 ms focus time - every 1 step*/
                             AFdata->focus_wait = (int) abs(AFdata->focus-last_focus)*1.4/(1000/global->fps)+1;
@@ -515,7 +519,7 @@ void *main_loop(void *data)
                     else
                     {
                         AFdata->focus_wait--;
-                        if (global->debug) g_printf("Wait Frame: %d\n",AFdata->focus_wait);
+                        //if (global->debug) g_printf("Wait Frame: %d\n",AFdata->focus_wait);
                     }
                 }
             }
