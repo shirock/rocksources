@@ -36,32 +36,31 @@ Arguments:
 
 Commands:
 * show-package-name
-  Show package name.
 * show-package-version
-  Show package version.
 * show-arch
-  Show architecture name.
 * show-revision
-  Show revision.
 * generate
   Generate a set of package information files.
   There are two information files.
   1. README: The descriptions of package.
   2. INSTALL-rule: The packing actions.
-* debian | dist
+* debian
   According to the actions of 'INSTALL-rule' to make a Debian package.
+* dist
+  It is the ame as command 'debian'.
 
 INSTALL-rule:
 * The line that begins with # or ; will be thought as comment.
 * Support variables interpolation. For example,
   WWWDIR=var/www
   pack homepage $WWWDIR/service
-* If you want to copy file or pack folder to package's control folder,
+* If you want to copy a file or pack a folder to package's control folder,
   using $CONTROLS instead of 'DEBIAN'.
 * Auto-rule for Debain (you don't need to write these rules):
   * It will copy ChangeLog to DEBIAN/changelog.
   * It will copy conffiles/preinst/prerm/postinst/postrm in
-    base dir or 'data' sub-dir to 'DEBIAN' dir.
+    base directory, 'data' sub-directory, or 'scripts' sub-directory to
+    'DEBIAN' directory.
   * It will copy install.sh to postinst, uninstall.sh to prerm.
 * Provides the following actions:
   * pack directory [dist_target_directory]
@@ -88,7 +87,7 @@ from os.path import *
 from subprocess import *
 from distutils.util import subst_vars
 
-MAKE_PACKAGE_VERSION = "1.6.0"
+MAKE_PACKAGE_VERSION = "1.6.1"
 
 PkgType = 'deb'
 PkgCtrlDir = 'DEBIAN'
@@ -119,6 +118,20 @@ def get_architecture():
     else:
         arch = "i386"
     return arch
+
+def get_revision():
+    try:
+        output = Popen(["svnversion", "-n"], stdout=PIPE).communicate()[0].strip()
+        m = re.match(r'\d+M?', output)
+        revision = m.group(0)
+    except:
+        revision = False
+    if not revision:
+        try:
+            revision = Popen(["git", "rev-parse", "--short", "HEAD"], stdout=PIPE).communicate()[0].strip()
+        except:
+            revision = '0'
+    return revision
 
 def is_exist(dst_name):
     target = "dist/%s/%s" % (PkgType, dst_name)
@@ -313,8 +326,7 @@ def make_debian_meta_file():
         f_control.write(" %s\n" % s)
     f_control.close()
 
-    # Auto-rule
-
+    ### Auto-rule ##
     # GNU code standard save change log as ChangeLog.
     # So make-package will copy ChangeLog as debian's changelog.
     if os.access("ChangeLog", os.R_OK) and not is_exist("DEBIAN/changelog"):
@@ -334,7 +346,8 @@ def make_debian_meta_file():
     }
 
     for meta_file in meta_files:
-        alter = "data/%s" % meta_file  # also check data/???
+        alter1 = "data/%s" % meta_file  # also check data/???
+        alter2 = "scripts/%s" % meta_file  # also check scripts/???
         dst_name = "DEBIAN/%s" % meta_files[meta_file][0]
         dst_attr = meta_files[meta_file][1]
 
@@ -342,8 +355,10 @@ def make_debian_meta_file():
             continue
         if os.access(meta_file, os.R_OK): # check base dir
             copy_file_to_dist(meta_file, dst_name, dst_attr)
-        elif os.access(alter, os.R_OK):   # check data subdir.
-            copy_file_to_dist(alter, dst_name, dst_attr)
+        elif os.access(alter1, os.R_OK):   # check data subdir.
+            copy_file_to_dist(alter1, dst_name, dst_attr)
+        elif os.access(alter2, os.R_OK):   # check scripts subdir.
+            copy_file_to_dist(alter2, dst_name, dst_attr)
 
 
 def set_arg_file(arg):
@@ -392,12 +407,8 @@ if __name__ == "__main__":
         print Install_Vars['ARCH']
         unknown_command = False
 
-    try:
-        output = Popen(["svnversion", "-n"], stdout=PIPE).communicate()[0].strip()
-        m = re.match(r'\d+M?', output)
-        revision = m.group(0)
-    except:
-        revision = '0'
+    revision = get_revision()
+
     if not Install_Vars.has_key('REVISION'):
         Install_Vars['REVISION'] = revision
     if "show-revision" in sys.argv:
@@ -449,9 +460,6 @@ if __name__ == "__main__":
         print("%s needs at least one line of long description." % head_file)
         quit(1)
     f_readme.close()
-
-    #gir_xml_ver = get_gir_xml_version()
-    #gir_magic_num = gir_xml_ver[-1]
 
     if not Install_Vars.has_key('PACKAGE_NAME'):
         Install_Vars['PACKAGE_NAME'] = fields['Package'].strip()

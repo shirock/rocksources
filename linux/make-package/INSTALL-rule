@@ -1,0 +1,4 @@
+# install rule file
+BINDIR=/usr/local/bin
+# Will install make-package in /usr/local/bin/
+copy make-package $BINDIR/

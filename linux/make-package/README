@@ -1,5 +1,5 @@
 Package: make-package
-Version: 1.5.8
+Version: 1.6.1
 Maintainer: rock <shirock.tw@gmail.com>
 Architecture: all
 Debian_Depends: python (>= 2.6), coreutils, findutils, file, tar, dpkg
@@ -42,13 +42,9 @@ Arguments:
 
 Commands:
 * show-package-name
-  Show package name.
 * show-package-version
-  Show package version.
 * show-arch
-  Show architecture name.
 * show-revision
-  Show revision.
 * generate
   Generate a set of package information files.
   There are two information files.
@@ -56,18 +52,21 @@ Commands:
   2. INSTALL-rule: The packing actions.
 * debian
   According to the actions of 'INSTALL-rule' to make a Debian package.
+* dist
+  It is the ame as command 'debian'.
 
 INSTALL-rule:
 * The line that begins with # or ; will be thought as comment.
 * Support variables interpolation. For example,
   WWWDIR=var/www
   pack homepage $WWWDIR/service
-* If you want to copy file or pack folder to package's control folder,
+* If you want to copy a file or pack a folder to package's control folder,
   using $CONTROLS instead of 'DEBIAN'.
 * Auto-rule for Debain (you don't need to write these rules):
   * It will copy ChangeLog to DEBIAN/changelog.
   * It will copy conffiles/preinst/prerm/postinst/postrm in
-    base dir or 'data' sub-dir to 'DEBIAN' dir.
+    base directory, 'data' sub-directory, or 'scripts' sub-directory to
+    'DEBIAN' directory.
   * It will copy install.sh to postinst, uninstall.sh to prerm.
 * Provides the following actions:
   * pack directory [dist_target_directory]
@@ -85,6 +84,6 @@ Debian's control:
 * If there is a %r in 'Version' field, that will be substitute
   as revision number.
 
-Example: To make a debian package file of make-package.
+Example: To make a debian package file of make-package (pack self).
  $ make-package generate debian
 
