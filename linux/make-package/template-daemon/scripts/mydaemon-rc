@@ -9,37 +9,36 @@
 # Description:       My Daemon.
 ### END INIT INFO
 
-DAEMON_NAME=mydaemon
+SERVICE=mydaemon
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
-DAEMON=/usr/local/bin/mydaemon
+PROGRAM=/usr/local/bin/mydaemon
 PIDFILE=/var/run/mydaemon.pid
 
-test -x $DAEMON || exit 0
+test -x $PROGRAM || exit 0
 
 . /lib/lsb/init-functions
 
 case "$1" in
   start)
-	log_daemon_msg "Starting deferred execution scheduler" "${DAEMON_NAME}"
-	start_daemon -p $PIDFILE $DAEMON
+	log_daemon_msg "Starting deferred execution scheduler" "$SERVICE"
+	start_daemon -p $PIDFILE $PROGRAM
 	log_end_msg $?
     ;;
   stop)
-	log_daemon_msg "Stopping deferred execution scheduler" "${DAEMON_NAME}"
-	killproc -p $PIDFILE $DAEMON
-	sleep 3
+	log_daemon_msg "Stopping deferred execution scheduler" "$SERVICE"
+	killproc -p $PIDFILE $PROGRAM
+    sleep 2
 	log_end_msg $?
     ;;
-  force-reload|restart)
+  restart)
     $0 stop
-    sleep 3
     $0 start
     ;;
   status)
-    status_of_proc -p $PIDFILE $DAEMON mgmatchd && exit 0 || exit $?
+    status_of_proc -p $PIDFILE $PROGRAM $SERVICE && exit 0 || exit $?
     ;;
   *)
-    echo "Usage: /etc/init.d/${DAEMON_NAME} {start|stop|restart|force-reload|status}"
+    echo "Usage: /etc/init.d/$SERVICE {start|stop|restart|status}"
     exit 1
     ;;
 esac
