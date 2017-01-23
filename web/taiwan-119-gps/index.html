@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!--
+Taiwan 119 GPS Copyright (C) 2017 遊手好閒的石頭成 <shirock.tw@gmail.com>
+
+Taiwan 119 GPS is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see
+<http://www.gnu.org/licenses/gpl-3.0-standalone.html>.
+
+You should see http://rocksaying.tw/ to get more information about this.
+-->
+<html>
+<meta charset="utf-8" />
+<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+
+<script src="main.js">
+</script>
+
+<style type="text/css">
+* {
+    box-sizing: border-box;
+    font-size: 26px;
+}
+.small {
+    font-size: 16px;
+}
+
+body {
+    margin: 0;
+    padding: 10px;
+    width: 100%;
+    background-color: #ddd;
+}
+
+[class*="row-"] {
+    margin: 10px auto;
+    padding: 5px;
+    width: 100%;
+}
+
+.row-sms {
+    border: 4px red outset;
+    border-radius: 15px;
+    background-color: white;
+    text-align: center;
+}
+
+#helpmsg {
+    border: 2px red solid;
+    width: 100%;
+    height: 4em;
+    padding: 3px;
+    font-size: 18px;
+}
+</style>
+
+<body>
+<h1>SOS! 119</h1>
+
+<div class="row-regions">
+<span class="small">選擇最近的消防局</span><br/>
+<select id="regions">
+</select>
+</div>
+
+<!-- http://www.moi.gov.tw/chi/chi_faq/faq_detail.aspx?t=2&n=10339&p=3&f=8 -->
+<div class="row-helpmsg">
+<span class="small">求救訊息</span><br/>
+<textarea id="helpmsg">我是○○○，男（女），受困了，在○○縣，身穿○○顏色的衣服，請救我！</textarea>
+</div>
+
+<div class="row-sms">
+<a id="sms" href="sms:">發 送 求 救 簡 訊<br/><span class="small">(自動加入GPS位置)</span></a>
+</div>
+
+<div class="raw-position" id="position">
+GPS 位置，偵測中...
+</div>
+<!--TODO refresh position button -->
+
+<div class="row-map">
+<iframe id="embedMap" width="100%" height="300" frameborder="0" scrolling="no">
+</iframe>
+</div>
+
+<!--
+<div>
+<a id="map"></a>
+</div>
+-->
+<div id="console">
+</div>
+</body>
+</html>
