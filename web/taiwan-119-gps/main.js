@@ -19,8 +19,8 @@ You should see http://rocksaying.tw/ to get more information about this.
 */
 
 // http://data.gov.tw/node/7917
-const  S119_API = 'http://od.moi.gov.tw/api/v1/rest/datastore/301060000C-000384-003';
-var s119_list = {"success":true,"result":{"resource_id":"301060000C-000384-003","limit":2000,"total":23,"fields":[{"type":"text","id":"unit"},{"type":"text","id":"SMS-number"},{"type":"text","id":"Alternate-SMS-number"},{"type":"text","id":"fax-number"}],"records":[{"unit":"單位","SMS-number":"簡訊號碼","Alternate-SMS-number":"備用簡訊號碼","fax-number":"傳真號碼"},{"unit":"基隆市消防局","SMS-number":"0911-511-901","Alternate-SMS-number":"","fax-number":"02-24294097"},{"unit":"臺北市政府消防局","SMS-number":"0932-299-702","Alternate-SMS-number":"0963-330-119","fax-number":"02-27587865"},{"unit":"新北市政府消防局","SMS-number":"0911-510-495","Alternate-SMS-number":"","fax-number":"02-89510905"},{"unit":"桃園縣政府消防局","SMS-number":"0911-511-904","Alternate-SMS-number":"","fax-number":"03-3371119"},{"unit":"新竹市消防局","SMS-number":"0911-511-905","Alternate-SMS-number":"","fax-number":"03-5260535"},{"unit":"新竹縣政府消防局","SMS-number":"0911-511-906","Alternate-SMS-number":"","fax-number":"03-5520331"},{"unit":"苗栗縣政府消防局","SMS-number":"0911-511-907","Alternate-SMS-number":"","fax-number":"037-271982"},{"unit":"臺中市政府消防局","SMS-number":"0911-511-908","Alternate-SMS-number":"","fax-number":"04-23820675"},{"unit":"彰化縣消防局","SMS-number":"0911-511-910","Alternate-SMS-number":"","fax-number":"04-7513126"},{"unit":"南投縣政府消防局","SMS-number":"0911-511-911","Alternate-SMS-number":"","fax-number":"049-2238034"},{"unit":"雲林縣消防局","SMS-number":"0911-511-912","Alternate-SMS-number":"","fax-number":"05-5351735"},{"unit":"嘉義市政府消防局","SMS-number":"0911-511-913","Alternate-SMS-number":"","fax-number":"05-2716638"},{"unit":"嘉義縣消防局","SMS-number":"0911-511-914","Alternate-SMS-number":"","fax-number":"05-3620359"},{"unit":"臺南市政府消防局","SMS-number":"0911-511-915","Alternate-SMS-number":"","fax-number":"06-2952154"},{"unit":"高雄市政府消防局","SMS-number":"0911-511-917","Alternate-SMS-number":"","fax-number":"07-8225911"},{"unit":"屏東縣政府消防局","SMS-number":"0911-511-919","Alternate-SMS-number":"","fax-number":"08-7655420"},{"unit":"宜蘭縣政府消防局","SMS-number":"0911-511-920","Alternate-SMS-number":"","fax-number":"03-9323175"},{"unit":"花蓮縣消防局","SMS-number":"0911-511-921","Alternate-SMS-number":"","fax-number":"03-8574962"},{"unit":"臺東縣消防局","SMS-number":"0911-511-922","Alternate-SMS-number":"","fax-number":"089-326923"},{"unit":"澎湖縣政府消防局","SMS-number":"0911-511-923","Alternate-SMS-number":"","fax-number":"06-9272457"},{"unit":"金門縣消防局","SMS-number":"0911-511-924","Alternate-SMS-number":"","fax-number":"082-371430"},{"unit":"連江縣消防局","SMS-number":"0919-919-995","Alternate-SMS-number":"","fax-number":"083-623816"}]}};
+const S119_API = 'http://od.moi.gov.tw/api/v1/rest/datastore/301060000C-000384-003';
+var s119_list = { "success": true, "result": { "resource_id": "301060000C-000384-003", "limit": 2000, "total": 23, "fields": [{ "type": "text", "id": "unit" }, { "type": "text", "id": "SMS-number" }, { "type": "text", "id": "Alternate-SMS-number" }, { "type": "text", "id": "fax-number" }], "records": [{ "unit": "單位", "SMS-number": "簡訊號碼", "Alternate-SMS-number": "備用簡訊號碼", "fax-number": "傳真號碼" }, { "unit": "基隆市消防局", "SMS-number": "0911-511-901", "Alternate-SMS-number": "", "fax-number": "02-24294097" }, { "unit": "臺北市政府消防局", "SMS-number": "0932-299-702", "Alternate-SMS-number": "0963-330-119", "fax-number": "02-27587865" }, { "unit": "新北市政府消防局", "SMS-number": "0911-510-495", "Alternate-SMS-number": "", "fax-number": "02-89510905" }, { "unit": "桃園縣政府消防局", "SMS-number": "0911-511-904", "Alternate-SMS-number": "", "fax-number": "03-3371119" }, { "unit": "新竹市消防局", "SMS-number": "0911-511-905", "Alternate-SMS-number": "", "fax-number": "03-5260535" }, { "unit": "新竹縣政府消防局", "SMS-number": "0911-511-906", "Alternate-SMS-number": "", "fax-number": "03-5520331" }, { "unit": "苗栗縣政府消防局", "SMS-number": "0911-511-907", "Alternate-SMS-number": "", "fax-number": "037-271982" }, { "unit": "臺中市政府消防局", "SMS-number": "0911-511-908", "Alternate-SMS-number": "", "fax-number": "04-23820675" }, { "unit": "彰化縣消防局", "SMS-number": "0911-511-910", "Alternate-SMS-number": "", "fax-number": "04-7513126" }, { "unit": "南投縣政府消防局", "SMS-number": "0911-511-911", "Alternate-SMS-number": "", "fax-number": "049-2238034" }, { "unit": "雲林縣消防局", "SMS-number": "0911-511-912", "Alternate-SMS-number": "", "fax-number": "05-5351735" }, { "unit": "嘉義市政府消防局", "SMS-number": "0911-511-913", "Alternate-SMS-number": "", "fax-number": "05-2716638" }, { "unit": "嘉義縣消防局", "SMS-number": "0911-511-914", "Alternate-SMS-number": "", "fax-number": "05-3620359" }, { "unit": "臺南市政府消防局", "SMS-number": "0911-511-915", "Alternate-SMS-number": "", "fax-number": "06-2952154" }, { "unit": "高雄市政府消防局", "SMS-number": "0911-511-917", "Alternate-SMS-number": "", "fax-number": "07-8225911" }, { "unit": "屏東縣政府消防局", "SMS-number": "0911-511-919", "Alternate-SMS-number": "", "fax-number": "08-7655420" }, { "unit": "宜蘭縣政府消防局", "SMS-number": "0911-511-920", "Alternate-SMS-number": "", "fax-number": "03-9323175" }, { "unit": "花蓮縣消防局", "SMS-number": "0911-511-921", "Alternate-SMS-number": "", "fax-number": "03-8574962" }, { "unit": "臺東縣消防局", "SMS-number": "0911-511-922", "Alternate-SMS-number": "", "fax-number": "089-326923" }, { "unit": "澎湖縣政府消防局", "SMS-number": "0911-511-923", "Alternate-SMS-number": "", "fax-number": "06-9272457" }, { "unit": "金門縣消防局", "SMS-number": "0911-511-924", "Alternate-SMS-number": "", "fax-number": "082-371430" }, { "unit": "連江縣消防局", "SMS-number": "0919-919-995", "Alternate-SMS-number": "", "fax-number": "083-623816" }] } };
 
 var coords = false;
 var regions_ctrl = false;
@@ -35,9 +35,19 @@ function set_position_content(text) {
     document.getElementById('position').innerHTML = text;
 }
 
-function got_position(position) {
-    coords = position.coords;
-    set_position_content(`緯度: ${coords.latitude}<br/>經度: ${coords.longitude}`);
+function got_position(position, err=false) {
+    let msg = '';
+    if (position) {
+        coords = position.coords;
+    }
+    else {
+        msg = err + '<br/>使用原先位置<br/>';
+    }
+    if (!coords) {
+        set_position_content('無法取得位置');
+        return;
+    }
+    set_position_content(`${msg}緯度: ${coords.latitude}<br/>經度: ${coords.longitude}`);
     for (let p in coords) {
         log(`${p}: ${coords[p]}`);
     }
@@ -63,7 +73,10 @@ function get_position() {
     set_position_content('GPS 位置，偵測中...');
     navigator.geolocation.getCurrentPosition(
         got_position,
-        ()=>{},
+        (err) => {
+            log(err);
+            got_position(false, err);
+        },
         {
             enableHighAccuracy: true,
             timeout: 5000, // 5 seconds
@@ -98,7 +111,7 @@ function create_regions() {
     let default_sms = localStorage.s119_sms;
 
     regions_ctrl.innerHTML = '';
-    s119_list.result.records.forEach((v,i)=>{
+    s119_list.result.records.forEach((v, i) => {
         if (/^\D/.test(v['SMS-number']))
             return;
         //log(v.unit, v['SMS-number']);
@@ -128,10 +141,11 @@ function init() {
     var xhr = new XMLHttpRequest();
     if (xhr.overrideMimeType)
         xhr.overrideMimeType('application/json');
-    xhr.addEventListener('load', function(){
+    xhr.addEventListener('load', function () {
         if (this.status >= 300)
             return;
         //log(this.responseText);
+        log("refresh fd list");
         let fd_list = JSON.parse(this.responseText);
         if (fd_list.success) {
             localStorage.s119_list = this.responseText;
@@ -139,7 +153,7 @@ function init() {
             create_regions();
         }
     });
-    xhr.addEventListener('error', function(evt){
+    xhr.addEventListener('error', function (evt) {
         log(evt);
     });
     xhr.open('GET', S119_API, true);
