@@ -36,8 +36,18 @@ function set_position_content(text) {
 }
 
 function got_position(position) {
-    coords = position.coords;
-    set_position_content(`緯度: ${coords.latitude}<br/>經度: ${coords.longitude}`);
+    let msg = '';
+    if (position) {
+        coords = position.coords;
+    }
+    else {
+        msg = '使用原先位置<br/>';
+    }
+    if (!coords) {
+        set_position_content('無法取得位置!');
+        return;
+    }
+    set_position_content(`${msg}緯度: ${coords.latitude}<br/>經度: ${coords.longitude}`);
     for (let p in coords) {
         log(`${p}: ${coords[p]}`);
     }
@@ -58,12 +68,22 @@ function got_position(position) {
     document.getElementById('embedMap').src = `http://www.google.com.tw/maps?q=loc:${coords.latitude},${coords.longitude}&output=embed`;
 }
 
+/*
+在下列環境中，開啟時可成功偵測位置，但按「定位」鈕再次定位時會失敗:
+* Microsoft Edge 瀏覽器
+* UWP App (PC 與 Windows 10 Mobile)
+
+但用 Firefox 瀏覽器時，不論作業系統是 windows 10 或 linux 都能再次定位。
+ */
 function get_position() {
     log('get position');
     set_position_content('GPS 位置，偵測中...');
     navigator.geolocation.getCurrentPosition(
         got_position,
-        ()=>{},
+        (err) => {
+            log(err);
+            got_position(false);
+        },
         {
             enableHighAccuracy: true,
             timeout: 5000, // 5 seconds
@@ -98,7 +118,7 @@ function create_regions() {
     let default_sms = localStorage.s119_sms;
 
     regions_ctrl.innerHTML = '';
-    s119_list.result.records.forEach((v,i)=>{
+    s119_list.result.records.forEach((v, i) => {
         if (/^\D/.test(v['SMS-number']))
             return;
         //log(v.unit, v['SMS-number']);
