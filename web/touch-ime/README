@@ -1,5 +1,5 @@
 Package: touch-ime
-Version: 0.9.2
+Version: 0.9.4
 Maintainer: shirock <shirock.tw@gmail.com>
 Architecture: all
 Section: misc
@@ -31,9 +31,9 @@ index.html is a demo.
 USER GUIDE
 ==========
 
-* Introduction: http://rocksaying.tw/archives/2013/Touch%20%E8%BC%B8%E5%85%A5%E6%B3%95%20%28HTML5%20%E8%A7%B8%E6%8E%A7%E5%BC%8F%E8%BC%B8%E5%85%A5%E6%B3%95%29.html
+* Introduction: http://rocksaying.tw/archives/25452026.html
 * Manual: https://code.google.com/p/rocksources/wiki/TouchInputMethod
-* How To Use On Screen Keyboard: http://rocksaying.tw/archives/2013/Touch%20%E8%BC%B8%E5%85%A5%E6%B3%95%E9%99%84%E5%8A%A0%20On%20Screen%20Keyboard.html
+* How To Use On Screen Keyboard: http://rocksaying.tw/archives/25786644.html
 
 Via package install
 ===================
