@@ -15,36 +15,42 @@ You should have received a copy of the GNU Lesser General Public License
 along with this program.  If not, see
 <http://www.gnu.org/licenses/lgpl-3.0-standalone.html>.
 
-You should see https://rocksources.googlecode.com/ to get more
+You should see https://github.com/shirock/rocksources/tree/master/web/touch-ime to get more
 information about Touch IME.
 */
-// $Rev: 121 $
+/* last-updated: 2017-02-15
+自 2016 年起更新的瀏覽器，皆開始警告將廢止在主執行緒執行同步 XMLHttpRequest ，故將載入表格的動作由同步改為非同步。
+"Synchronous XMLHttpRequest on the main thread is deprecated because of its detrimental effects to the end user's experience. For more help, check http://xhr.spec.whatwg.org/."
+*/
 var TouchInputMethod = new (function(){
 
 var default_input_method_engine_name = 'zhuyin';
 var current_input_method_engine_name = default_input_method_engine_name;
-
-var engines_cycle = {
-    "zhuyin": "en",
-    "en": "email",
-    "email": "pinyin",
-    "pinyin": "quick",
-    "quick": "array30",
-    "array30": "zhuyin"
-};
+var is_user_change_engine = false;
 
 var engine_info = {
-    "zhuyin": {"name": "注音"},
-    "en": {"name": "英數"},
-    "enShift": {"name": "英數大"},
-    "email": {"name": "電郵"},
-    "pinyin": {"name": "拼音"},
-    "array30": {"name": "行列30"},
+    "zhuyin":   {"name": "注音"},
+    "en":       {"name": "英數"},
+    "enShift":  {"name": "英數大"},
+    "email":    {"name": "電郵"},
+    "pinyin":   {"name": "拼音"},
+    "array30":  {"name": "行列30"},
     "cangjie3": {"name": "倉頡"},
     "cangjie5": {"name": "倉頡五"},
-    "quick": {"name": "速成"}
+    "quick":    {"name": "速成"}
 };
 
+// 輸入法切換鏈
+var engines_cycle = {
+    "zhuyin":   "en",
+    "en":       "email",
+    "email":    "pinyin",
+    "pinyin":   "quick",
+    "quick":    "array30",
+    "array30":  "zhuyin"
+};
+
+// 指示特殊 input type 專用的輸入法
 var special_input_keyboard_map = {
     'password': 'en',
     'datetime': 'en',
@@ -76,22 +82,6 @@ var auto_clear_input_keys = false;
 var input_keys = [];
 
 var resources_path = ''; // see set_resources_path().
-
-var table_xhr = new XMLHttpRequest();
-if (table_xhr.overrideMimeType)
-    table_xhr.overrideMimeType('text/plain');
-table_xhr.addEventListener('load', function(){
-    if (table_xhr.status >= 300)
-        return false;
-    data = table_xhr.responseText;
-    update_candidates(data);
-    return true;
-});
-
-var engine_xhr = new XMLHttpRequest();
-if (engine_xhr.overrideMimeType)
-    engine_xhr.overrideMimeType('application/json');
-
 
 var keyboard_id = 'input_method_keyboard';
 var candidate_id = 'input_method_candidate';
@@ -277,8 +267,8 @@ this.install_engine_info = function(new_engine_info)
 {
     console.log("install engine info");
     engine_info = new_engine_info;
-    var code_list = [];
-    for (var code in engine_info) {
+    let code_list = [];
+    for (let code in engine_info) {
         //console.log("code in engine_info:", code);
         code_list.push(code);
     }
@@ -300,7 +290,7 @@ valid code name:
  */
 this.enable_engines = function(engine_code_list)
 {
-    var next;
+    let next;
     if (engine_code_list.length < 1)
         return;
     current_input_method_engine_name = engine_code_list[0];
@@ -324,10 +314,8 @@ change input engine to engine_code.
  */
 this.change_engine = function(engine_code)
 {
-    changed = try_change_engine(engine_code);
-    if (changed)
-        default_input_method_engine_name = engine_code;
-    // 每當使用者手動選擇輸入法之後，就改以該輸入法為預設。
+    is_user_change_engine = true;
+    try_change_engine(engine_code);
 }
 
 /**
@@ -346,9 +334,8 @@ this.clean_local_table = function()
 {
     if (!localStorage)
         return;
-    var special_table = ['en', 's', 'w', 'ascii'];
-    special_table.forEach(function(v, idx, ot) {
-        console.info('remove localStorage.%s', 'input_method_'.concat(v));
+    ['en', 's', 'w', 'ascii'].forEach(function(v, idx, ot) {
+        console.log('remove localStorage.%s', 'input_method_'.concat(v));
         localStorage.removeItem('input_method_'.concat(v));
     });
 }
@@ -376,7 +363,7 @@ this.oncapitalization = false;
 
 this.init = function()
 {
-    var elms, i;
+    let elms, i;
 
     keyboard = document.getElementById(keyboard_id);
     candidate = document.getElementById(candidate_id);
@@ -427,7 +414,7 @@ this.init = function()
         "end_composition": end_composition
     };
 
-    for (var k in input_method_toolbar_handlers) {
+    for (let k in input_method_toolbar_handlers) {
         elms = document.getElementsByClassName(control_classes[k]);
         if (elms.length > 0) {
             for (i = 0; i < elms.length; ++i)
@@ -465,11 +452,11 @@ this.init = function()
 
 function detect_resources_path() {
     // detect uri of touch-ime.
-    var i, path_index;
-    var loaded_scripts = document.getElementsByTagName('script');
+    let path_index;
+    let loaded_scripts = document.getElementsByTagName('script');
     if (loaded_scripts.length < 1)
         return;
-    for (i = 0; i < loaded_scripts.length; ++i) {
+    for (let i = 0; i < loaded_scripts.length; ++i) {
         path_index = loaded_scripts[i].src.match(/(.*\/)touch-ime.js$/);
         if (path_index)
             resources_path = path_index[1];
@@ -477,7 +464,7 @@ function detect_resources_path() {
 }
 
 function get_current_input_index() {
-    var i, inputs = document.querySelectorAll('input, textarea'); //document.getElementsByTagName('input');
+    let i, inputs = document.querySelectorAll('input, textarea'); //document.getElementsByTagName('input');
     for (i = 0; i < inputs.length; ++i) {
         //console.log("%s, %s", output.name, output.offsetTop);
         if (output == inputs[i])
@@ -489,16 +476,16 @@ function get_current_input_index() {
 }
 
 function goto_previous() {
-    var ic = get_current_input_index();
-    var n = ic.current - 1;
+    let ic = get_current_input_index();
+    let n = ic.current - 1;
     if (n < 0)
         n = ic.inputs.length - 1;
     ic.inputs[n].focus();
 }
 
 function goto_next() {
-    var ic = get_current_input_index();
-    var n = ic.current + 1;
+    let ic = get_current_input_index();
+    let n = ic.current + 1;
     if (n >= ic.inputs.length)
         n = 0;
     ic.inputs[n].focus();
@@ -524,7 +511,7 @@ function goto_next() {
 }
 
 function refresh_select_engine_ctrls() {
-    var select_ctrl, engine_code, opt;
+    let select_ctrl, engine_code, opt;
     select_engine_ctrls = document.getElementsByClassName(control_classes["select_engine"]);
     for (i = 0; i < select_engine_ctrls.length; ++i) {
         select_ctrl = select_engine_ctrls[i];
@@ -543,49 +530,63 @@ function refresh_select_engine_ctrls() {
     select_ctrl = engine_code = opt = null;
 }
 
-function load_input_method_engine() {
-    var tmp, tmp_tbl, tmp_keyboard;
+function word_table_loaded() {
+    if (word_table_xhr.status >= 300) {
+        console.error("Could not load word table");
+        engine_word_table_failed = true;
+        try_to_load_usable_engine();
+        return;
+    }
+    console.log('word table loaded');
+    word_table = JSON.parse(word_table_xhr.responseText);
 
-    var word_table_file_name = current_input_method_engine_name.concat('-tbl.js');
-    console.info("get table:", resources_path, word_table_file_name);
-    engine_xhr.open('GET', resources_path+word_table_file_name, false); // sync call
-    try {
-        engine_xhr.send();
-        tmp_tbl = JSON.parse(engine_xhr.responseText);
-    }
-    catch (e) {
-        console.error("Could not load word table ", word_table_file_name);
-        return false;
-    }
+    engine_word_table_loaded = true;
+    input_method_engine_loaded();
+}
 
-    var keyboard_file_name = current_input_method_engine_name.concat('-keyboard.js');
-    console.info("get table:", keyboard_file_name);
-    engine_xhr.open('GET', resources_path+keyboard_file_name, false);
-    try {
-        engine_xhr.send();
-        tmp_keyboard = JSON.parse(engine_xhr.responseText);
+function keyboard_loaded() {
+    if (keyboard_xhr.status >= 300) {
+        console.error("Could not load keyboard");
+        engine_keyboard_failed = true;
+        try_to_load_usable_engine();
+        return;
     }
-    catch (e) {
-        console.error("Could not load word table ", word_table_file_name);
-        return false;
-    }
-
-    word_table = tmp_tbl;
+    console.log('keyboard loaded');
+    let tmp_keyboard = JSON.parse(keyboard_xhr.responseText);
     max_input_keys = tmp_keyboard.max_input_keys;
     key_sym_map = tmp_keyboard.key_sym_map;
     keyboard_layout = tmp_keyboard.keyboard_layout;
-    //console.info("keyboard: %o", keyboard_layout);
+
+    engine_keyboard_loaded = true;
+    input_method_engine_loaded();
+}
+
+function try_to_load_usable_engine() {
+    if (!engine_word_table_failed || !engine_keyboard_failed)
+        return;
+    console.error(`${current_input_method_engine_name} is not usable. load next engine.`);
+    current_input_method_engine_name = engines_cycle[current_input_method_engine_name];
+    load_input_method_engine();
+}
+
+function input_method_engine_loaded() {
+    if (!engine_word_table_loaded || !engine_keyboard_loaded)
+        return;
+
+    console.log('engine loaded');
+    let tmp;
 
     if (!keyboard) // Document is not laoded, DOMtree is not ready.
         return;
 
     keyboard.innerHTML = '';
-    keyboard_layout.forEach(function(v, idx, ot) {
+    keyboard_layout.forEach((v, idx, ot)=>{
+        let btn;
         if (v == '\n') {
             keyboard.appendChild(document.createElement('br'));
             return;
         }
-        var btn = document.createElement('button');
+        btn = document.createElement('button');
         class_list_add(btn, control_classes['inputkey']);
         btn.value = v;
         btn.textContent = (capital_mode ? key_sym_map[v].toUpperCase() : key_sym_map[v]);
@@ -596,14 +597,14 @@ function load_input_method_engine() {
     });
 
     // show current engine name in 'switch' button.
-    for (var i = 0; i < switch_engine_ctrls.length; ++i) {
+    for (let i = 0; i < switch_engine_ctrls.length; ++i) {
         switch_engine_ctrls[i].textContent = engine_info[current_input_method_engine_name].name;
     }
 
     // change current engine in 'select' control.
-    for (var i = 0; i < select_engine_ctrls.length; ++i) {
+    for (let i = 0; i < select_engine_ctrls.length; ++i) {
         tmp = select_engine_ctrls[i];
-        for (var j = 0; j < tmp.options.length; ++j) {
+        for (let j = 0; j < tmp.options.length; ++j) {
             if (tmp.options[j].value == current_input_method_engine_name) {
                 tmp.selectedIndex = j;
                 break;
@@ -611,29 +612,63 @@ function load_input_method_engine() {
         }
     }
 
-    tmp = tmp_tbl = tmp_keyboard = null;
+    tmp = null;
 
     clear_input_keys();
+
+    if (is_user_change_engine) {
+        is_user_change_engine = false;
+        // 每當使用者手動選擇輸入法之後，就改以該輸入法為預設。
+        //console.log('change default_input_method_engine_name');
+        default_input_method_engine_name = current_input_method_engine_name;
+    }
+    return;
+}
+
+// 協調 word table 和 keyboard 載入動作
+var engine_word_table_loaded = false;
+var engine_word_table_failed = false;
+var engine_keyboard_loaded = false;
+var engine_keyboard_failed = false;
+
+var word_table_xhr = new XMLHttpRequest();
+if (word_table_xhr.overrideMimeType)
+    word_table_xhr.overrideMimeType('application/json');
+word_table_xhr.addEventListener('load', word_table_loaded, false);
+
+var keyboard_xhr = new XMLHttpRequest();
+if (keyboard_xhr.overrideMimeType)
+    keyboard_xhr.overrideMimeType('application/json');
+keyboard_xhr.addEventListener('load', keyboard_loaded, false);
+
+function load_input_method_engine() {
+    engine_word_table_loaded = engine_keyboard_loaded = false;
+    engine_word_table_failed = engine_keyboard_failed = false;
+
+    let word_table_file_name = current_input_method_engine_name.concat('-tbl.js');
+    console.log("get word table:", resources_path, word_table_file_name);
+    word_table_xhr.open('GET', resources_path+word_table_file_name, true);
+    word_table_xhr.send();
+
+    let keyboard_file_name = current_input_method_engine_name.concat('-keyboard.js');
+    console.log("get keyboard table:", keyboard_file_name);
+    keyboard_xhr.open('GET', resources_path+keyboard_file_name, true);
+    keyboard_xhr.send();
+
     return true;
 }
 
 function try_change_engine(engine_code) {
     if (engine_code == current_input_method_engine_name)
-        return true; // 相同輸入法，不必改變. 回傳 true 表示正常.
-    var old_input_name = current_input_method_engine_name;
+        return; // 相同輸入法，不必改變.
     current_input_method_engine_name = engine_code;
-    var changed = load_input_method_engine();
-    if (!changed) {
-        current_input_method_engine_name = old_input_name;
-        load_input_method_engine();
-    }
-    return changed;
+    load_input_method_engine();
 }
 
 function according_input_type_switch_engine() {
     // this will not change default_input_method_engine_name.
     // First check class name.
-    for (var ctrl_name in special_input_keyboard_map) {
+    for (let ctrl_name in special_input_keyboard_map) {
         if (class_list_contains(output, ctrl_name)) {
             try_change_engine(special_input_keyboard_map[ctrl_name]);
             return;
@@ -652,41 +687,16 @@ function according_input_type_switch_engine() {
 }
 
 function switch_engine() {
-    var backup_name = current_input_method_engine_name;
-    while (true) {
-        current_input_method_engine_name = engines_cycle[current_input_method_engine_name];
-        if (load_input_method_engine())
-            break;
-        if (backup_name == current_input_method_engine_name) {
-            console.error("touch-ime failed! All input engine's table files could not be loaded");
-            /*這是一個特殊的情況，當此條件發生時，表示走完一輪 engines_cycle
-            卻無法載入任何輸入法字表，這也意味著 touch-ime 無法運作。*/
-            return;
-        }
-    }
-    // 每當使用者手動選擇輸入法之後，就改以該輸入法為預設。
-    default_input_method_engine_name = current_input_method_engine_name;
+    is_user_change_engine = true;
+    current_input_method_engine_name = engines_cycle[current_input_method_engine_name];
+    load_input_method_engine();
 }
 
 function select_engine() {
-    var backup_name = current_input_method_engine_name;
-    console.log("select engine:", this.options[this.selectedIndex].value);
+    is_user_change_engine = true;
+    console.log("select engine: " + this.options[this.selectedIndex].value);
     current_input_method_engine_name = this.options[this.selectedIndex].value;
-
-    if (!load_input_method_engine()) {
-        // revert
-        current_input_method_engine_name = backup_name;
-        for (var i = 0; i < this.options.length; ++i) {
-            if (this.options[i].value == backup_name) {
-                this.selectedIndex = i;
-                break;
-            }
-        }
-    }
-    else {
-        // 每當使用者手動選擇輸入法之後，就改以該輸入法為預設。
-        default_input_method_engine_name = current_input_method_engine_name;
-    }
+    load_input_method_engine();
 }
 
 function end_composition() {
@@ -754,8 +764,8 @@ function backspace_output_texts() {
     W3 HTML5 - 4.10 Forms. */
     if (output.value.length < 1)
         return false;
-    var txt = output.value;
-    var entry_cursor = output.selectionEnd;
+    let txt = output.value;
+    let entry_cursor = output.selectionEnd;
     if (entry_cursor != undefined) {
         if (entry_cursor < 1)
             return false;
@@ -775,8 +785,8 @@ function add_char_output_texts(ch) {
         document.execCommand('insertText', false, ch);
     }
     else */
-    var txt = output.value;
-    var entry_cursor = output.selectionEnd;
+    let txt = output.value;
+    let entry_cursor = output.selectionEnd;
     if (entry_cursor != undefined) {
         output.value = txt.substring(0, entry_cursor).
             concat(ch, txt.substring(entry_cursor));
@@ -818,9 +828,9 @@ function class_list_toggle(node, class_name) {
     if (classList_supporting /*&& node.classList.toggle*/)
         return node.classList.toggle(class_name);
     //console.info("browser does not support classList.toggle");
-    var classes = node.className.split(' ');
-    var need_to_turn_on = true;
-    classes.forEach(function(v, i, oa){
+    let classes = node.className.split(' ');
+    let need_to_turn_on = true;
+    classes.forEach((v, i, oa)=>{
         if (v == class_name) {
             oa.splice(i, 1); // toggle off
             need_to_turn_on = false;
@@ -837,8 +847,8 @@ function class_list_contains(node, class_name) {
     if (classList_supporting /*&& node.classList.contains*/)
         return node.classList.contains(class_name);
     //console.info("browser does not support classList.contains");
-    var classes = node.className.split(' ');
-    for (var i = 0; i < classes.length; ++i) {
+    let classes = node.className.split(' ');
+    for (let i = 0; i < classes.length; ++i) {
         if (classes[i] == class_name)
             return true;
     }
@@ -847,7 +857,7 @@ function class_list_contains(node, class_name) {
 
 function toggle_auto_clear_input_keys() {
     auto_clear_input_keys = !auto_clear_input_keys;
-    var elms, i;
+    let elms, i;
     elms = document.getElementsByClassName(control_classes['auto_clear_input_keys_mode']);
     if (elms.length == 0)
         return;
@@ -862,7 +872,7 @@ function toggle_auto_clear_input_keys() {
 
 function toggle_capital() {
     capital_mode = !capital_mode;
-    var elms, i, kb_text;
+    let elms, i, kb_text;
     elms = document.getElementsByClassName(control_classes['capital_toggle']);
     if (elms.length == 0)
         return;
@@ -878,8 +888,8 @@ function toggle_capital() {
         TouchInputMethod.oncapitalization(capital_mode);
     console.log("capital_mode: ", capital_mode);
 
-    var kbs = keyboard.getElementsByTagName('button');
-    var ikb;
+    let kbs = keyboard.getElementsByTagName('button');
+    let ikb;
     for (ikb = 0; ikb < kbs.length; ++ikb) {
         kb_text = kbs[ikb].textContent;
         if (capital_mode && kb_text >= 'a' && kb_text <= 'z')
@@ -898,15 +908,15 @@ function toggle_capital() {
 function refresh_show_input_keys() {
     if (!show_input_keys)
         return;
-    var keys = [];
-    for (var i = 0; i < input_keys.length; ++i) {
+    let keys = [];
+    for (let i = 0; i < input_keys.length; ++i) {
         keys.push(key_sym_map[input_keys[i]]);
     }
     show_input_keys.textContent = (keys.length > 0 ? keys.join('') : ' ');
 }
 
 function trim(s) {
-    var h, t;
+    let h, t;
     for (h = 0; h < s.length; ++h) {
         if (s.charCodeAt(h) > 32)
             break;
@@ -928,7 +938,7 @@ function update_candidates(data) {
     }
 
     // 避免單一 ',' 字元。
-    var candidates = (data.length == 1 ? [data] : data.split(','));
+    let candidates = (data.length == 1 ? [data] : data.split(','));
 
     if (input_keys.length == max_input_keys && candidates.length == 1) {
         // 已輸入最多字根且只有一個候選字，自動出字
@@ -968,39 +978,41 @@ function refresh_candidates() {
         return true;
     }
 
-    var table_key;
+    let table_key;
     table_key = input_keys.join('');
     //console.log("key: ", table_key);
 
-    var data = false;
+    let data = false;
     if (table_key.charAt(0) == '~') { //獨立字根，一律從 localStorage 或 .tab 中讀取。
         table_key = table_key.substring(1); // strip '~'
-        var local_table_key = 'input_method_'.concat(table_key);
+        let local_table_key = 'input_method_'.concat(table_key);
         console.log("search localStorage by key ", local_table_key);
         if (localStorage)
             data = localStorage.getItem(local_table_key);
         if (!data) {
             console.log("not in localStorage");
-            var text_table_name = table_key.concat('.tab');
+            let text_table_name = table_key.concat('.tab');
             console.log("get table_name: ", text_table_name);
-            table_xhr.open('GET', resources_path+text_table_name, false); // sync call.
-            try {
-                table_xhr.send();
-                if (table_xhr.status < 300)
-                    data = table_xhr.responseText;
-                //console.log("load ", data.substring(0, 20));
-            }
-            catch (e) {
-                data = false;
-                console.info("could not request " + text_table_name);
-                return false;
-            }
-            if (data && localStorage) {
-                console.log("save in localStorage");
-                localStorage.setItem(local_table_key, data);
-            }
-            else
-                console.info("could not request " + text_table_name);
+            let table_xhr = new XMLHttpRequest();
+            if (table_xhr.overrideMimeType)
+                table_xhr.overrideMimeType('text/plain');
+            table_xhr.addEventListener('load', ((storage_key)=>{
+                return function(){
+                    if (this.status >= 300) {
+                        console.error('could not load table');
+                        return;
+                    }
+                    let data = table_xhr.responseText;
+                    if (localStorage) {
+                        console.log("save in localStorage ", storage_key);
+                        localStorage.setItem(storage_key, data);
+                    }
+                    update_candidates(data);
+                };
+            })(local_table_key), false);
+            table_xhr.open('GET', resources_path+text_table_name, true);
+            table_xhr.send();
+            return true;
         }
     }
     else if (word_table) {
@@ -1013,35 +1025,17 @@ function refresh_candidates() {
             return false;
         }
     }
-    /*
-    else {
-        data = localStorage.getItem(table_name);
-        //console.log('localStorage: %s', data);
-    }
-    */
 
     if (data) {
         update_candidates(data);
-        return true;
     }
 
-    /*
-    var text_table_name = 'tbl/' + input_keys.join('-') + '.tab';
-    //console.log("table_name: %s", text_table_name);
-    table_xhr.open('GET', text_table_name, true);
-    try {
-        table_xhr.send();
-    }
-    catch (e) {
-        // ignore.
-    }
-    */
     return true;
 } // end refresh_candidates()
 
 function bind_all_text_input_focus_handler() {
-    var inputs = document.querySelectorAll('input, textarea');
-    for (var i = 0; i < inputs.length; ++i) {
+    let inputs = document.querySelectorAll('input, textarea');
+    for (let i = 0; i < inputs.length; ++i) {
         /*
         if (this.type in special_input_keyboard_map &&
             special_input_keyboard_map[this.type] == 'ignore')
