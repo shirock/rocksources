@@ -151,6 +151,8 @@ class CameraService(dbus.service.Object):
     def joining_player(self):
         #See http://docs.python.org/library/multiprocessing.html#all-platforms
         #    Joining zombie processes
+        if MAIN_PID != os.getpid():
+            return
         cl = multiprocessing.active_children()
             #debug("length of active children: %d; length of cameras: %d" %
             #    (len(cl), len(self.cameras)))
@@ -604,28 +606,16 @@ class Camera(multiprocessing.Process, dbus.service.Object):
         self.method_pipe.send(request_args)
 
         try:
-            result = self.method_pipe.poll(CameraService.Max_Wait_Seconds)
-            if result:
-                #if method_name == "take_snapshot":
-                    #result = self.method_pipe.recv_bytes()
-                # 不再透過 pipe 傳遞 image 資料，降低 IO 負擔，以避免 I/O crash 導致的服務停擺狀況。
-                # See also: ticket:1431
-#                if recv_bytes:
-#                    result = self.method_pipe.recv()
-#                    if result: # result is filepath of snapshot
-#                        #debug("read data from %s" % result)
-#                        with open(result, "rb") as fh:
-#                            result = fh.read()
-#                        debug("read %d bytes" % len(result))
-#                else:
+            if self.method_pipe.poll(CameraService.Max_Wait_Seconds):
                 result = self.method_pipe.recv()
             else:
-                debug("no response. may be child terminated")
-                result = None
+                debug("no response. poll failed")
+                #result = None
+                time.sleep(0.2)
+                result = self.method_pipe.recv()
         except Exception as e:
             debug("request with result error: %s" % e)
             result = None
-            #os._exit(1)
 
         CameraService.Request_Count -= 1
         CameraService.stop_request_alarm()
@@ -1133,7 +1123,10 @@ def g_event_timer(*args):
     return True
 
 if __name__ == "__main__":
-    #os.chdir("/")
+    start_list_filepath = "/etc/camera/uvc/start-list"
+    debug_filepath = "/etc/camera/uvc/debug"
+
+    os.chdir("/")
     try:
         opts, args = getopt.getopt(sys.argv[1:], "dhqs:",
             ["debug", "help", "quiet", "start="])
@@ -1143,8 +1136,10 @@ if __name__ == "__main__":
         usage(status=2)
 
     Debug_Mode = False
-
-    start_list_filepath = "/etc/camera/uvc/start-list"
+    if os.access(debug_filepath, os.R_OK):
+        debug_file_content = json.loads(open(debug_filepath, 'r').readline())
+        if debug_file_content:
+            Debug_Mode = True
 
     for o, a in opts:
         if o in ("-d", "--debug"):
