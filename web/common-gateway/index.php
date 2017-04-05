@@ -487,7 +487,7 @@ class CommonGateway
                 }
 
                 // case: name is 'abc_def', search 'Abc_Def.php'.
-                $name = implode('_', $ws);
+                $app_name = implode('_', $ws);
                 break;
             case 4:
                 // case: name is 'abc_def', search 'AbcDef.php'.
