@@ -1,0 +1,108 @@
+<?php
+$codename = $_SERVER['SCRIPT_NAME'];
+$codename = substr($codename, strrpos($codename, '/')+1, -4);
+?>
+<html>
+<meta charset="UTF-8" />
+<title>
+Camera Service RESTful API
+</title>
+
+<style type="text/css">
+h2 {
+    border-top: 3px double;
+}
+
+var {
+    color: blue;
+}
+
+p.url {
+    text-decoration: underline;
+}
+
+p.url::before {
+    content: "URL: ";
+    color: red;
+}
+</style>
+
+<body>
+
+<h1>Camera Service RESTful API
+</h1>
+
+<p>所有動作皆以 HTTP GET 方法調用。 <var>camera_idx</var> 表示鏡頭索引編號，其格式可為任何一個以數字結尾的字串，例如 "video0", "camera23", "cap1" 等。 0 表示第一個鏡頭的索引編號。
+</p>
+
+<p>HTTP 狀態碼:</p>
+<ul>
+    <li>200 - Ok.</li>
+    <li>400 - Bad request.</li>
+    <li>404 - Camera not found.</li>
+</ul>
+
+<h2>Show
+</h2>
+
+<p class="url"><?=$codename ?>.php/camera/<strong>show</strong>/<var>{camera_idx}</var>/<var>{x}</var>/<var>{y}</var>
+</p>
+
+<p>在 <var>x</var>, <var>y</var> 座標處顯示指定鏡頭的監視畫面。
+</p>
+
+
+<h2>Hide
+</h2>
+
+<p class="url"><?=$codename ?>.php/camera/<strong>hide</strong>/<var>{camera_idx}</var>
+</p>
+
+<p>隱藏指定鏡頭的監視畫面。
+</p>
+
+
+<h2>Resize
+</h2>
+
+<p class="url"><?=$codename ?>.php/camera/<strong>resize</strong>/<var>{camera_idx}</var>/<var>{width}</var>/<var>{height}</var>
+</p>
+
+<p>改變指定鏡頭監視畫面的顯示區域大小。這不會改變影像解析度。
+</p>
+
+
+<h2>Capture
+</h2>
+
+<ul>
+    <li><p class="url"><?=$codename ?>.php/camera/<strong>capture</strong>/<var>{camera_idx}</var>/<var>{image_format}</var>
+    <li><p class="url"><?=$codename ?>.php/camera/<strong>capture</strong>/<var>{camera_idx}</var>/<var>{image_format}</var>/base64
+</ul>
+
+<p>拍照目前的監視畫面內容。 <var>image_format</var> 指示回傳的照片格式，可為 "jpg", "bmp", "png" 或 "tiff" 。若最後一節參數為 "base64" ，則將以 BASE64 編碼字串回傳照片內容。
+</p>
+
+<h3>注意事項</h3>
+<ul>
+    <li>加上 "base64" 參數時，回傳的文件型態是 'application/octet-stream'。</li>
+    <li>未加上 "base64" 參數時，將依據 image_format 回傳文件型態，例如 'image/jpeg', 'image/bmp', 'image/png'。</li>
+</ul>
+
+
+<h2>Save
+</h2>
+
+<p class="url"><?=$codename ?>.php/camera/<strong>save</strong>/<var>{camera_idx}</var>/<var>{image_filepath}</var>
+</p>
+
+<p>儲存一張目前的監視畫面照片。照片儲存在 Web server 主機中， <var>image_filepath</var> 為儲存檔路徑，必須加上副檔名指示照片格式。
+</p>
+
+<h3>注意事項</h3>
+<p>檔案儲存路徑必須允許 Web server 寫入內容。
+</p>
+
+</body>
+
+</html>

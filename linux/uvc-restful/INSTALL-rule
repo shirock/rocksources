@@ -1,0 +1,3 @@
+WWWDIR=/var/www/restful/camera
+
+pack src $WWWDIR
