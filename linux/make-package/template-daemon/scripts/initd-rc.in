@@ -1,6 +1,6 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:          mydaemon
+# Provides:          @PKGNAME@
 # Required-Start:    $syslog $remote_fs
 # Required-Stop:     $syslog $remote_fs
 # Default-Start:     2 3 4 5
@@ -9,10 +9,10 @@
 # Description:       My Daemon.
 ### END INIT INFO
 
-SERVICE=mydaemon
+SERVICE=@PKGNAME@
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
-PROGRAM=/usr/local/bin/mydaemon
-PIDFILE=/var/run/mydaemon.pid
+PROGRAM=/usr/local/bin/@PKGNAME@
+PIDFILE=/var/run/@PKGNAME@.pid
 
 test -x $PROGRAM || exit 0
 

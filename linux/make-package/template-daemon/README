@@ -1,10 +1,9 @@
-Package: package-name
-Version: 0.0.1
+Package: mydaemon
+Version: 0.0.1-rev%r
 Architecture: @ARCH@
 Maintainer: Package Maintainers <shirock.tw@gmail.com>
-Debian_Depends: linux-generic (>= 2.6.26), libdbus-1-3, libdbus-glib-1-2
-Debian_Section: misc
-Debian_Priority: optional
+Depends: build-essential, python (>= 2.6)
+Section: misc
+Priority: optional
 Description: Intro.
  Details.
-

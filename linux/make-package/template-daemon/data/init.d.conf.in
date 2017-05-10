@@ -1,0 +1,6 @@
+start on (local-filesystems
+          and started dbus)
+stop on runlevel [!23]
+
+respawn
+exec /usr/local/bin/@PKGNAME@

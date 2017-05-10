@@ -1,9 +1,9 @@
 #!/bin/sh
-PKGNAME=package-name
+PKGNAME=mydaemon
 PREFIX="\/usr\/local"
 
 
-REQUIREDS="libc6-dev libglib2.0-dev libdbus-1-dev libdbus-glib-1-dev python"
+REQUIREDS="libc6-dev libglib2.0-dev python"
 echo "check required packages: $REQUIREDS"
 
 for REQUIRED in $REQUIREDS ; do
@@ -32,7 +32,7 @@ SDKROOT=/opt/3rdSDK
 SDKINC=$SDKROOT/include
 SDKLIB=$SDKROOT/Linux/lib/$LIBARCH
 
- #### 
+ ####
  # case 1.
  # If you have SDK of 3rd party, you want developer manual install it.
  # Are required files existence?
@@ -76,7 +76,7 @@ extract_tarball ()
     fi
 }
 
- #### 
+ ####
  # case 2.
  # If you have SDK of 3rd party, you want download and extract it automatically.
  # Download and extract it.
@@ -84,7 +84,8 @@ extract_tarball ()
 #extract_tarball sdk.tar.gz src/sdk
 
 # Write variables to files.
-WRITEFILES="Makefile"
+WRITEFILES="Makefile scripts/initd-rc scripts/install.sh scripts/uninstall.sh \
+    data/conffiles data/event.d.conf data/init.d.conf data/logrotate.conf"
 for WRITEFILE in $WRITEFILES ; do
     echo -n "writting $WRITEFILE ... "
     cat ${WRITEFILE}.in \
@@ -102,9 +103,9 @@ for WRITEFILE in $WRITEFILES ; do
     fi
 done
 
-echo 
+echo
 echo "Configure ok."
 echo "Now you can run 'make' to build this software."
-echo 
+echo
 
 exit 0

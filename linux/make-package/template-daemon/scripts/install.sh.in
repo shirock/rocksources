@@ -1,9 +1,6 @@
 #!/bin/sh
-SERVICE=mydaemon
+SERVICE=@PKGNAME@
 INITD=/etc/init.d/$SERVICE
-
-cp -n ../data/$SERVICE-logrotate    /etc/logrotate.d/$SERVICE
-cp -n ../data/$SERVICE.conf         /etc/
 
 if [ -x /sbin/insserv ]; then
   insserv $SERVICE

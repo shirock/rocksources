@@ -1,5 +1,10 @@
 BINDIR=/usr/local/bin
+DAEMON=mydaemon
 
-copy scripts/mydaemon-rc        /etc/init.d/mydaemon
-copy data/mydaemon-logrotate    /etc/logrotate.d/mydaemon
-copy data/mydaemon.conf         /etc
+# you may chose one.
+copy scripts/initd-rc       /etc/init.d/$DAEMON a+x
+copy data/event.d.conf      /etc/event.d/$DAEMON
+copy data/init.d.conf       /etc/init/$DAEMON.conf
+
+copy data/logrotate.conf    /etc/logrotate.d/$DAEMON
+copy data/$DAEMON.conf      /etc

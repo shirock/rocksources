@@ -14,12 +14,11 @@ uninstall:
 	echo "Not implemented."
 
 dist: build
-	./make-package debian
+	./make-package dist
 
 clean:
 	make -C src clean
 	rm -rf dist
-	rm -f *.deb
 
 help:
 	@echo "The following tasks available:"

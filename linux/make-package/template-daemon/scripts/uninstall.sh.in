@@ -1,5 +1,5 @@
 #!/bin/sh
-SERVICE=mydaemon
+SERVICE=@PKGNAME@
 INITD=/etc/init.d/$SERVICE
 
 $INITD stop
@@ -9,7 +9,5 @@ if [ -x /sbin/insserv ]; then
 else
   update-rc.d -f $SERVICE remove
 fi
-
-rm -f /etc/logrotate.d/$SERVICE
 
 exit 0
