@@ -91,8 +91,8 @@ struct vdIn
 	UINT32 buff_offset[NB_BUFFER];      // memory buffers offset as set by VIDIOC_QUERYBUF
 	unsigned char *tmpbuffer;           // temp buffer for decoding compressed data
 	unsigned char *framebuffer;         // frame buffer (YUYV), for rendering in SDL overlay
-	unsigned char *snapshot;            // TODO snapshot. raw frame data without any video filter.
-	int framebuffer_size;               // TODO snapshot. memcpy(snapshot, framebuffer, framebuffer_size);
+	unsigned char *snapshot;            // snapshot. raw frame data without any video filter.
+	int framebuffer_size;               // snapshot. memcpy(snapshot, framebuffer, framebuffer_size);
 	int isstreaming;                    // video stream flag (1- ON  0- OFF)
 	int isbayer;                        // raw bayer flag
 	int pix_order;                      // raw bayer pixel order (rg/gb, bg/gr, ...)
@@ -107,9 +107,10 @@ struct vdIn
 	int available_exp[4];               //backward compatible (old v4l2 exposure menu interface)
 	int PanTilt;                        //1-if PanTilt Camera 0-otherwise
 	gboolean signalquit;                // video loop exit flag
-	gboolean capVid;                    // Video capture flag (raised while capturing)
-	gboolean VidCapStop;                // Video capture stop flag (raised when video capture has stopped)
+//	gboolean capVid;                    // Video capture flag (raised while capturing)
+//	gboolean VidCapStop;                // Video capture stop flag (raised when video capture has stopped)
 	gboolean IOfinished;                // Signals that IO thread has finished
+    gboolean streaming;                 // Video streaming flag
 	LFormats *listFormats;              // structure with frame formats list
 	LDevices *listDevices;              // structure with devices list
 };

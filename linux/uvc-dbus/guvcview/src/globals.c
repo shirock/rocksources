@@ -19,6 +19,7 @@
 #                                                                               #
 ********************************************************************************/
 
+#include <stdlib.h>
 #include <glib/gprintf.h>
 #include "globals.h"
 #include "v4l2uvc.h"
@@ -39,15 +40,15 @@ int initGlobals (struct GLOBAL *global)
 
 	global->confPath = g_strdup("/etc/camera/uvc/guvcview.conf");
 
-	global->vidFPath = g_new(pchar, 2);
+//	global->vidFPath = g_new(pchar, 2);
 
 	global->imgFPath = g_new(pchar, 2);
 
-	global->vidFPath[1] = g_strdup(home);
+//	global->vidFPath[1] = g_strdup(home);
 
 	global->imgFPath[1] = g_strdup(home);
 
-	global->vidFPath[0] = g_strdup(DEFAULT_AVI_FNAME);
+//	global->vidFPath[0] = g_strdup(DEFAULT_AVI_FNAME);
 
 	global->imgFPath[0] = g_strdup(DEFAULT_IMAGE_FNAME);
 
@@ -68,12 +69,12 @@ int initGlobals (struct GLOBAL *global)
 	g_snprintf(global->vidinc_str,20,"File num:%d",global->vid_inc);
 
 	global->vid_sleep=0;
-	global->vidfile=NULL; /*vid filename passed through argument options with -n */
+//	global->vidfile=NULL; /*vid filename passed through argument options with -n */
 	global->Capture_time=0; /*vid capture time passed through argument options with -t */
 	global->imgFormat=IMG_FORMAT_JPG; /* 0 -JPG 1-BMP 2-PNG*/
 	global->VidCodec=0; /*0-"MJPG"  1-"YUY2" 2-"DIB "(rgb32) 3-...*/
 //	global->AVI_MAX_LEN=AVI_MAX_SIZE; /* ~2 Gb*/
-	global->snd_begintime=0;/*begin time for audio capture*/
+//	global->snd_begintime=0;/*begin time for audio capture*/
 	global->currtime=0;
 	global->lasttime=0;
 	global->Vidstarttime=0;
@@ -121,6 +122,11 @@ int initGlobals (struct GLOBAL *global)
 	global->AFcontrol = FALSE;
 	global->change_res = FALSE;
 	global->add_ctrls = FALSE;
+
+    global->streamingPort = g_strdup("8080");
+    global->streamingName = NULL;
+    global->streamingPassword = NULL;
+
 	return (0);
 }
 
@@ -128,23 +134,30 @@ int closeGlobals(struct GLOBAL *global)
 {
 	g_free(global->videodevice);
 	g_free(global->confPath);
-	g_free(global->vidFPath[1]);
+//	g_free(global->vidFPath[1]);
 	g_free(global->imgFPath[1]);
 	g_free(global->imgFPath[0]);
-	g_free(global->vidFPath[0]);
-	g_free(global->vidFPath);
+//	g_free(global->vidFPath[0]);
+//	g_free(global->vidFPath);
 	g_free(global->imgFPath);
     g_free(global->WVcaption);
 	g_free(global->imageinc_str);
 	g_free(global->vidinc_str);
-	g_free(global->vidfile);
+//	g_free(global->vidfile);
 	g_free(global->mode);
 	__CLOSE_MUTEX( __GMUTEX );
 	__CLOSE_COND( __GCOND );
 
+    if (global->streamingPort)
+        free(global->streamingPort);
+    if (global->streamingName)
+        free(global->streamingName);
+    if (global->streamingPassword)
+        free(global->streamingPassword);
+
 	global->videodevice=NULL;
 	global->confPath=NULL;
-	global->vidfile=NULL;
+//	global->vidfile=NULL;
 	global->mode=NULL;
 	if(global->jpeg) g_free(global->jpeg);
 	global->jpeg=NULL;

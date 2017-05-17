@@ -1,6 +1,9 @@
-LIBGUVCVIEW_SRCDIR=guvcview
+SRCDIR=guvcview/src
+
 build:
-	make -C guvcview/src build
+	make -C $(SRCDIR) -f Makefile-lib build
+	rm $(SRCDIR)/*.o
+	make -C $(SRCDIR) build
 
 dist:
 	./make-package --dest=. debian
@@ -15,7 +18,9 @@ uninstall:
 	echo "Not implemeted"
 
 clean:
-	make -C guvcview/src clean
+	make -C $(SRCDIR) clean
+	rm -f $(SRCDIR)/uvc-cli
+	rm -f $(SRCDIR)/libguvcview
 	rm -f dbus/*.pyc
 	rm -rf dist export
 	rm -f *.deb

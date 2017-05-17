@@ -48,96 +48,6 @@
 // call gdk_window_get_geometry() to reflush state.
 #define WINDOW_OUT_OF_SYNC  (gdk_window_get_geometry(global->inner_window, NULL, NULL, NULL, NULL, NULL))
 
-#if 0
-static void wmctrl(struct GLOBAL *global, char *action, char *arg)
-{
-    gchar *wmctrl_argv[] = {
-        "/usr/bin/wmctrl",
-        "-F",
-        "-r",
-        global->WVcaption,
-        action, // like "-b"
-        arg, // like "add,above"
-        NULL
-    };
-//     char *wmctrl_argv[] = {
-//         "/usr/bin/wmctrl",
-//         "-l",
-//         NULL
-//     };
-    gchar *wm_out;
-    gchar *wm_err;
-    gint wm_status;
-
-    if (global->debug)
-        printf("wmctrl -F -r \"%s\" %s \"%s\"\n", global->WVcaption, action, arg);
-
-    int i;
-    for (i = 0; i < 5; ++i) {
-        wm_out = wm_err = NULL;
-        wm_status = 0;
-        if (!g_spawn_sync("/",
-            wmctrl_argv,
-            NULL,
-            0, // G_SPAWN_DEFAULT
-            NULL, NULL,
-            &wm_out, &wm_err, &wm_status, NULL)
-        ) {
-            printf("wmctrl false\n");
-        }
-        //else {
-        //    printf("%s\n", wm_out);
-        //}
-
-        if (wm_out)
-            g_free(wm_out);
-        if (wm_err)
-            g_free(wm_err);
-
-        if (wm_status == 0) {
-            break;
-        }
-        else {
-            printf("wmctrl retry\n");
-        }
-        sleep_ms(200);
-    }
-}
-
-void video_set_geometry(struct GLOBAL *global, int x, int y, int width, int height)
-{
-    if (!global->inner_window)
-        return;
-
-    gdk_window_move_resize(global->inner_window, x, y, width, height);
-
-//     char *pos_buf;
-//
-//     pos_buf = g_strdup_printf("0,%d,%d,%d,%d", x, y, width, height);
-//     wmctrl(global, "-e", pos_buf);
-
-    if (x >= 0)
-        global->geometry.x = x;
-    if (y >= 0)
-        global->geometry.y = y;
-    if (width >= 0)
-        global->geometry.width = width;
-    if (height >= 0)
-        global->geometry.height = height;
-
-//    g_free(pos_buf);
-
-    if (global->debug) {
-        printf("After set geometry: x=%d, y=%d, w=%d, h=%d\n",
-            global->geometry.x,
-            global->geometry.y,
-            global->geometry.width,
-            global->geometry.height
-        );
-    }
-}
-#endif
-
 static bool xlib_get_xid(struct GLOBAL *global, XID *xid)
 {
     gchar *wm_argv[] = {
@@ -424,7 +334,7 @@ void *main_loop(void *data)
 
         drect.x = 0;
         drect.y = 0;
-        drect.w = global->geometry.width; // TODO scaling.
+        drect.w = global->geometry.width;
         drect.h = global->geometry.height;
     }
 
@@ -453,23 +363,6 @@ void *main_loop(void *data)
             {
                 global->skip_n++; //skip this frame
             }
-            /*reset video start time to first frame capture time */
-            #if 0
-            if(capVid)
-            {
-                if(global->framecount < 1)
-                {
-                    global->Vidstarttime = videoIn->timestamp;
-                    global->v_ts = 0;
-                }
-                else
-                {
-                    global->v_ts = videoIn->timestamp - global->Vidstarttime;
-                    /*always use the last frame time stamp for video stop time*/
-                    global->Vidstoptime = videoIn->timestamp;
-                }
-            }
-            #endif
 
             /*---------------- autofocus control ------------------*/
 
@@ -480,7 +373,7 @@ void *main_loop(void *data)
                     /*starting autofocus*/
                     AFdata->focus = AFdata->left; /*start left*/
                     focus_control->value = AFdata->focus;
-                    // TODO autofocus
+                    // autofocus
                     if (set_ctrl (videoIn->fd, s->control_list, AFdata->id) != 0) { // couldn't to set focus
                         global->autofocus = FALSE;
                         AFdata->setFocus = 0;
@@ -504,7 +397,7 @@ void *main_loop(void *data)
                         if ((AFdata->focus != last_focus))
                         {
                             focus_control->value = AFdata->focus;
-                            // TODO autofocus
+                            // autofocus
                             if (set_ctrl (videoIn->fd, s->control_list, AFdata->id) != 0) {
                                 //g_printerr("ERROR: couldn't set focus to %d\n", AFdata->focus);
                                 global->autofocus = FALSE;
@@ -564,25 +457,6 @@ void *main_loop(void *data)
             videoIn->capImage=FALSE;
         }
 
-        /*---------------------------capture Video---------------------------------*/
-        #if 0
-        if (capVid && !(global->skip_n))
-        {
-            __LOCK_MUTEX(__VMUTEX);
-                if(videoIn->VidCapStop) videoIn->VidCapStop = FALSE;
-            __UNLOCK_MUTEX(__VMUTEX);
-            //int res=0;
-            /*format and resolution don't change(disabled) while capturing video*/
-            //if((res=store_video_frame(all_data))<0) g_printerr("WARNING: droped frame (%i)\n",res);
-
-        } /*video and audio capture have stopped */
-        else
-        {
-            __LOCK_MUTEX(__VMUTEX);
-                if(!(videoIn->VidCapStop)) videoIn->VidCapStop=TRUE;
-            __UNLOCK_MUTEX(__VMUTEX);
-        }
-        #endif
 
         /* decrease skip frame count */
         if (global->skip_n > 0)
@@ -651,7 +525,6 @@ void *main_loop(void *data)
                             /* Keyboard event */
                             /* Pass the event data onto PrintKeyInfo() */
                             /*
-                            TODO event
                             Notice. SDL事件只有在SDL獨立視窗時可處理。
                             如果指定了SDL_WINDOWID，則事件轉交 GTK 負責，此處不作用。
                             */
@@ -710,46 +583,6 @@ void *main_loop(void *data)
         /* if set make the thread sleep - default no sleep (full throttle)*/
         if(global->vid_sleep) sleep_ms(global->vid_sleep);
 
-        /*------------------------------------------*/
-        /*  restart video (new resolution/format)   */
-        /*------------------------------------------*/
-        #if 0
-        if (global->change_res)
-        {
-            g_printf("setting new resolution (%d x %d)\n", global->width, global->height);
-            /*clean up */
-
-            if(particles) g_free(particles);
-            particles = NULL;
-
-            if (global->debug) g_printf("cleaning buffer allocations\n");
-            fflush(NULL);//flush all output buffers
-
-            if(!global->no_display)
-            {
-                SDL_FreeYUVOverlay(overlay);
-                overlay = NULL;
-            }
-            /*init device*/
-            restart_v4l2(videoIn, global);
-            /*set new resolution for video thread*/
-            width = global->width;
-            height = global->height;
-            format = global->format;
-            /* restart SDL with new values*/
-            if(!global->no_display)
-            {
-                overlay = video_init(data, &(pscreen));
-                p = (unsigned char *) overlay->pixels[0];
-
-                drect.x = 0;
-                drect.y = 0;
-                drect.w = pscreen->w;
-                drect.h = pscreen->h;
-            }
-            global->change_res = FALSE;
-        }
-        #endif
     }/*loop end*/
 
     #if 0

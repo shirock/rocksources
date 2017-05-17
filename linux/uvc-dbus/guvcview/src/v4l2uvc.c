@@ -683,7 +683,6 @@ static int videoIn_frame_alloca(struct vdIn *vd, int format, int width, int heig
 			}
 	}
 
-	// TODO snapshot
 	vd->framebuffer_size = framebuf_size;
     if (all_data.global->Frame_Flags != 0) {
         // set filter. copy raw frame to snapshot.
@@ -722,11 +721,12 @@ int init_videoIn(struct vdIn *vd, struct GLOBAL *global)
 	g_printf("video device: %s \n", vd->videodevice);
 
 	//flag to video thread
-	vd->capVid = FALSE;
+	//vd->capVid = FALSE;
 	//flag from video thread
-	vd->VidCapStop=TRUE;
+	//vd->VidCapStop=TRUE;
+    vd->streaming = FALSE;
 
-	vd->VidFName = g_strdup(DEFAULT_AVI_FNAME);
+//	vd->VidFName = g_strdup(DEFAULT_AVI_FNAME);
 	vd->signalquit = FALSE;
 	vd->PanTilt=0;
 	vd->isbayer = 0; //bayer mode off
@@ -814,7 +814,6 @@ int init_videoIn(struct vdIn *vd, struct GLOBAL *global)
 
 	if(!(global->control_only))
 	{
-	    // TODO set video size
 		if ((ret=init_v4l2(vd, &global->format, &global->width, &global->height, &global->fps, &global->fps_num)) < 0)
 		{
 			g_printerr("Init v4L2 failed !! \n");
@@ -1013,8 +1012,8 @@ static int frame_decode(struct vdIn *vd, int format, int width, int height)
 	}
 
     /*
-    TODO #1432 MJPG snapshot.
     Always save raw frame in tmpbuffer for snapshot.
+    The filters will not apply to snapshot.
     */
     if (vd->snapshot != vd->framebuffer)
         memcpy(vd->snapshot, vd->framebuffer, vd->framebuffer_size);

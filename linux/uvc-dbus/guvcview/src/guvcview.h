@@ -51,7 +51,7 @@ struct ALL_DATA
     struct vdIn *videoIn;
     struct VidState *s;
     __THREAD_TYPE video_thread;
-    //GThread *IO_thread;
+    __THREAD_TYPE IO_thread;
 };
 
 extern struct ALL_DATA all_data;
@@ -63,5 +63,7 @@ void lib_video_window_resize(int width, int height);
 gboolean lib_get_video_size(int *width, int *height);
 gboolean lib_capture_frame(const char*img_fmt, guint8 **data, guint *data_len);
 gboolean lib_save_frame(const char*img_fmt, const char*img_filepath);
+gboolean lib_start_streaming(const char *port, const char *username, const char *password);
+void lib_stop_streaming();
 
 #endif

@@ -36,117 +36,115 @@
 
 int store_picture(void *data)
 {
-	struct ALL_DATA *all_data = (struct ALL_DATA *) data;
+    struct ALL_DATA *all_data = (struct ALL_DATA *) data;
 
-	struct GLOBAL *global = all_data->global;
-	struct vdIn *videoIn = all_data->videoIn;
+    struct GLOBAL *global = all_data->global;
+    struct vdIn *videoIn = all_data->videoIn;
 
-	struct JPEG_ENCODER_STRUCTURE *jpeg_struct = NULL;
-	BYTE *pim =  NULL;
-	BYTE *jpeg = NULL;
-	int jpeg_size = 0;
-	int rc = 0;
+    struct JPEG_ENCODER_STRUCTURE *jpeg_struct = NULL;
+    BYTE *pim =  NULL;
+    BYTE *jpeg = NULL;
+    int jpeg_size = 0;
+    int rc = 0;
 
     /*
-    TODO snapshot by rock.
+    snapshot by rock.
     I save raw (no filter, no image processing) frame in snapshot.
-    So here should save picture from snapshot, not framebuffer.
+    So here should save picture from videoIn->snapshot, not videoIn->tmpbuffer.
     */
+    switch(global->imgFormat)
+    {
+        case IMG_FORMAT_JPG:/*jpg*/
+            /* Save directly from MJPG frame */
+            #if 0
+            // FIXME #1432, some webcam's mjpeg frame (may be MJPEG-B) could not directly save as jpeg.
+            if((global->Frame_Flags==0) && (global->format==V4L2_PIX_FMT_MJPEG))
+            {
+                if(SaveJPG(videoIn->ImageFName,videoIn->buf.bytesused,videoIn->tmpbuffer))
+                {
+                    g_printerr ("Error: Couldn't capture Image to %s \n",
+                        videoIn->ImageFName);
+                    return(-1);
+                }
+            }
+            else
+            #endif
+            if ((global->Frame_Flags==0) && (global->format==V4L2_PIX_FMT_JPEG))
+            {
+                if (SaveBuff(videoIn->ImageFName,videoIn->buf.bytesused,videoIn->snapshot))
+                {
+                    g_printerr ("Error: Couldn't capture Image to %s \n",
+                        videoIn->ImageFName);
+                    rc = -1;
+                    goto end_func;
+                }
+            }
+            else
+            { /* use built in encoder */
+                jpeg = g_new0(BYTE, ((global->width)*(global->height))>>1);
+                jpeg_struct = g_new0(struct JPEG_ENCODER_STRUCTURE, 1);
 
-	switch(global->imgFormat)
-	{
-		case IMG_FORMAT_JPG:/*jpg*/
-			/* Save directly from MJPG frame */
-			#if 0
-			// TODO #1432, some webcam's mjpeg frame could not directly save as jpeg.
-			if((global->Frame_Flags==0) && (global->format==V4L2_PIX_FMT_MJPEG))
-			{
-				if(SaveJPG(videoIn->ImageFName,videoIn->buf.bytesused,videoIn->tmpbuffer))
-				{
-					g_printerr ("Error: Couldn't capture Image to %s \n",
-						videoIn->ImageFName);
-					return(-1);
-				}
-			}
-			else
-			#endif
-			if ((global->Frame_Flags==0) && (global->format==V4L2_PIX_FMT_JPEG))
-			{
-				if (SaveBuff(videoIn->ImageFName,videoIn->buf.bytesused,videoIn->tmpbuffer))
-				{
-					g_printerr ("Error: Couldn't capture Image to %s \n",
-						videoIn->ImageFName);
-					//return(-1);
-					rc = -1;
-					goto end_func;
-				}
-			}
-			else
-			{ /* use built in encoder */
-				jpeg = g_new0(BYTE, ((global->width)*(global->height))>>1);
-				jpeg_struct = g_new0(struct JPEG_ENCODER_STRUCTURE, 1);
+                /* Initialization of JPEG control structure */
+                initialization (jpeg_struct,global->width,global->height);
 
-				/* Initialization of JPEG control structure */
-				initialization (jpeg_struct,global->width,global->height);
-
-				/* Initialization of Quantization Tables  */
-				initialize_quantization_tables (jpeg_struct);
+                /* Initialization of Quantization Tables  */
+                initialize_quantization_tables (jpeg_struct);
 
 
-				//jpeg_size = encode_image(videoIn->framebuffer, jpeg,
-				jpeg_size = encode_image(videoIn->snapshot, jpeg,
-					jpeg_struct, 1, global->width, global->height);
+                //jpeg_size = encode_image(videoIn->framebuffer, jpeg,
+                jpeg_size = encode_image(videoIn->snapshot, jpeg,
+                    jpeg_struct, 1, global->width, global->height);
 
-				if(SaveBuff(videoIn->ImageFName, jpeg_size, jpeg))
-				{
-					g_printerr ("Error: Couldn't capture Image to %s \n",
-						videoIn->ImageFName);
-					//return(-1);
-					rc = -1;
-					goto end_func;
-				}
-			}
-			break;
+                if(SaveBuff(videoIn->ImageFName, jpeg_size, jpeg))
+                {
+                    g_printerr ("Error: Couldn't capture Image to %s \n",
+                        videoIn->ImageFName);
+                    //return(-1);
+                    rc = -1;
+                    goto end_func;
+                }
+            }
+            break;
 
-		case IMG_FORMAT_BMP:/*bmp*/
-			/*24 bits -> 3bytes     32 bits ->4 bytes*/
-			pim = g_new0(BYTE, (global->width)*(global->height)*3);
-			//yuyv2bgr(videoIn->framebuffer,pim,global->width,global->height);
-			yuyv2bgr(videoIn->snapshot,pim,global->width,global->height);
+        case IMG_FORMAT_BMP:/*bmp*/
+            /*24 bits -> 3bytes     32 bits ->4 bytes*/
+            pim = g_new0(BYTE, (global->width)*(global->height)*3);
+            //yuyv2bgr(videoIn->framebuffer,pim,global->width,global->height);
+            yuyv2bgr(videoIn->snapshot,pim,global->width,global->height);
 
-			if(SaveBPM(videoIn->ImageFName, global->width, global->height, 24, pim))
-			{
-				g_printerr ("Error: Couldn't capture Image to %s \n",
-					videoIn->ImageFName);
-				//return(-1);
-				rc = -1;
-				goto end_func;
-			}
-			break;
+            if(SaveBPM(videoIn->ImageFName, global->width, global->height, 24, pim))
+            {
+                g_printerr ("Error: Couldn't capture Image to %s \n",
+                    videoIn->ImageFName);
+                //return(-1);
+                rc = -1;
+                goto end_func;
+            }
+            break;
 
-		case IMG_FORMAT_PNG:/*png*/
-			/*24 bits -> 3bytes     32 bits ->4 bytes*/
-			pim = g_new0(BYTE, (global->width)*(global->height)*3);
-			//yuyv2rgb(videoIn->framebuffer,pim,global->width,global->height);
-			yuyv2rgb(videoIn->snapshot,pim,global->width,global->height);
-			write_png(videoIn->ImageFName, global->width, global->height, pim);
-			break;
+        case IMG_FORMAT_PNG:/*png*/
+            /*24 bits -> 3bytes     32 bits ->4 bytes*/
+            pim = g_new0(BYTE, (global->width)*(global->height)*3);
+            //yuyv2rgb(videoIn->framebuffer,pim,global->width,global->height);
+            yuyv2rgb(videoIn->snapshot,pim,global->width,global->height);
+            write_png(videoIn->ImageFName, global->width, global->height, pim);
+            break;
 
        case IMG_FORMAT_RAW:/*raw*/
             videoIn->cap_raw = 1;
             //return 1;
             rc = 1;
-	}
+    }
 
   end_func:
-	if(jpeg_struct) g_free(jpeg_struct);
-	jpeg_struct=NULL;
-	if(jpeg) g_free(jpeg);
-	jpeg = NULL;
-	if(pim) g_free(pim);
-	pim=NULL;
+    if(jpeg_struct) g_free(jpeg_struct);
+    jpeg_struct=NULL;
+    if(jpeg) g_free(jpeg);
+    jpeg = NULL;
+    if(pim) g_free(pim);
+    pim=NULL;
 
-	return rc;
+    return rc;
 }
 
 
@@ -195,28 +193,6 @@ _store_picture_to_buffer_bmp(long width, long height, int BitCount, BYTE *ImageP
     memmove(dp, &BmpInfoh, sizeof(BITMAPINFOHEADER));
     dp += sizeof(BITMAPINFOHEADER);
     memmove(dp, ImagePix, imgsize);
-    #if 0
-	if ((fp = fopen(Filename,"wb"))!=NULL)
-	{	// (wb) write in binary mode
-		ret=fwrite(&BmpFileh, sizeof(BITMAPFILEHEADER), 1, fp);
-		ret+=fwrite(&BmpInfoh, sizeof(BITMAPINFOHEADER),1,fp);
-		ret+=fwrite(ImagePix,imgsize,1,fp);
-		if (ret<3) ret=1;//write error
-		else ret=0;
-
-		fflush(fp); //flush data stream to file system
-		if(fsync(fileno(fp)) || fclose(fp))
-		{
-			perror("BMP ERROR - couldn't write to file");
-			ret=1;
-		}
-	}
-	else
-	{
-		ret=1;
-		g_printerr("ERROR: Could not open file %s for write \n",Filename);
-	}
-	#endif
 	return ret;
 }
 
@@ -247,10 +223,6 @@ _store_picture_to_buffer_png(int width, int height,BYTE *prgb_data,
 	png_text text_ptr[3];
 
 	png_bytep row_pointers[height];
-	/* open the file */
-//	fp = fopen(file_name, "wb");
-//	if (fp == NULL)
-//	return (1);
 
 	/* Create and initialize the png_struct with the desired error handler
 	* functions.  If you want to use the default stderr and longjump method,
@@ -263,7 +235,6 @@ _store_picture_to_buffer_png(int width, int height,BYTE *prgb_data,
 
 	if (png_ptr == NULL)
 	{
-		//fclose(fp);
 		g_free(png_buff);
 		return (2);
 	}
@@ -272,7 +243,6 @@ _store_picture_to_buffer_png(int width, int height,BYTE *prgb_data,
 	info_ptr = png_create_info_struct(png_ptr);
 	if (info_ptr == NULL)
 	{
-		//fclose(fp);
 		g_free(png_buff);
 		png_destroy_write_struct(&png_ptr, NULL);
 		return (3);
@@ -283,15 +253,12 @@ _store_picture_to_buffer_png(int width, int height,BYTE *prgb_data,
 	*/
 	if (setjmp(png_jmpbuf(png_ptr)))
 	{
-		/* If we get here, we had a problem reading the file */
-		//fclose(fp);
 		g_free(png_buff);
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 		return (4);
 	}
 
 	/* set up the output control using standard C streams */
-	//png_init_io(png_ptr, fp);
 	_png_current_write_position = png_buff;
     voidp write_io_ptr = png_get_io_ptr(png_ptr);
     png_set_write_fn(png_ptr,
@@ -388,15 +355,6 @@ _store_picture_to_buffer_png(int width, int height,BYTE *prgb_data,
 	/* clean up after the write, and free any memory allocated */
 	png_destroy_write_struct(&png_ptr, &info_ptr);
 
-	/* close the file */
-	#if 0
-	fflush(fp); //flush data stream to file system
-	if(fsync(fileno(fp)) || fclose(fp))
-	{
-		perror("PNG ERROR - couldn't write to file");
-		return(5);
-	}
-	#endif
 	*data_len = _png_current_write_position - png_buff;
 	*data = malloc(*data_len);
 	g_print("png size: %d\n", *data_len);
@@ -427,9 +385,8 @@ int store_picture_to_buffer(guint8 **data, guint *data_len)
 	int jpeg_size = 0;
 
     /*
-    TODO snapshot by rock.
     I save raw (no filter, no image processing) frame in snapshot.
-    So here should save picture from snapshot, not framebuffer.
+    So here should save picture from videoIn->snapshot, not videoIn->tmpbuffer.
     */
 
 	switch(global->imgFormat)
@@ -453,15 +410,7 @@ int store_picture_to_buffer(guint8 **data, guint *data_len)
 			{
 			    *data_len = videoIn->buf.bytesused;
 			    *data = malloc(videoIn->buf.bytesused);
-			    memmove(*data, videoIn->tmpbuffer, videoIn->buf.bytesused);
-			    #if 0
-				if (SaveBuff(videoIn->ImageFName,videoIn->buf.bytesused,videoIn->tmpbuffer))
-				{
-					g_printerr ("Error: Couldn't capture Image to %s \n",
-						videoIn->ImageFName);
-					return(-1);
-				}
-				#endif
+			    memmove(*data, videoIn->snapshot, videoIn->buf.bytesused);
 			}
 			else
 			{ /* use built in encoder */
@@ -482,33 +431,15 @@ int store_picture_to_buffer(guint8 **data, guint *data_len)
 			    *data_len = jpeg_size;
 			    *data = malloc(jpeg_size);
 			    memmove(*data, jpeg, jpeg_size);
-
-                #if 0
-				if(SaveBuff(videoIn->ImageFName, jpeg_size, jpeg))
-				{
-					g_printerr ("Error: Couldn't capture Image to %s \n",
-						videoIn->ImageFName);
-					return(-1);
-				}
-				#endif
 			}
 			break;
 
 		case 1:/*bmp*/
 			/*24 bits -> 3bytes     32 bits ->4 bytes*/
 			pim = g_new0(BYTE, (global->width)*(global->height)*3);
-			//yuyv2bgr(videoIn->framebuffer,pim,global->width,global->height);
-			yuyv2bgr(videoIn->snapshot,pim,global->width,global->height);
+			yuyv2bgr(videoIn->snapshot, pim, global->width, global->height);
 
             _store_picture_to_buffer_bmp(global->width, global->height, 24, pim, data, data_len);
-			#if 0
-			if(SaveBPM(videoIn->ImageFName, global->width, global->height, 24, pim))
-			{
-				g_printerr ("Error: Couldn't capture Image to %s \n",
-					videoIn->ImageFName);
-				return(-1);
-			}
-			#endif
 			break;
 
 		case 2:/*png*/

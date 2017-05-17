@@ -82,6 +82,7 @@ struct VidState *s = NULL;
 void init_controls (struct ALL_DATA *);
 
 void *socket_command_loop(void *alldata);
+void *http_server_thread(void *alldata);
 
 
 //==== export functions ====
@@ -420,6 +421,47 @@ gboolean lib_save_frame(const char*img_fmt, const char*img_filepath)
     return (ret == 0 ? TRUE : FALSE);
 }
 
+gboolean lib_start_streaming(const char *port, const char *username, const char *password)
+{
+    if (all_data.videoIn->streaming)
+        return TRUE;
+
+    if (port && port[0] != '\0') {
+        if (all_data.global->streamingPort)
+            free(all_data.global->streamingPort);
+        all_data.global->streamingPort = strdup(port);
+    }
+
+    if (username && username[0] != '\0') {
+        if (all_data.global->streamingName)
+            free(all_data.global->streamingName);
+        all_data.global->streamingName = strdup(username);
+    }
+
+    if (password && password[0] != '\0') {
+        if (all_data.global->streamingPassword)
+            free(all_data.global->streamingPassword);
+        all_data.global->streamingPassword = strdup(password);
+    }
+
+    all_data.videoIn->streaming = TRUE;
+    printf("Streaming port:%s. Username:%s, Password:%s\n", all_data.global->streamingPort, all_data.global->streamingName, all_data.global->streamingPassword);
+
+    if( __THREAD_CREATE(&all_data.IO_thread, http_server_thread, (void *) &all_data))
+    {
+        g_printerr("IO thread creation failed\n");
+        all_data.videoIn->streaming = FALSE;
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+void lib_stop_streaming()
+{
+    all_data.videoIn->streaming = FALSE;
+}
+
 //==== end export functions ====
 
 // options
@@ -456,7 +498,7 @@ static void _lib_option_set_window_geometry(struct GLOBAL *global,
 static void _lib_option_set_hflip(struct GLOBAL *global,
             const char*k, const void*_v)
 {
-    global->Frame_Flags |= YUV_MIRROR; // TODO mirror
+    global->Frame_Flags |= YUV_MIRROR;
 }
 
 static void _lib_option_set_debug(struct GLOBAL *global,
@@ -616,7 +658,6 @@ int lib_open_camera(const char*device_name,
 	readConf(global);
 
 	/*------------------------ reads command line options --------------------*/
-	// TODO configurations and options
     _lib_parse_options(global, options);
 
     if (global->videodevice)
@@ -651,7 +692,6 @@ int lib_open_camera(const char*device_name,
 	gtk_init(&argc, &argv);
 //	g_set_application_name("Guvcview Video Capture");
 
-    // TODO xid
     printf("Window id: %s\n", window_id);
     if (window_id[0] == 'N' || window_id[0] == 'n' ) {
         global->no_display = TRUE;
@@ -912,9 +952,20 @@ void test_capture_image(int n)
 int main(int argc, char **argv)
 {
     int rc = 0;
-    if (argc <= 3)
+    char *camera, *wid, *options, *port;
+
+    if (argc < 2)
     {
-        g_print("%s <uvc_name> <window_id> <options>\n", argv[0]);
+        printf("\n");
+        printf("%s <uvc_name> [window_id] [options] [streaming-port]\n\n", argv[0]);
+        printf("  uvc_name: like /dev/video0\n");
+        printf("  window_id:\n");
+        printf("    0: New monitor window.\n");
+        printf("    No: No monitor.\n");
+        printf("    a integer: embed monitor.\n");
+        printf("  options: camera options.\n");
+        printf("  streaming-port: HTTP streaming port.\n");
+        printf("\n");
         return 1;
     }
 
@@ -923,7 +974,16 @@ int main(int argc, char **argv)
     // TODO snapshot
     signal(SIGUSR1, test_capture_image);
 
-    rc = lib_open_camera(argv[1], argv[2], argv[3]);
+    camera = argv[1];
+    wid = (argc >= 3 ? argv[2] : "0");
+    options = (argc >= 4 ? argv[3] : "");
+    port = (argc >= 5 ? argv[4] : NULL);
+
+    rc = lib_open_camera(camera, wid, options);
+
+    if (port) {
+        lib_start_streaming(port, NULL, NULL);
+    }
 
     char cmd[128];
 
@@ -937,14 +997,16 @@ int main(int argc, char **argv)
 
     int snapshot_cnt = 0;
 
-    printf("all_data.global->autofocus: %s\n", all_data.global->autofocus ? "Yes" : "No");
+    sleep(1);
+    //printf("all_data.global->autofocus: %s\n", all_data.global->autofocus ? "Yes" : "No");
     while(TRUE)
     {
         printf("Command: s (save jpeg, sb: bmp, sp: png), c (capture), v (video size), "
                "Px,y,w,h (change geometry), S (show window), H (hide window), "
+               "rPort (start streaming at Port), R (stop streaming), "
                "l (list controls), gName (get control value), VName=Value (set control value), "
                "f (require autofocus), F (continue autofocus), x (exit)\n");
-        //sleep(1);
+        printf("cmd> ");
         fgets(cmd, sizeof(cmd), stdin);
         cmd[strlen(cmd)-1] = '\0';
         switch (cmd[0])
@@ -1068,6 +1130,19 @@ int main(int argc, char **argv)
             break;
         case 'F':
             lib_continue_focus(TRUE);
+            break;
+        case 'r':
+            {
+                char *port = NULL;
+                if (cmd[1] == '\0')
+                    port = "8080";
+                else
+                    port = cmd+1;
+                lib_start_streaming(port, NULL, NULL);
+            }
+            break;
+        case 'R':
+            lib_stop_streaming();
             break;
         }
     }

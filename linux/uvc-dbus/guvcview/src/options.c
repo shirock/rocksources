@@ -85,7 +85,7 @@ writeConf(struct GLOBAL *global, char *videodevice)
 		g_fprintf(fp,"# Auto Image naming (filename-n.ext)\n");
 		g_fprintf(fp,"image_inc=%d\n",global->image_inc);
 		g_fprintf(fp,"# Video capture Full Path\n");
-		g_fprintf(fp,"video_path='%s/%s'\n",global->vidFPath[1],global->vidFPath[0]);
+//		g_fprintf(fp,"video_path='%s/%s'\n",global->vidFPath[1],global->vidFPath[0]);
 		printf("write %s OK\n",global->confPath);
 
 		//flush stream buffers to filesystem
@@ -230,6 +230,14 @@ readConf(struct GLOBAL *global)
 							sscanf(scanner->value.v_string,"%i/%i",
 								&(global->fps_num), &(global->fps));
 						}
+                        else if (g_strcmp0(name,"streaming_username")==0)
+                        {
+                            global->streamingName = g_strdup(scanner->value.v_string);
+                        }
+                        else if (g_strcmp0(name,"streaming_password")==0)
+                        {
+                            global->streamingPassword = g_strdup(scanner->value.v_string);
+                        }
 #if 0
 						else if (g_strcmp0(name,"image_path")==0)
 						{

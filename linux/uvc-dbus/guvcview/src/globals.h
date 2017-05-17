@@ -53,24 +53,29 @@ struct GLOBAL
 
 	char *videodevice;     // video device (def. /dev/video0)
 	char *confPath;        //configuration file path
-	char *vidfile;         //video filename passed through argument options with -n
+//	char *vidfile;         //video filename passed through argument options with -n
 	char *WVcaption;       //video preview title bar caption
 	char *imageinc_str;    //label for File inc
 	char *vidinc_str;      //label for File inc
 	char *mode;            //mjpg (default)
-	pchar* vidFPath;       //video path [0] - filename  [1] - dir
+//	pchar* vidFPath;       //video path [0] - filename  [1] - dir
 	pchar* imgFPath;       //image path [0] - filename  [1] - dir
+
+	//streaming
+    char *streamingPort;
+    char *streamingName;
+    char *streamingPassword;
 
 	BYTE *jpeg;            // jpeg buffer
 
 //	ULONG AVI_MAX_LEN;     //avi max length
-	DWORD snd_begintime;   //begin time for audio capture
+//	DWORD snd_begintime;   //begin time for audio capture
 	DWORD currtime;
 	DWORD lasttime;
 	UINT64 Vidstarttime;    //video start time
 	UINT64 Vidstoptime;     //video stop time
 	QWORD v_ts;            //video time stamp
-	QWORD a_ts;            //audio time stamp
+//	QWORD a_ts;            //audio time stamp
 	DWORD vid_inc;         //video name increment
 	DWORD framecount;      //video frame count
 	DWORD frmCount;        //frame count for fps display calc

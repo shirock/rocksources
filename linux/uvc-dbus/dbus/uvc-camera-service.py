@@ -430,6 +430,24 @@ class CameraService(dbus.service.Object):
         camera_id = camera_id.encode('utf-8')
         self.cameras[camera_id].resize_video_window(width, height)
 
+    @dbus.service.method('rock.guvcview.camera', in_signature='ssss', out_signature='b')
+    def StartStreaming(self, camera_id, port, username, password):
+        '''
+        Start streaming.
+        If camera is not open, it will invoke StartCapture() before streaming.
+        '''
+        if not self.IsCapturing(camera_id):
+            self.StartCapture(camera_id)
+        camera_id = camera_id.encode('utf-8')
+        return self.cameras[camera_id].start_streaming(port, username, password)
+
+    @dbus.service.method('rock.guvcview.camera', in_signature='s')
+    def StopStreaming(self, camera_id):
+        if not self.IsCapturing(camera_id):
+            return
+        camera_id = camera_id.encode('utf-8')
+        self.cameras[camera_id].stop_streaming()
+
 
     def terminate_all_cameras(self):
         debug("terminate all cameras and broadcast closed signal.")
@@ -514,6 +532,14 @@ def init_libguvcview():
     LibUvc.lib_video_window_resize.argtypes = [ctypes.c_int, ctypes.c_int]
     LibUvc.lib_video_window_resize.restype = None
 
+    LibUvc.lib_start_streaming.argtypes = [
+        ctypes.c_char_p,
+        ctypes.c_char_p,
+        ctypes.c_char_p]
+    LibUvc.lib_start_streaming.restype = ctypes.c_bool
+
+    LibUvc.lib_stop_streaming.argtypes = None
+    LibUvc.lib_stop_streaming.restype = None
 
 
 # 在多行程模式下，每個 Camera 實體皆獨立存在於各自的行程空間中。
@@ -662,6 +688,12 @@ class Camera(multiprocessing.Process, dbus.service.Object):
     def resize_video_window(self, width, height):
         self.request_no_result("video_window_resize", args=(width, height))
 
+    def start_streaming(self, port, username, password):
+        result = self.request_with_result("start_streaming", args=(port,username,password))
+        return result
+
+    def stop_streaming(self):
+        self.request_no_result("stop_streaming")
 
     @dbus.service.method('rock.guvcview.camera', in_signature='')
     def RequireFocus(self):
@@ -823,8 +855,6 @@ def camera_wrapper(obj, pipe, camera_id, window_id, autoplay, options):
             else:
                 debug('%s method not found' % rc['method'])
                 continue
-#    LibUvc.lib_video_window_hide.argtypes = None
-#    LibUvc.lib_video_window_hide.restype = None
 
             if result != None:
                 method_pipe.send(result)
@@ -1182,7 +1212,7 @@ if __name__ == "__main__":
             if len(parts) == 6:
                 mrl, x, y, w, h, opts = parts
             else:
-                mrl, x, y, w, h = parts
+                mrl, x, y, w, h = parts[:5]
                 opts = ""
             x = int(x)
             y = int(y)
@@ -1190,6 +1220,11 @@ if __name__ == "__main__":
             h = int(h)
             Service.StartMonitorWindow(mrl, x, y, w, h, opts)
             log("Auto open camera: %s %d %d %d %d %s" % (mrl, x, y, w, h, opts))
+
+            if len(parts) >= 7:
+                port = parts[6]
+                Service.StartStreaming(mrl, port, '', '')
+                log("Auto stream camera at port %s" % port)
         except Exception as e:
             #debug(e)
             pass

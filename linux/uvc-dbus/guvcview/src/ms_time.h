@@ -42,6 +42,6 @@ void sleep_ms(int ms_time);
 
 /*wait on cond by sleeping for n_loops of sleep_ms ms */
 /*(test (var == val) every loop)                      */
-int wait_ms(gboolean* var, gboolean val, GMutex *mutex, int ms_time, int n_loops);
+int wait_ms(gboolean* var, gboolean val, __MUTEX_TYPE *mutex, int ms_time, int n_loops);
 #endif
 

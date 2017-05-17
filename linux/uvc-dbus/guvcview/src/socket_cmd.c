@@ -296,6 +296,49 @@ save_image_as(int fd, int argc, char **argv)
     return true;
 }
 
+/**
+streaming start|stop [address] [port] [username] [password]
+
+*/
+static bool
+streaming(int fd, int argc, char **argv)
+{
+    if (argc < 2) {
+        response_error(fd, "lose switch argument");
+        return true;
+    }
+
+    char *op = argv[1];
+    bool result;
+
+    char *port = NULL;
+    char *username = NULL;
+    char *password = NULL;
+
+    if (strcmp(op, "start") == 0) {
+        if (argc >= 3)
+            port = argv[2];
+        if (argc >= 4)
+            username = argv[3];
+        if (argc >= 5)
+            password = argv[4];
+
+        result = lib_start_streaming(port, username, password);
+        if (!result) {
+            response_error(fd, "failed to start streaming");
+            return true;
+        }
+
+        response_ok(fd);
+    }
+    else {
+        lib_stop_streaming();
+    }
+
+    response_ok(fd);
+    return true;
+}
+
 static int
 create_socket(const char *socket_path)
 {
@@ -372,6 +415,9 @@ command_dispatch(int fd)
         },
         {
             "get-video-size", get_video_size
+        },
+        {
+            "streaming", streaming
         },
         /*
         {

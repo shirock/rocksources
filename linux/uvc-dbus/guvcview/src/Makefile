@@ -5,19 +5,19 @@ OBJS = guvcview.o globals.o options.o \
   autofocus.o colorspaces.o \
   v4l2_controls.o v4l2_devices.o v4l2_dyna_ctrls.o v4l2_formats.o v4l2uvc.o \
   video.o video_filters.o \
-  socket_cmd.o
+  socket_cmd.o http_stream.o
 
-build: libguvcview
+build: uvc-cli
 
-libguvcview: $(OBJS)
-	gcc -shared -O2 -o libguvcview $(OBJS) -lm \
+uvc-cli: $(OBJS)
+	gcc -g -O2 -o uvc-cli $(OBJS) -lm \
   `pkg-config --libs glib-2.0 gthread-2.0 gtk+-2.0 sdl libpng12 libavcodec libavutil libv4l2`
 
 .c.o:
-	gcc -I. -I.. \
+	gcc -DDEMO -DHAVE_CONFIG_H -I. -I.. \
   `pkg-config --cflags glib-2.0 gthread-2.0 gtk+-2.0 sdl libpng12 libavcodec libavutil libv4l2` \
-  -Wall -fPIC -O2 -c -o $@ $<
+  -Wall -O2 -c -o $@ $<
 
 clean:
 	rm -f *.o
-	rm -f libguvcview-cli libguvcview
+	rm -f uvc-cli
