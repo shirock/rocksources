@@ -24,16 +24,8 @@
 
 #include "globals.h"
 
-/*----------------------- write conf (.guvcviewrc) file ----------------------*/
-int 
-writeConf(struct GLOBAL *global, char *videodevice);
-
 /*----------------------- read conf (.guvcviewrc) file -----------------------*/
-int 
+int
 readConf(struct GLOBAL *global);
-
-/*------------------------- read command line options ------------------------*/
-void
-readOpts(int argc,char *argv[], struct GLOBAL *global);
 
 #endif

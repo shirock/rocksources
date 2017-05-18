@@ -645,8 +645,6 @@ int lib_open_camera(const char*device_name,
 #endif
 	gdk_threads_init ();
 
-	/*structure containing all shared data - passed in callbacks*/
-//	struct ALL_DATA all_data;
 	memset(&all_data,0,sizeof(struct ALL_DATA));
 
 	/*allocate global variables*/
@@ -674,23 +672,17 @@ int lib_open_camera(const char*device_name,
 
 	if(!control_only) /*control_only exclusion (video and Audio) */
 	{
-
 		// must be called before using avcodec lib
 		avcodec_init();
-
 		// register all the codecs (you can also register only the codec
 		//you wish to have smaller code
 		avcodec_register_all();
-
 	}
-
-	/*---------------------------- GTK init ----------------------------------*/
 
     int argc = 1;
     char *_argv1 = "libguvcview";
     char **argv = {&_argv1};
 	gtk_init(&argc, &argv);
-//	g_set_application_name("Guvcview Video Capture");
 
     printf("Window id: %s\n", window_id);
     if (window_id[0] == 'N' || window_id[0] == 'n' ) {
@@ -868,7 +860,6 @@ int lib_open_camera(const char*device_name,
 			N_("Make sure your device driver is v4l2 compliant\nand that it is properly installed."),
 			&all_data);
 	}
-	/*-----------------------------GTK widgets---------------------------------*/
 	/*----------------------- Image controls Tab ------------------------------*/
 	init_controls(&all_data);
 
@@ -886,7 +877,6 @@ int lib_open_camera(const char*device_name,
 				N_("Please report it to http://developer.berlios.de/bugs/?group_id=8179"),
 				&all_data);
 		}
-		//all_data.video_thread = video_thread;
 	}/*end of control_only exclusion*/
 
 	__THREAD_TYPE socket_command_thread;
@@ -894,19 +884,13 @@ int lib_open_camera(const char*device_name,
     {
         //g_printerr("Thread create failed: %s!!\n", err1->message );
         //g_error_free ( err1 ) ;
-
-        //ERR_DIALOG (N_("Guvcview error:\n\nUnable to create Video Thread"),
-        //    N_("Please report it to http://developer.berlios.de/bugs/?group_id=8179"),
-        //    &all_data);
         printf("Could not create socket command thread. Disable this feature.\n");
     }
 
     printf("PID: %d\n", getpid());
-	/* The last thing to get called */
-	gdk_threads_enter();
+    gdk_threads_enter();
 
-//	g_printf("Closing GTK... OK\n");
-	return 0;
+    return 0;
 }
 
 

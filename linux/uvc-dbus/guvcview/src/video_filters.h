@@ -35,19 +35,6 @@ struct particle
 	float decay;
 };
 
-//struct dizzy_data
-//{
-//	BYTE *buffer;
-//	BYTE *current_buffer, *alt_buffer;
-//	int dx;
-//	int dy;
-//	int sx;
-//	int sy;
-//	double phase = 0.0;
-//	double phase_increment = 0.02;
-//	double zoomrate = 1.01;
-//};
-
 /* Flip YUYV frame - horizontal
  * args:
  *      frame = pointer to frame buffer (yuyv format)
@@ -55,7 +42,7 @@ struct particle
  *      height= frame height
  * returns: void
  */
-void 
+void
 yuyv_mirror (BYTE *frame, int width, int height);
 
 /* Flip YUV frame - vertical
@@ -65,7 +52,7 @@ yuyv_mirror (BYTE *frame, int width, int height);
  *      height= frame height
  * returns: void
  */
-void  
+void
 yuyv_upturn(BYTE* frame, int width, int height);
 
 /* Invert YUV frame
@@ -75,7 +62,7 @@ yuyv_upturn(BYTE* frame, int width, int height);
  *      height= frame height
  * returns: void
  */
-void 
+void
 yuyv_negative(BYTE* frame, int width, int height);
 
 /* monochromatic effect for YUYV frame
@@ -85,7 +72,7 @@ yuyv_negative(BYTE* frame, int width, int height);
  *      height= frame height
  * returns: void
  */
-void 
+void
 yuyv_monochrome(BYTE* frame, int width, int height);
 
 /*break image in little square pieces
