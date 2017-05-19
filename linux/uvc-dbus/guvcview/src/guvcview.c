@@ -25,10 +25,14 @@
 ********************************************************************************/
 
 
+#include <unistd.h>
 #include <glib.h>
 #include <glib/gprintf.h>
+// #ifdef USE_GDK
 #include <gtk/gtk.h>
-#include <unistd.h>
+// #else
+#include <SDL/SDL.h>
+// #endif
 
 #include "colorspaces.h"
 #include "jpgenc.h"
@@ -51,20 +55,21 @@ THIS LIBRARY IS NOT REENTRANT AND NOT THREAD-SAFED!
 
 API defines.
 */
-gchar *lib_get_controls_values();
-gchar *lib_get_control_value(const char*name);
-gboolean lib_set_control_value(const char*name, const char*json_value);
-void lib_require_focus();
-void lib_continue_focus(gboolean value);
-void lib_auto_focus(gboolean value);
-
-gboolean lib_get_video_size(int *width, int *height);
-void lib_close_camera();
-gboolean lib_capture_frame(const char*img_fmt, guint8 **data, guint *data_len);
-gboolean lib_save_frame(const char*img_fmt, const char*img_filepath);
-int lib_open_camera(const char*device_name,
-                    const char*window_id,
-                    const char*options);
+// gchar *lib_get_controls_values();
+// gchar *lib_get_control_value(const char*name);
+// gboolean lib_set_control_value(const char*name, const char*json_value);
+// void lib_require_focus();
+// void lib_continue_focus(gboolean value);
+// void lib_auto_focus(gboolean value);
+//
+// gboolean lib_get_video_size(int *width, int *height);
+// void lib_close_camera();
+// gboolean lib_capture_frame(const char*img_fmt, guint8 **data, guint *data_len);
+// gboolean lib_save_frame(const char*img_fmt, const char*img_filepath);
+// int lib_open_camera(const char*device_name,
+//                     const char*window_id,
+//                     const char*options);
+//
 
 struct ALL_DATA all_data;
 
@@ -77,7 +82,6 @@ struct VidState *s = NULL;
 
 /*thread definitions*/
 //GThread *video_thread = NULL;
-
 
 void init_controls (struct ALL_DATA *);
 
@@ -351,15 +355,6 @@ void lib_video_window_resize(int width, int height)
     video_resize(all_data.global, width, height);
 }
 
-
-void lib_close_camera()
-{
-    gdk_threads_leave();
-    all_data.videoIn->signalquit = TRUE;
-    close_v4l2(all_data.videoIn, FALSE);
-    exit(0);
-}
-
 gboolean lib_capture_frame(const char*img_fmt, guint8 **data, guint *data_len)
 {
     if (*data)
@@ -593,6 +588,17 @@ static void _lib_parse_options(struct GLOBAL *global, const char*options)
     return;
 }
 
+void lib_close_camera()
+{
+    all_data.videoIn->signalquit = TRUE;
+    close_v4l2(all_data.videoIn);
+
+    printf("join video thread\n");
+//     gdk_threads_leave();
+    __THREAD_JOIN(all_data.video_thread);
+    //exit(0);
+}
+
 /*--------------------------------- MAIN -------------------------------------*/
 /** lib_open_camera()
 
@@ -637,13 +643,14 @@ int lib_open_camera(const char*device_name,
                     const char*options)
 {
 	int ret=0;
-	gboolean control_only = FALSE;
 
 	/* initialize glib threads - make glib thread safe*/
 #if !defined(GLIB_DEPRECATED_IN_2_32)
 	g_thread_init(NULL);
 #endif
-	gdk_threads_init ();
+// #ifdef USE_GDK
+//	gdk_threads_init();
+// #endif
 
 	memset(&all_data,0,sizeof(struct ALL_DATA));
 
@@ -663,21 +670,12 @@ int lib_open_camera(const char*device_name,
     global->videodevice = g_strdup(device_name);
     global->WVcaption = g_strdup_printf("uvcvideo - %s", device_name);
 
-	//sets local control_only flag - prevents several initializations/allocations
-	control_only = (global->control_only || global->add_ctrls) ;
-
 	/*---------------------------------- Allocations -------------------------*/
 
 	s = g_new0(struct VidState, 1);
 
-	if(!control_only) /*control_only exclusion (video and Audio) */
-	{
-		// must be called before using avcodec lib
-		avcodec_init();
-		// register all the codecs (you can also register only the codec
-		//you wish to have smaller code
-		avcodec_register_all();
-	}
+    avcodec_init();
+    avcodec_register_all();
 
     int argc = 1;
     char *_argv1 = "libguvcview";
@@ -692,13 +690,17 @@ int lib_open_camera(const char*device_name,
         // create an inner window
         // let width and height to be 0.
         // after creating window, it will set width and height as size of video.
+// #ifdef USE_GDK
         global->foreign_window = NULL;
+// #else
+//         global->is_embed_view = FALSE;
+// #endif
     }
     else {
         setenv("SDL_WINDOWID", window_id, TRUE);
+// #ifdef USE_GDK
         GdkNativeWindow xid = atoi(window_id);
 
-        //all_data.foreign_window = gdk_window_foreign_new(xid);
         global->foreign_window = gdk_window_foreign_new(xid);
         gdk_window_get_geometry(global->foreign_window,
             &global->geometry.x,
@@ -708,6 +710,7 @@ int lib_open_camera(const char*device_name,
             &global->geometry.depth
             );
         printf("Window size: width: %d; height: %d;\n", global->geometry.width, global->geometry.height);
+// #endif
     }
 
 	/*----------------------- init videoIn structure --------------------------*/
@@ -730,20 +733,9 @@ int lib_open_camera(const char*device_name,
 		{
 			case VDIN_DEVICE_ERR://can't open device
 				ERR_DIALOG ("Guvcview error:\n\nUnable to open device",
-					"Please make sure the camera is connected\nand that the correct driver is installed.",
+					"Please make sure the camera is connected\nand that the correct driver is installed.\n",
 					&all_data);
 				break;
-
-			#if 0
-			case VDIN_DYNCTRL_OK: //uvc extension controls OK, give warning and shutdown (called with --add_ctrls)
-				WARN_DIALOG ("Guvcview:\n\nUVC Extension controls",
-					"Extension controls were added to the UVC driver",
-					&all_data);
-				//clean_struct(&all_data);
-				close_v4l2(all_data.videoIn, control_only);
-				exit(0);
-				break;
-            #endif
 
 			case VDIN_DYNCTRL_ERR: //uvc extension controls error - EACCES (needs root user)
 				ERR_DIALOG ("Guvcview error:\n\nUVC Extension controls",
@@ -863,33 +855,33 @@ int lib_open_camera(const char*device_name,
 	/*----------------------- Image controls Tab ------------------------------*/
 	init_controls(&all_data);
 
-	if (!control_only) /*control_only exclusion*/
-	{
-		/*------------------ Creating the main loop (video) thread ---------------*/
-		GError *err1 = NULL;
+    /*------------------ Creating the main loop (video) thread ---------------*/
+    GError *err1 = NULL;
 
-        if( __THREAD_CREATE(&all_data.video_thread, main_loop, (void *) &all_data))
-		{
-			g_printerr("Thread create failed: %s!!\n", err1->message );
-			g_error_free ( err1 ) ;
+    if(__THREAD_CREATE(&all_data.video_thread, main_loop, (void *) &all_data))
+    {
+        g_printerr("Thread create failed: %s!!\n", err1->message );
+        g_error_free ( err1 ) ;
 
-			ERR_DIALOG (N_("Guvcview error:\n\nUnable to create Video Thread"),
-				N_("Please report it to http://developer.berlios.de/bugs/?group_id=8179"),
-				&all_data);
-		}
-	}/*end of control_only exclusion*/
+        ERR_DIALOG (N_("Guvcview error:\n\nUnable to create Video Thread"),
+            N_("Please report it to http://developer.berlios.de/bugs/?group_id=8179"),
+            &all_data);
+        return VDIN_ALLOC_ERR;
+    }
+    __THREAD_DETACH(all_data.video_thread);
 
-	__THREAD_TYPE socket_command_thread;
-    if( __THREAD_CREATE(&socket_command_thread, socket_command_loop, (void *) &all_data))
+    __THREAD_TYPE socket_command_thread;
+    if(__THREAD_CREATE(&socket_command_thread, socket_command_loop, (void *) &all_data))
     {
         //g_printerr("Thread create failed: %s!!\n", err1->message );
         //g_error_free ( err1 ) ;
         printf("Could not create socket command thread. Disable this feature.\n");
     }
+    else {
+            __THREAD_DETACH(socket_command_thread);
+    }
 
     printf("PID: %d\n", getpid());
-    gdk_threads_enter();
-
     return 0;
 }
 
@@ -935,7 +927,6 @@ void test_capture_image(int n)
 
 int main(int argc, char **argv)
 {
-    int rc = 0;
     char *camera, *wid, *options, *port;
 
     if (argc < 2)
@@ -963,7 +954,9 @@ int main(int argc, char **argv)
     options = (argc >= 4 ? argv[3] : "");
     port = (argc >= 5 ? argv[4] : NULL);
 
-    rc = lib_open_camera(camera, wid, options);
+    if (lib_open_camera(camera, wid, options) < 0) {
+        exit(EXIT_FAILURE);
+    }
 
     if (port) {
         lib_start_streaming(port, NULL, NULL);
@@ -971,7 +964,6 @@ int main(int argc, char **argv)
 
     char cmd[128];
 
-    printf("capture\n");
     char *img_fmt = NULL;
     char img_filename[PATH_MAX];
     guint8 *data;
@@ -1039,7 +1031,7 @@ int main(int argc, char **argv)
             break;
         case 'x':
         case 'q':
-            lib_close_camera();
+            goto end_func;
             break;
         case 'l':
             json_str = lib_get_controls_values();
@@ -1130,9 +1122,9 @@ int main(int argc, char **argv)
             break;
         }
     }
-//	gtk_main();
-//	gdk_threads_leave();
 
-    return rc;
+  end_func:
+    lib_close_camera();
+    return 0;
 }
 #endif

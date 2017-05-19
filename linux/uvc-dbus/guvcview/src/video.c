@@ -26,7 +26,11 @@
 #include <SDL/SDL.h>
 #include <glib.h>
 #include <glib/gprintf.h>
+// #ifdef USE_GDK
 #include <gtk/gtk.h>
+// #else
+#include <SDL/SDL.h>
+// #endif
 #include <X11/X.h>
 
 #include "defs.h"
@@ -46,7 +50,11 @@
 #define __GMUTEX &global->mutex
 
 // call gdk_window_get_geometry() to reflush state.
+// #ifdef USE_GDK
 #define WINDOW_OUT_OF_SYNC  (gdk_window_get_geometry(global->inner_window, NULL, NULL, NULL, NULL, NULL))
+// #else
+// #define WINDOW_OUT_OF_SYNC  (NULL)
+// #endif
 
 static bool xlib_get_xid(struct GLOBAL *global, XID *xid)
 {
@@ -177,13 +185,13 @@ static SDL_Overlay * video_init(void *data, SDL_Surface **pscreen)
         /* For this version, we will use hardware acceleration as default*/
         if(global->hwaccel)
         {
-            if ( ! getenv("SDL_VIDEO_YUV_HWACCEL") ) putenv("SDL_VIDEO_YUV_HWACCEL=1");
-            if ( ! getenv("SDL_VIDEO_YUV_DIRECT") ) putenv("SDL_VIDEO_YUV_DIRECT=1");
+            if ( !getenv("SDL_VIDEO_YUV_HWACCEL") ) putenv("SDL_VIDEO_YUV_HWACCEL=1");
+            if ( !getenv("SDL_VIDEO_YUV_DIRECT") ) putenv("SDL_VIDEO_YUV_DIRECT=1");
         }
         else
         {
-            if ( ! getenv("SDL_VIDEO_YUV_HWACCEL") ) putenv("SDL_VIDEO_YUV_HWACCEL=0");
-            if ( ! getenv("SDL_VIDEO_YUV_DIRECT") ) putenv("SDL_VIDEO_YUV_DIRECT=0");
+            if ( !getenv("SDL_VIDEO_YUV_HWACCEL") ) putenv("SDL_VIDEO_YUV_HWACCEL=0");
+            if ( !getenv("SDL_VIDEO_YUV_DIRECT") ) putenv("SDL_VIDEO_YUV_DIRECT=0");
         }
 
         if (SDL_VideoDriverName(driver, sizeof(driver)) && global->debug)
@@ -224,6 +232,7 @@ static SDL_Overlay * video_init(void *data, SDL_Surface **pscreen)
     overlay = SDL_CreateYUVOverlay(global->width, global->height,
         SDL_YUY2_OVERLAY, *pscreen);
 
+// #if USE_GDK
     if (!global->foreign_window) {
         //wmctrl(global, "-b", "add,above"); // set window to keepabove
         XID xid;
@@ -238,7 +247,9 @@ static SDL_Overlay * video_init(void *data, SDL_Surface **pscreen)
             global->inner_window = NULL;
         }
     }
+// #endif
 
+    global->live_overlay = overlay;
     return (overlay);
 }
 
@@ -555,9 +566,6 @@ void *main_loop(void *data)
                     {
                         case 220: /*webcam button*/
                             // TODO how to do?
-                            //gdk_threads_enter();
-                            //gtk_button_clicked (GTK_BUTTON(gwidget->CapImageButt));
-                            //gdk_threads_leave();
                             break;
                     }
                 } // end event.type==SDL_KEYDOWN
@@ -566,6 +574,7 @@ void *main_loop(void *data)
                     //g_print("SDL resize: %d, %d\n", event.resize.w, event.resize.h);
                     // NOTICE: This will not raise when environ SDL_WINDOWID set (foreign_window).
                     //if (!global->foreign_window) {
+// #ifdef USE_GDK
                     if (global->inner_window) {
                         // change overlay rectangle.
                         drect.w = event.resize.w;
@@ -577,6 +586,15 @@ void *main_loop(void *data)
                                 global->bpp,
                                 get_sdl_video_flags(global));
                     }
+// #else
+//                     drect.w = event.resize.w;
+//                     drect.h = event.resize.h;
+//                     SDL_SetVideoMode(
+//                         event.resize.w,
+//                         event.resize.h,
+//                         global->bpp,
+//                         get_sdl_video_flags(global));
+// #endif
                 }
             }
         } // !no_display

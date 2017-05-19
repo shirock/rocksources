@@ -23,7 +23,12 @@
 #define GLOBALS_H
 
 #include <glib.h>
+// #ifdef USE_GDK
 #include <gtk/gtk.h>
+// #else
+#include <SDL/SDL.h>
+// #endif
+
 #include "defs.h"
 #include "utils.h"
 
@@ -86,7 +91,6 @@ struct GLOBAL
 	gboolean AFcontrol;    //Autofocus control flag (exists or not)
 	gboolean autofocus;    //autofocus flag (enable/disable)
 	gboolean debug;        //debug mode flag (--verbose)
-	gboolean control_only; //if set don't stream video (enables image control in other apps e.g. ekiga, skype, mplayer)
 	gboolean add_ctrls;    //flag for exiting after adding extension controls
 
     struct {
@@ -96,8 +100,15 @@ struct GLOBAL
         gint height;
         gint depth;
     } geometry;
+
+// #ifdef USE_GDK
     GdkWindow *inner_window;
     GdkWindow *foreign_window;
+// #else
+    SDL_Surface *liveview;
+    SDL_Overlay *live_overlay;
+    gboolean is_embed_view;
+// #endif
 };
 
 /*----------------------------- prototypes ------------------------------------*/
