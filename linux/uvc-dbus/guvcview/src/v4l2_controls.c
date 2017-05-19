@@ -1040,8 +1040,7 @@ init_controls (struct ALL_DATA *all_data)
 
         //special cases (extra software controls)
 	    if (((current->control.id == V4L2_CID_FOCUS_ABSOLUTE) ||
-	        (current->control.id == V4L2_CID_FOCUS_LOGITECH)) &&
-	         !(global->control_only))
+	        (current->control.id == V4L2_CID_FOCUS_LOGITECH)))
 	    {
 		    global->AFcontrol=1;
 
@@ -1074,11 +1073,7 @@ init_controls (struct ALL_DATA *all_data)
         }
     }
 
-	/*              try to start the video stream             */
-	/* do it here (after all ioctls) since some cameras take  */
-	/* a long time to initialize after this                   */
-	/* it's OK if it fails since it is retried in uvcGrab     */
-	if(!global->control_only) video_enable(videoIn);
+    video_enable(videoIn);
 
 	s = NULL;
 	global = NULL;

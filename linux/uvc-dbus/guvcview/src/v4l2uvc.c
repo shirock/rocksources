@@ -810,25 +810,23 @@ int init_videoIn(struct vdIn *vd, struct GLOBAL *global)
 		ret = (ret ? VDIN_DYNCTRL_ERR: VDIN_DYNCTRL_OK);
 		goto error;
 	}
-	else ret = 0; //clean ret code
+	else
+        ret = 0; //clean ret code
 
-	if(!(global->control_only))
-	{
-		if ((ret=init_v4l2(vd, &global->format, &global->width, &global->height, &global->fps, &global->fps_num)) < 0)
-		{
-			g_printerr("Init v4L2 failed !! \n");
-			goto error;
-		}
+    if ((ret=init_v4l2(vd, &global->format, &global->width, &global->height, &global->fps, &global->fps_num)) < 0)
+    {
+        g_printerr("Init v4L2 failed !! \n");
+        goto error;
+    }
 
-        g_printf("mode is set to %s\n", global->mode);
-        g_printf("resolution is set to %dx%d\n", global->width, global->height);
-		g_printf("fps is set to %i/%i\n", global->fps_num, global->fps);
-		/*allocations*/
-		if((ret = videoIn_frame_alloca(vd, global->format, global->width, global->height)) != VDIN_OK)
-		{
-			goto error;
-		}
-	}
+    g_printf("mode is set to %s\n", global->mode);
+    g_printf("resolution is set to %dx%d\n", global->width, global->height);
+    g_printf("fps is set to %i/%i\n", global->fps_num, global->fps);
+    /*allocations*/
+    if((ret = videoIn_frame_alloca(vd, global->format, global->width, global->height)) != VDIN_OK)
+    {
+        goto error;
+    }
 	return (ret);
 error:
 	v4l2_close(vd->fd);
@@ -1262,7 +1260,7 @@ error:
  *
  * returns: void
 */
-void close_v4l2(struct vdIn *vd, gboolean control_only)
+void close_v4l2(struct vdIn *vd)
 {
 	if (vd->isstreaming) video_disable(vd);
 
@@ -1271,10 +1269,7 @@ void close_v4l2(struct vdIn *vd, gboolean control_only)
 	if(vd->VidFName)g_free(vd->VidFName);
 	// free format allocations
 	if(vd->listFormats) freeFormats(vd->listFormats);
-	if (!control_only)
-	{
-		close_v4l2_buffers(vd);
-	}
+    close_v4l2_buffers(vd);
 	vd->videodevice = NULL;
 	vd->tmpbuffer = NULL;
 	vd->framebuffer = NULL;

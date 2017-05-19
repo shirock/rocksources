@@ -512,6 +512,7 @@ socket_command_loop(void *alldata)
     }
 
     while (!all_data->videoIn->signalquit) {
+        // TODO select with 0.1 seconds.
         if (!block_serve(bfd))
             break;
     }

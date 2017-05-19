@@ -41,6 +41,7 @@
 #define __THREAD_TYPE pthread_t
 #define __THREAD_CREATE(t,f,d) (pthread_create(t,NULL,f,d))
 #define __THREAD_JOIN(t) (pthread_join(t, NULL))
+#define __THREAD_DETACH(t) (pthread_detach(t))
 
 
 #define __MUTEX_TYPE pthread_mutex_t

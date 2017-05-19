@@ -149,7 +149,7 @@ int uvcGrab(struct vdIn *vd, int format, int width, int height, int *fps, int *f
  *
  * returns: void
 */
-void close_v4l2(struct vdIn *vd, gboolean control_only);
+void close_v4l2(struct vdIn *vd);
 
 /* restarts v4l2 device with new format
  * args:
