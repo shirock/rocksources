@@ -1,0 +1,37 @@
+#!/bin/sh
+
+REQUIREDS="python3 python3-pip python3-serial"
+echo "check required packages: $REQUIREDS"
+
+for REQUIRED in $REQUIREDS ; do
+    echo -n "checking required package $REQUIRED ... "
+    dpkg -l $REQUIRED 2>&1 | grep ^ii > /dev/null
+    if [ $? -ne 0 ]; then
+        echo "[no]"
+        echo "Please install required packages."
+        exit 1
+    fi
+    echo "[yes]"
+done
+
+
+REQUIREDS="paho-mqtt"
+echo
+echo "check required python packages: $REQUIREDS"
+
+for REQUIRED in $REQUIREDS ; do
+    echo -n "checking required package $REQUIRED ... "
+    pip3 --quiet show $REQUIRED > /dev/null
+    if [ $? -ne 0 ]; then
+        echo "[no]"
+        echo "Please run 'pip3 install $REQUIRED' to install required python package."
+        exit 1
+    fi
+    echo "[yes]"
+done
+
+echo 
+echo "Configure ok."
+echo 
+
+exit 0

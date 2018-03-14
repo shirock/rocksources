@@ -1,0 +1,20 @@
+#!/bin/bash
+# set run-services runable to watchdog mode.
+#
+
+SERVICES="rf95_server.py"
+
+while [ -x $0 ]; do
+  for SERVICE in $SERVICES; do
+    pgrep $SERVICE > /dev/null
+    if [ $? -ne 0 ]; then
+      echo $SERVICE is gone. run it.
+      exec ~/bin/$SERVICE > /dev/null &
+    #else
+      #echo $SERVICE is running.
+    fi
+  done
+  sleep 60
+done
+
+exit 0
