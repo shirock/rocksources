@@ -6,6 +6,8 @@
 
 * configure 指令稿: 檢查其他需求套件是否已安裝。
 * install.sh 指令稿: 將使用者 pi 加入 dialout 群組。安裝 paho-mqtt 套件。
+* pyrfm: Python library for Grove LoRa Radio 。我修改過的 pyrfm ，增加了 `setHeaderTo()` 和 `setHeaderFrom()` 方法。這是 Grove LoRa Radio Arduino 套件已實作，但 pyrfm 原作者未實作的方法。我加以補全。
+* lora-sender.py: 示範用 LoRa 發訊端。此發訊端範例使用我修改的 pyrfm 。
 
 主程式 rf95_server.py 可以 root 身份執行，亦可以一般使用者 (pi) 的身份執行。不同使用者身份執行時，其預設的資料目錄也不相同。
 

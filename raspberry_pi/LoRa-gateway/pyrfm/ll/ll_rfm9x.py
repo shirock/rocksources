@@ -203,9 +203,11 @@ RFM_MAX_PAYLOAD_LEN = RFM_FIFO_SIZE
 class LinkLayer(Prototype):
 	_RX_Buffer=	None
 	_TX_id=			0
+	_header_to =    0
+	_header_from =  0
 	
 	State=			None
-	Mode=				None
+	Mode=			None
 
 	def postInit(self):
 		self.flush()
@@ -334,7 +336,18 @@ class LinkLayer(Prototype):
 			# My measurements show 20dBm is correct
 			self.PL.writeRegister(RFM_REG_PA_CONFIG, RFM_PA_SELECT | (power-5))
 		
-		
+	def setHeaderFrom(self, id):
+		self._header_from = id
+
+	def getHeaderFrom(self):
+		return self._header_from
+
+	def setHeaderTo(self, id):
+		self._header_to = id
+
+	def getHeaderTo(self):
+		return self._header_to
+
 	def _handleIRQ(self):
 		# Read the interrupt register
 		irq_flags = self.PL.readRegister(RFM_REG_IRQ_FLAGS)
@@ -446,7 +459,7 @@ class LinkLayer(Prototype):
 			
 			#The headers
 			#<to> <from> <id> <flags> 
-			self.PL.writeRegister(RFM_REG_FIFO, [0,0,self._TX_id,0])
+			self.PL.writeRegister(RFM_REG_FIFO, [self._header_to, self._header_from, self._TX_id, 0])
 			#The message data
 			length=len(data) + RFM_HEADER_LEN
 			self.PL.writeRegister(RFM_REG_FIFO, data);
