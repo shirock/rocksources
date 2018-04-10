@@ -309,7 +309,7 @@ class CommonGateway
     protected $control = null;
     protected $segments = null;
     protected $action = null;
-    protected $request_document_type = 'html';
+    protected $request_document_type = 'js'; //'html';
     protected $raw_request_data = null;
 
     function __get($k)
@@ -393,10 +393,12 @@ class CommonGateway
             // Accept: text/plain; q=0.9, application/xml+html; q=0.1
             $http_accept = explode(',', $_SERVER['HTTP_ACCEPT']);
 
-            if ($http_accept[0] != '*/*') {
-                #$this->response_content_type = $http_accept[0];
-                header('Content-Type: ' . $http_accept[0] .'; charset=utf-8');
+            // some clients will always insert '*/*' in the first option. skip it.
+            if ($http_accept[0] == '*/*') { 
+                array_shift($http_accept);
             }
+
+            header('Content-Type: ' . $http_accept[0] .'; charset=utf-8');
 
             list($tmp, $http_accept_ext) = explode('/', $http_accept[0]);
             // $http_accept_ext would be the extension name of document type.
