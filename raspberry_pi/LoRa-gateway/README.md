@@ -31,7 +31,7 @@ id = 255
 port = /dev/serial0
 
 [MQTT]
-host = localhost
+host = iot.eclipse.org
 topic_base = tw/rocksaying/lora
 username = guest
 # username should not be empty
