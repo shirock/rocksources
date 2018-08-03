@@ -3,7 +3,12 @@ Rock's Source
 
 Also visits my blog: [http://rocksaying.tw/](http://rocksaying.tw/).
 
-Hosted:
+My source repositories:
+
+* [rocksources](https://github.com/shirock/rocksources) - Unclassified or incubating.
+* [non-jquery-ui](https://github.com/shirock/non-jquery-ui) - Some web UI without jQuery.
+
+Hosted in here:
 
 * raspberry_pi/LoRa-gateway: Raspberry Pi 使用 Grove LoRa 無線模組負擔 LoRa Gateway 角色。
 * web/taiwan-119-gps: 台灣 119 求救簡訊 APP 。
