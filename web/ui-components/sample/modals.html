@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<!-- <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> -->
+
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css"> -->
+<!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous"> -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<body>
+<p>
+MessageModal 可在執行非同步工作時，顯示覆蓋全頁的訊息，阻擋使用者操作頁面的內容。
+例如使用 XmlHttpRequest 上傳表單資料時，防止使用者在上傳完成前修改表單。
+</p>
+<p>
+Spinner 基於設計目的，應在非同步工作完成後，由程式關閉覆蓋訊息，所以不顯示關閉按鈕，不讓使用者自己關閉。
+</p>
+
+<div>
+<p>
+Show an overlay message with close button: 
+</p>
+<p>
+<button type="button" class="btn btn-primary">MessageModal1 button</button>
+</p>
+<p>
+<button type="button" class="btn btn-primary">MessageModal2 button</button>
+</p>
+
+</div>
+
+<p>The clock will keep working.</p>
+<div id="clock" style="font-size: 1.5em; margin: 5px; padding: 5px; border: 1px solid black;">
+</div>
+
+<p>
+顯示覆蓋訊息時，不會擱置其他背景工作。而 alert() 則會擱置背景工作 (worker不受影嚮)。
+</p>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>  -->
+<!-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script> -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+<script src="../src/modals.js"></script>
+
+<script>
+function init(){
+    console.log('init');
+    let clock_div = document.getElementById('clock');
+    function clock_run() {
+        var clock = new Date();
+        clock_div.innerText = clock.toString();
+    }
+    clock_run();
+    setInterval(clock_run, 1000);
+
+    let btns = document.querySelectorAll('.btn').forEach(btn=>{
+        btn.addEventListener('click', ev=>{
+            MessageModal.show(ev.target.innerText);
+            MessageModal.show('當多起提示訊息的事件發生時，訊息將疊加在同一視窗，而不是疊加多個訊息視窗');
+        });
+    });
+
+    Spinner.show();
+    setTimeout(function(){
+      Spinner.hide();
+    }, 3000); 
+}
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
