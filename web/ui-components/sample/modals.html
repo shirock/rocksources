@@ -9,11 +9,25 @@
 
 <body>
 <p>
-MessageModal 可在執行非同步工作時，顯示覆蓋全頁的訊息，阻擋使用者操作頁面的內容。
+Required: Bootstrap 4.3 or later
+</p>
+
+<h4>Spinner</h4>
+<p>
+Spinner 可在執行非同步工作時，顯示覆蓋全頁的訊息，阻擋使用者操作頁面的內容。
 例如使用 XmlHttpRequest 上傳表單資料時，防止使用者在上傳完成前修改表單。
 </p>
 <p>
 Spinner 基於設計目的，應在非同步工作完成後，由程式關閉覆蓋訊息，所以不顯示關閉按鈕，不讓使用者自己關閉。
+</p>
+
+<p>
+<button type="button" class="btn btn-info">show Spinner again</button>
+</p>
+
+<h4>MessageModal</h4>
+<p>
+MessageModal 顯示覆蓋全頁的訊息窗，使用者點擊背景或訊息窗右上的關閉鈕即可關掉訊息窗。
 </p>
 
 <div>
@@ -45,6 +59,13 @@ Show an overlay message with close button:
 
 <script>
 function init(){
+    function spinner_demo() {
+        Spinner.show('處理中...(3秒模擬)');
+        setTimeout(function(){
+            Spinner.hide();
+        }, 3000); 
+    }
+
     console.log('init');
     let clock_div = document.getElementById('clock');
     function clock_run() {
@@ -54,17 +75,20 @@ function init(){
     clock_run();
     setInterval(clock_run, 1000);
 
-    let btns = document.querySelectorAll('.btn').forEach(btn=>{
+    let btns = document.querySelectorAll('.btn-primary').forEach(btn=>{
         btn.addEventListener('click', ev=>{
             MessageModal.show(ev.target.innerText);
             MessageModal.show('當多起提示訊息的事件發生時，訊息將疊加在同一視窗，而不是疊加多個訊息視窗');
         });
     });
 
-    Spinner.show();
-    setTimeout(function(){
-      Spinner.hide();
-    }, 3000); 
+    btns = document.querySelectorAll('.btn-info').forEach(btn=>{
+        btn.addEventListener('click', ev=>{
+            spinner_demo();
+        });
+    });
+
+    spinner_demo();
 }
 window.addEventListener('DOMContentLoaded', init);
 </script>
