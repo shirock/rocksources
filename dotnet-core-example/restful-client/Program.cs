@@ -54,6 +54,8 @@ namespace Example
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.Add("X-Key", "xxxxx");  // Custom header
+            client.DefaultRequestHeaders.Add("CK", "yyyy");  // Custom header
 
             // If you need to set Content-Type header, use this way:
             // var request = new HttpRequestMessage(HttpMethod.Get, "http://localhost:5000/api/values/5");
