@@ -12,7 +12,7 @@ CommonGateway 為程序人員完成下列工作:
 * 它會根據控制項方法的回傳結果與客戶端期望的文件回應型態，處理對應的視圖樣板。
 * 它會儘量透過外部注入的方式，將其他資源放入控制項 (即 IoC 模式)，減少對原有程式碼的侵入性。
 
-更多內容請參閱: [CommonGateway 介紹](http://rocksaying.tw/archives/2013/CommonGateway%20%E4%BB%8B%E7%B4%B9.html) 。
+更多內容請參閱: [CommonGateway 介紹](http://rocksaying.tw/archives/21318202.html) 。
 
 ## 設計意見
 
