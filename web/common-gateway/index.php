@@ -23,7 +23,6 @@ CommonGateway 會分析 HTTP 方法，自適當的資料來源中取出表單資
 
 傳統上，我們可以從 $_GET, $_POST 中取得表單資料。
 但是 PUT 方法送來的表單，並沒有對應的全域變數。此時就需要透過 request 取得。
-
  */
 
 // Mock data, TEST ONLY
@@ -467,6 +466,12 @@ class CommonGateway
             return false;
         }
 
+        // if style of name is 'abc_def'
+        $ws = explode('_', $name);
+        for ($i = 0; $i < count($ws); ++$i) {
+            $ws[$i] = ucfirst($ws[$i]);
+        }
+
         for ($case_f = 0; $case_f < 5; ++$case_f) {
             switch ($case_f) {
             case 0:
@@ -482,12 +487,6 @@ class CommonGateway
                 $app_name = strtolower($name[0]) . substr($name, 1);
                 break;
             case 3:
-                // case: name is 'abc_def'
-                $ws = explode('_', $name);
-                for ($i = 0; $i < count($ws); ++$i) {
-                    $ws[$i] = ucfirst($ws[$i]);
-                }
-
                 // case: name is 'abc_def', search 'Abc_Def.php'.
                 $app_name = implode('_', $ws);
                 break;
@@ -604,6 +603,12 @@ class CommonGateway
         #elseif (is_object($model) and !isset(${$this->app_name}))
         if ((is_object($model) or is_array($model)) and !isset(${$this->app_name}))
             ${$this->app_name} = &$model; // 指派此資料模型給控制項同名的變數
+            // 分配一個和控制項名稱相同的別名
+
+        // 根據服務名稱與 HTTP 標頭的 Accept 內容，載入對應的視圖。
+        // 視圖的副檔名按 Ruby on Rails 型式，開頭為 p ，後接文件型態名稱。
+        // 例如 HTML 文件的視圖，副檔名為 phtml 。
+        // 比較特別的是 JSON 文件的視圖，其副檔名為 pjs ，不是 pjson 。
         if ($this->request_document_type == 'json' or
             $this->request_document_type == 'javascript'
         ) {
@@ -641,35 +646,12 @@ $gw = new CommonGateway();
 
 /*
 執行控制項(controller)的回傳值(即 $gw->run() 的回傳值)，決定視圖(view)的處理工作。
-回傳值規則如後述。
-
-1. false : 視同控制項自行處理回應工作， CommonGateway 不會繼續載入視圖。
-
-遇到 false 以外的回傳值，CommonGateway 都會載入視圖。
-CommonGateway 會自動根據服務名稱與 HTTP 標頭的 Accept 內容，載入對應的視圖。
-視圖的副檔名按 Ruby on Rails 型式，開頭為 p ，後接文件型態名稱。
-例如 HTML 文件的視圖，副檔名為 phtml 。
-比較特別的是 JSON 文件的視圖，其副檔名為 pjs ，不是 pjson 。
-
 CommonGateway 會根據控制項回傳資料的型態，決定傳給視圖的資料來源(model)內容為何。
-
-null (或無回傳值) : 大部份控制項的處理函數不會回傳內容，故這是預設行為。
-此時會將控制項的公開屬性當作資料來源(model)，將控制項的公開屬性內容展開成視圖活
-動範圍內的區域變數。
-例如控制項有公開屬性 title ，CommonGateway 會將此屬性指派為視圖的區域變數 $title 。
-
-true : 同回傳 null 的情形。
-
-整數 : 介於100 ~ 599間的整數，視為控制項直接回傳 HTTP 狀態碼。
-CommonGateway 會將該狀態碼回傳給瀏覽器，而不載入任何視圖。
-
-array : CommonGateway 會將回傳的陣列視為資料集合，將陣列內容展開成為視圖內的區域
-變數。
-注意，若陣列會數字索引陣列，則會展開後的區域變數名稱之字首為 data_ 。例如第0個陣列
-元素展開後的區域變數名稱將會是 data_0 ，餘類推。
-
-object : CommonGateway 會將回傳的個體視為資料來源，直接指派為視圖內的區域變數 $model。
-此時在視圖內將可以調用該個體的方法。這可以取代 helper 。
+回傳值規則看下方 render() 說明。
+但是以下種兩回傳值不會載入視圖:
+1. false 。
+1. 回傳值為介於100 ~ 599間的整數，視為控制項直接回傳 HTTP 狀態碼。
+CommonGateway 會將該狀態碼回傳給瀏覽器。
 */
 $model = $gw->run();
 
@@ -683,6 +665,37 @@ if (is_int($model) and $model >= 100 and $model <= 599) {
 
 $gw->load_view_helper();
 
-$gw->render($model);
+/*
+將 $model (控制項資料內容) 傳給 render() 作為「視圖活動範圍內可用的資料內容」。
 
+1. 若 $model 為 null (或無回傳值): 大部份控制項的處理函數不回傳內容，故這是預設行為。
+此時會將控制項的公開屬性當作資料來源(model)，將控制項的公開屬性內容展開成
+視圖活動範圍內的區域變數。
+例如控制項有公開屬性 title ，CommonGateway 會將此屬性指派為視圖的區域變數 $title 。
+
+2. 若 $model 為 true : 同回傳 null 的情形。
+
+3. 若 $model 為 false : 視同控制項自行處理回應工作， CommonGateway 不會繼續載入視圖。
+
+4. 若 $model 為介於100 ~ 599間的整數，視為控制項直接回傳 HTTP 狀態碼。
+CommonGateway 會將該狀態碼回傳給瀏覽器，而不載入任何視圖。
+
+5. 若 $model 為 array : CommonGateway 會將回傳的陣列視為資料來源，
+指派為視圖內的區域變數 $model，並將陣列內容展開成為視圖內的區域變數。
+注意，若陣列為數字索引陣列，則展開後的區域變數名稱之字首為 data_ 。
+例如 $model = array('a', 'b') ，則視圖內展開的區域變數內容將是
+$data_0 == 'a', $data_1 == 'b' ，餘類推。
+
+6. 若 $model 為 object : CommonGateway 會將回傳的個體視為資料來源，
+指派為視圖內的區域變數 $model。
+此時在視圖內將可以調用該個體的方法。這可以取代 helper 。
+
+7. 若 $model 型態為 array 或 object ，則視圖內將同時分配一個和控制項名稱相同的別名。
+
+例如控制項 MyBook 回傳的資料為 object ，包含一個資料欄位 Title 。
+則在視圖內，可以用下列途徑取得 Title 內容:
+1. $model->Title;
+2. $MyBook->Title;
+*/
+$gw->render($model);
 ?>
