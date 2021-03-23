@@ -1,5 +1,5 @@
 #labels Featured,Phase-Design
 = CommonGateway =
 
-請看 [CommonGateway 介紹](http://rocksaying.tw/archives/21318202.html)。
+請看 CommonGateway 介紹 http://rocksaying.tw/archives/21318202.html
 
