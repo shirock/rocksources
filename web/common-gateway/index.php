@@ -35,6 +35,11 @@ if (PHP_SAPI == 'cli') {
     $_POST = array('name' => 'rock');
 }
 
+function url_root_path()
+{
+    return dirname($_SERVER['SCRIPT_NAME']);
+}
+
 class Controller
 {
     public function index()
@@ -51,7 +56,7 @@ class Controller
         規定採用 UTF-8 編碼。但是二進位文件內容若使用 UTF-8 編碼，則編碼後的內容
         長度會比 BASE64 長上許多。故此處限定預先以 BASE64 二進位文件內容。
      */
-    public static function load_uploaded_files($fields)
+    public static function loadUploadedFiles($fields)
     {
         $files = array();
         foreach ($fields as $field) {
@@ -61,16 +66,19 @@ class Controller
                         if (!empty($filepath))
                             $files[$field][] = file_get_contents($filepath);
                     }
-                } else {
+                } 
+                else {
                     if (!empty($_FILES[$field]['tmp_name']))
                         $files[$field] = file_get_contents($_FILES[$field]['tmp_name']);
                 }
-            } elseif (isset($_POST[$field]) and !empty($_POST[$field])) {
+            } 
+            elseif (isset($_POST[$field]) and !empty($_POST[$field])) {
                 if (is_array($_POST[$field])) {
                     foreach ($_POST[$field] as $encoded_text) {
                         $files[$field][] = base64_decode($encoded_text);
                     }
-                } else {
+                } 
+                else {
                     $files[$field] = base64_decode($_POST[$field]);
                 }
             }
@@ -230,6 +238,12 @@ class HttpResponse
         self::exception(HttpResponse::BAD_REQUEST, $msg);
     }
 
+    // PSR-1 name style
+    static function badRequest($msg=false)
+    {
+        self::bad_request($msg);
+    }
+
     static function unauthorized($msg=false)
     {
         self::exception(HttpResponse::UNAUTHORIZED, $msg);
@@ -238,6 +252,11 @@ class HttpResponse
     static function payment_required($msg=false)
     {
         self::exception(HttpResponse::PAYMENT_REQUIRED, $msg);
+    }
+
+    static function paymentRequired($msg=false)
+    {
+        self::payment_required($msg);
     }
 
     static function forbidden($msg=false)
@@ -250,9 +269,19 @@ class HttpResponse
         self::exception(HttpResponse::NOT_FOUND, $msg);
     }
 
+    static function notFound($msg=false)
+    {
+        self::not_found($msg);
+    }
+
     static function method_not_allowed($msg=false)
     {
         self::exception(HttpResponse::METHOD_NOT_ALLOWED, $msg);
+    }
+
+    static function methodNotAllowed($msg=false)
+    {
+        self::method_not_allowed($msg);
     }
 
     static function not_acceptable($msg=false)
@@ -260,9 +289,19 @@ class HttpResponse
         self::exception(HttpResponse::NOT_ACCEPTABLE, $msg);
     }
 
+    static function notAcceptable($msg=false)
+    {
+        self::not_acceptable($msg);
+    }
+
     static function request_timeout($msg=false)
     {
         self::exception(HttpResponse::REQUEST_TIMEOUT, $msg);
+    }
+
+    static function requestTimeout($msg=false)
+    {
+        self::request_timeout($msg);
     }
 
     static function conflict($msg=false)
@@ -280,24 +319,40 @@ class HttpResponse
         self::exception(HttpResponse::INTERNAL_SERVER_ERROR, $msg);
     }
 
+    static function internalServerError($msg=false)
+    {
+        self::internal_server_error($msg);
+    }
+
     static function not_implemented($msg=false)
     {
         self::exception(HttpResponse::NOT_IMPLEMENTED, $msg);
     }
 
-    static function bad_gateway($msg=false) {
+    static function notImplemented($msg=false)
+    {
+        self::not_implemented($msg);
+    }
+
+    static function bad_gateway($msg=false) 
+    {
         self::exception(HttpResponse::BAD_GATEWAY , $msg);
+    }
+
+    static function badGateway($msg=false) 
+    {
+        self::bad_gateway($msg);
     }
 
     static function service_unavailable($msg=false)
     {
         self::exception(HttpResponse::SERVICE_UNAVAILABLE, $msg);
     }
-}
 
-function url_root_path()
-{
-    return dirname($_SERVER['SCRIPT_NAME']);
+    static function serviceUnavailable($msg=false)
+    {
+        self::service_unavailable($msg);
+    }
 }
 
 class CommonGateway
@@ -331,7 +386,7 @@ class CommonGateway
 
         $control_seg = array_shift($this->segments);
 
-        $this->load_control($control_seg); // and set $this->app_name
+        $this->loadControl($control_seg); // and set $this->app_name
 
         switch ($_SERVER['REQUEST_METHOD']) {
         case 'GET':
@@ -358,19 +413,22 @@ class CommonGateway
             if ($content_type == 'application/x-www-form-urlencoded') {
                 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $request_vars = &$_POST;
-                } else { // PUT
+                } 
+                else { // PUT
                     $request_vars = json_decode($this->raw_request_data, true);
                     $_POST= &$request_vars;
                     $_REQUEST = array_merge($_GET, $request_vars);
                     # only contains $_GET and $_POST, due to security concerns.
                 }
-            } elseif ($content_type == 'application/json') {
+            } 
+            elseif ($content_type == 'application/json') {
                 $request_vars = json_decode($this->raw_request_data, true);
                 //if ($_SERVER['REQUEST_METHOD'] == 'POST')
                     $_POST = &$request_vars; // 兼容傳統格式。
                 $_REQUEST = array_merge($_GET, $request_vars);
                 # only contains $_GET and $_POST, due to security concerns.
-            } else {
+            } 
+            else {
                 $request_vars = &$_POST;
             }
             break;
@@ -381,10 +439,10 @@ class CommonGateway
             break;
         }
 
-        $app_config = $this->_load_app_config();
-        $this->inject_resource($this->control, 'config', $app_config);
+        $app_config = $this->loadAppConfig();
+        $this->injectResource($this->control, 'config', $app_config);
 
-        $this->inject_resource($this->control, 'request', $request_vars);
+        $this->injectResource($this->control, 'request', $request_vars);
 
         // I just look the first option.
         if (isset($_SERVER['HTTP_ACCEPT'])) {
@@ -406,7 +464,52 @@ class CommonGateway
                 $this->request_document_type = $http_accept_ext;
         }
 
-        $this->inject_resource($this->control, 'request_document_type', $this->request_document_type);
+        $this->injectResource($this->control, 'request_document_type', $this->request_document_type);
+    }
+
+    /**
+     * 取得基於 index.php 的 URL 路徑。
+     * 不指定 $path 時，回傳 index.php 的 URL 。
+     */
+    public static function makeURL($path = false)
+    {
+        $root = $_SERVER['SCRIPT_NAME'];
+        if (!$path) {
+            return $root;
+        }
+        else if ($path[0] != '/') {
+            $sep = '/';
+        }
+        else {
+            $sep = '';
+        }
+        return $root . $sep . $path;
+    }
+
+    public static function makeFilepath($name)
+    {
+        return dirname(__FILE__) . '/' . $name;
+    }
+
+    protected function makeControlFilepath($name)
+    {
+        return "controllers/{$name}.php";
+    }
+
+    protected function loadAppConfig()
+    {
+        $config = false;
+        $config_path = self::makeFilepath('etc/app_config.php');
+        if (file_exists($config_path)) {
+            @include_once $config_path;
+        } 
+        else {
+            $config_path = self::makeFilepath('etc/app_config.json');
+            if (file_exists($config_path)) {
+                $config = json_decode(file_get_contents($config_path));
+            }
+        }
+        return $config;
     }
 
     /**
@@ -427,7 +530,7 @@ class CommonGateway
       var $request
       // 將名稱為 request 的資源注入 $request 屬性。
      */
-    public function inject_resource($target, $name, $resource)
+    protected function injectResource($target, $name, $resource)
     {
         $ro = new ReflectionObject($target);
         foreach ($ro->getProperties() as $prop) {
@@ -445,28 +548,85 @@ class CommonGateway
         return;
     }
 
-    protected function _load_app_config()
+    /**
+     session 設置參數放在 etc/session_cookie.(json|php) 。
+     參數內容看 session_set_cookie_params() 說明。
+     若用 session_cookie.php ，則陣列名稱是 $options ，例如:
+     $options = [
+        'lifetime' => '3600',
+        'samesite' => 'Strict'
+      ]
+     */
+    protected function startSession()
     {
-        $config = false;
-        $config_path = dirname(__FILE__) . '/etc/app_config.php';
-        if (file_exists($config_path)) {
-            @include_once $config_path;
-        } else {
-            $config_path = dirname(__FILE__) . '/etc/app_config.json';
-            if (file_exists($config_path)) {
-                $config = json_decode(file_get_contents($config_path));
+        $options = false;
+        $params_path = self::makeFilepath('etc/session_cookie.json');
+        if (file_exists($params_path)) {
+            $options = json_decode(file_get_contents($params_path), true);
+        } 
+        else {
+            $params_path = self::makeFilepath('etc/session_cookie.php');
+            if (file_exists($params_path)) {
+                @include_once $params_path;
             }
         }
-        return $config;
+
+        if ($options)
+            session_set_cookie_params($options);
+
+        session_start();
     }
 
-    protected function _detect_app_name($path, $name)
+    private $is_authorized = false;
+
+    /**
+     * 若控制項註記 @authorize ，則需經過認證。
+     * 若控制項方法註記 @authorize ，則需經過認證。
+     * 
+     * 認證用控制項為 Authorize 或 Login 。
+     * 授權時，必須設定 $_SESSION['Authorization'] 為任意值，有效值甚至包括 false 。
+     * index.php 僅依 isset($_SESSION['Authorization']) 判定是否授權。
+     */
+    protected function authorize($target, $is_reflect = false)
+    {
+        // 若 class 已註記 @authorize ，就表示全部方法都要求授權。
+        // 就不再判斷 method 是否註記 @authorize 。
+        if ($this->is_authorized) {
+            return;
+        }
+
+        $ro = ($is_reflect ? $target : new ReflectionObject($target));
+        $doc = $ro->getDocComment();
+        if (preg_match("/@authorize\s/", $doc, $m) > 0) {
+            $this->is_authorized = true;
+            $this->startSession();
+            if (isset($_SESSION['Authorization'])) {
+                return;
+            }
+
+            // 認證用控制項為 Authorize 或 Login
+            if (file_exists($this->makeControlFilepath('Login')))
+                $authorize_control = 'Login';
+            else 
+                $authorize_control = 'Authorize';
+
+            $authorize_path = self::makeURL($authorize_control);
+            // echo 'redirect to ', $authorize_path;
+            header("Location: $authorize_path");
+            exit;
+        }
+        return;
+    }
+
+    protected function detectAppName($path, $name)
     {
         if (!ctype_alnum(str_replace('_', '', $name))) { // invalid name.
             return false;
         }
 
-        // if style of name is 'abc_def'
+        $name = strtolower($name); // 消除大小寫差異。
+
+        // 若這是包含 _ 的名稱，先拆字。
         $ws = explode('_', $name);
         for ($i = 0; $i < count($ws); ++$i) {
             $ws[$i] = ucfirst($ws[$i]);
@@ -476,50 +636,41 @@ class CommonGateway
             switch ($case_f) {
             case 0:
                 // case: search directly by name.
-                $app_name = $name;
+                $file_name = $name;
                 break;
             case 1:
                 // case: name is 'abc', search for 'Abc.php';
-                $app_name = ucfirst($name);
+                $file_name = ucfirst($name);
                 break;
             case 2:
-                // case: name is 'Abc', search for 'abc.php';
-                $app_name = strtolower($name[0]) . substr($name, 1);
+                // case: name is 'abc_def', search 'Abc_Def.php'.
+                $file_name = implode('_', $ws);
                 break;
             case 3:
-                // case: name is 'abc_def', search 'Abc_Def.php'.
-                $app_name = implode('_', $ws);
-                break;
-            case 4:
                 // case: name is 'abc_def', search 'AbcDef.php'.
-                $app_name = implode('', $ws);
+                $file_name = implode('', $ws);
                 break;
             default:
                 break;
             }
 
-            $component_filepath = $this->_make_control_filepath($app_name);
+            $component_filepath = $this->makeControlFilepath($file_name);
             if ( file_exists($component_filepath) ) {
-                return $app_name;
+                return ucfirst($file_name);
             }
         }
         return false;
     }
 
-    protected function _make_control_filepath($name)
-    {
-        return "controllers/{$name}.php";
-    }
-
-    protected function load_control($name)
+    protected function loadControl($name)
     {
         #$this->_load_component('controllers/', $name);
-        $this->app_name = $this->_detect_app_name('controllers/', $name);
+        $this->app_name = $this->detectAppName('controllers/', $name);
         if ($this->app_name == false) {
             HttpResponse::not_found();
         }
 
-        $control_filepath = $this->_make_control_filepath($this->app_name);
+        $control_filepath = $this->makeControlFilepath($this->app_name);
 
         require_once $control_filepath;
 
@@ -531,7 +682,8 @@ class CommonGateway
     {
         if (file_exists(self::DEFAULT_HOMEPAGE)) {
             include_once self::DEFAULT_HOMEPAGE;
-        } else {
+        } 
+        else {
             echo '<p>index.php/{control_name}/{object_id}.</p>';
             echo '<p>You may put your controller class in controllers/{class_name}.php.</p>';
         }
@@ -544,9 +696,18 @@ class CommonGateway
             return $this->index();
         }
 
+        if ($this->app_name == 'Login' or $this->app_name == 'Authorize') {
+            // 目標是負責認證工作的控制項，需要開始 session 
+            $this->startSession();
+        }
+        else {
+            $this->authorize($this->control);
+        }
+
         if ( empty($this->segments) and $_SERVER['REQUEST_METHOD'] == 'GET') { // Without parameter
             $method = 'index';
-        } else {
+        } 
+        else {
             $method = strtolower($_SERVER['REQUEST_METHOD']);
         }
 
@@ -561,7 +722,8 @@ class CommonGateway
                     $method_exists = true;
                 }
             }
-        } else {
+        } 
+        else {
             $method_exists = true;
         }
 
@@ -579,12 +741,15 @@ class CommonGateway
         $arguments = $this->segments;
 
         $ref_method = new ReflectionMethod(get_class($this->control), $method);
+        $this->authorize($ref_method, true);
+
         $method_parameters = $ref_method->getParameters();
         // 若定義了第一個參數為array，則PATH參數陣列將會直接傳入。
         // 其他情形則一律展開參數後傳入，此時函數內部可透過參數列名稱或 func_get_arg() 取得參數內容。
         if (isset($method_parameters[0]) and $method_parameters[0]->isArray()) {
             $model = $this->control->$method($arguments);
-        } else {
+        } 
+        else {
             if (count($arguments) < $ref_method->getNumberOfRequiredParameters())
                 HttpResponse::bad_request();
             $model = call_user_func_array(array($this->control, $method), $arguments);
@@ -600,20 +765,25 @@ class CommonGateway
         // 若型態為陣列，則展開內容為區域變數.
         if (is_array($model))
             extract($model, EXTR_PREFIX_INVALID, 'data');
-        #elseif (is_object($model) and !isset(${$this->app_name}))
-        if ((is_object($model) or is_array($model)) and !isset(${$this->app_name}))
-            ${$this->app_name} = &$model; // 指派此資料模型給控制項同名的變數
-            // 分配一個和控制項名稱相同的別名
+        // 分配 $model 一個和控制項名稱相同但首字母小寫的別名(reference)
+        $model_alias = lcfirst($this->app_name);
+        if ((is_object($model) or is_array($model)) and 
+            !isset($$model_alias))
+        {
+            $$model_alias = &$model;
+        }
 
         // 根據服務名稱與 HTTP 標頭的 Accept 內容，載入對應的視圖。
         // 視圖的副檔名按 Ruby on Rails 型式，開頭為 p ，後接文件型態名稱。
         // 例如 HTML 文件的視圖，副檔名為 phtml 。
         // 比較特別的是 JSON 文件的視圖，其副檔名為 pjs ，不是 pjson 。
         if ($this->request_document_type == 'json' or
-            $this->request_document_type == 'javascript'
-        ) {
+            $this->request_document_type == 'javascript')
+        {
             $_ext_name = 'js';
-        } else {
+        } 
+        else 
+        {
             $_ext_name = $this->request_document_type;
         }
 
@@ -622,17 +792,19 @@ class CommonGateway
 
         if (file_exists($_view_filepath)) {
             include_once $_view_filepath;
-        } elseif ($_ext_name == 'js') {
+        } 
+        elseif ($_ext_name == 'js') {
             // 如果未指定配對的view，但要求傳回的文件型態是json，就自動傳回整份 $model 內容。
             // 在我的使用經驗上，九成傳回json的view，內容都只有一行 json_encode($model) 。
             // 故將此規則寫入 Common Gateway ，減少空泛的 json view 。
             echo json_encode($model);
-        } else {
+        } 
+        else {
             echo "Template is missing. Missing $_view_filepath.";
         }
     }
 
-    function load_view_helper()
+    function loadViewHelper()
     {
         @include_once "helpers/_global.php"; // for all application.
 
@@ -663,7 +835,7 @@ if (is_int($model) and $model >= 100 and $model <= 599) {
     HttpResponse::status($model);
 }
 
-$gw->load_view_helper();
+$gw->loadViewHelper();
 
 /*
 將 $model (控制項資料內容) 傳給 render() 作為「視圖活動範圍內可用的資料內容」。
