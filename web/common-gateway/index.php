@@ -24,7 +24,7 @@ CommonGateway 會分析 HTTP 方法，自適當的資料來源中取出表單資
 傳統上，我們可以從 $_GET, $_POST 中取得表單資料。
 但是 PUT 方法送來的表單，並沒有對應的全域變數。此時就需要透過 request 取得。
  */
-
+namespace {
 // Mock data, TEST ONLY
 if (PHP_SAPI == 'cli') {
     $_SERVER['PATH_INFO'] = "/book/info/123";
@@ -33,58 +33,6 @@ if (PHP_SAPI == 'cli') {
     $_SERVER['HTTP_ACCEPT'] = 'application/json';
     $_SERVER['CONTENT_TYPE'] = 'application/x-www-form-urlencoded';
     $_POST = array('name' => 'rock');
-}
-
-function url_root_path()
-{
-    return dirname($_SERVER['SCRIPT_NAME']);
-}
-
-class Controller
-{
-    public function index()
-    {
-        echo 'index...';
-    }
-
-    /**
-     Laod uploaded files form $_FILES or $_POST (JSON only).
-     1. 此方法不會保留上傳檔案的原本名稱。忽略 $_FILES 的 'name' 欄位。
-     2. 使用 JSON 文件上傳檔案時，CommonGateway 會自動將 JSON 文件解碼再指派
-        給 $_POST 變數。故此函數也會從 $_POST 變數中載入內容。
-     3. 使用 JSON 文件上傳時，限定以 BASE64 處理要上傳的檔案內容。這是因為JSON
-        規定採用 UTF-8 編碼。但是二進位文件內容若使用 UTF-8 編碼，則編碼後的內容
-        長度會比 BASE64 長上許多。故此處限定預先以 BASE64 二進位文件內容。
-     */
-    public static function loadUploadedFiles($fields)
-    {
-        $files = array();
-        foreach ($fields as $field) {
-            if (isset($_FILES[$field]) and !empty($_FILES[$field])) {
-                if (is_array($_FILES[$field]['tmp_name'])) {
-                    foreach ($_FILES[$field]['tmp_name'] as $filepath) {
-                        if (!empty($filepath))
-                            $files[$field][] = file_get_contents($filepath);
-                    }
-                } 
-                else {
-                    if (!empty($_FILES[$field]['tmp_name']))
-                        $files[$field] = file_get_contents($_FILES[$field]['tmp_name']);
-                }
-            } 
-            elseif (isset($_POST[$field]) and !empty($_POST[$field])) {
-                if (is_array($_POST[$field])) {
-                    foreach ($_POST[$field] as $encoded_text) {
-                        $files[$field][] = base64_decode($encoded_text);
-                    }
-                } 
-                else {
-                    $files[$field] = base64_decode($_POST[$field]);
-                }
-            }
-        }
-        return $files;
-    }
 }
 
 class HttpResponse
@@ -870,4 +818,95 @@ $data_0 == 'a', $data_1 == 'b' ，餘類推。
 2. $MyBook->Title;
 */
 $gw->render($model);
+
+} // end global namespace
+
+namespace cg {
+class Controller
+{
+    public function index()
+    {
+        echo 'index...';
+    }
+
+    /**
+     Laod uploaded files form $_FILES or $_POST (JSON only).
+     1. 此方法不會保留上傳檔案的原本名稱。忽略 $_FILES 的 'name' 欄位。
+     2. 使用 JSON 文件上傳檔案時，CommonGateway 會自動將 JSON 文件解碼再指派
+        給 $_POST 變數。故此函數也會從 $_POST 變數中載入內容。
+     3. 使用 JSON 文件上傳時，限定以 BASE64 處理要上傳的檔案內容。這是因為JSON
+        規定採用 UTF-8 編碼。但是二進位文件內容若使用 UTF-8 編碼，則編碼後的內容
+        長度會比 BASE64 長上許多。故此處限定預先以 BASE64 二進位文件內容。
+     */
+    public static function loadUploadedFiles($fields)
+    {
+        $files = array();
+        foreach ($fields as $field) {
+            if (isset($_FILES[$field]) and !empty($_FILES[$field])) {
+                if (is_array($_FILES[$field]['tmp_name'])) {
+                    foreach ($_FILES[$field]['tmp_name'] as $filepath) {
+                        if (!empty($filepath))
+                            $files[$field][] = file_get_contents($filepath);
+                    }
+                } 
+                else {
+                    if (!empty($_FILES[$field]['tmp_name']))
+                        $files[$field] = file_get_contents($_FILES[$field]['tmp_name']);
+                }
+            } 
+            elseif (isset($_POST[$field]) and !empty($_POST[$field])) {
+                if (is_array($_POST[$field])) {
+                    foreach ($_POST[$field] as $encoded_text) {
+                        $files[$field][] = base64_decode($encoded_text);
+                    }
+                } 
+                else {
+                    $files[$field] = base64_decode($_POST[$field]);
+                }
+            }
+        }
+        return $files;
+    }
+}
+} // end namespace cg
+
+namespace cg\html {
+    function resource_url($path = false)
+    {
+        $root = dirname($_SERVER['SCRIPT_NAME']);
+        if (!$path) {
+            return $root;
+        }
+        return $root . '/' . $path;
+    }
+
+    function stylesheet($srcs)
+    {
+        if (is_array($srcs)) {
+            foreach ($srcs as $src) {
+                echo '<link rel="stylesheet" href="', resource_url($src), '">', "\n";
+            }
+        }
+        else {
+            echo '<link rel="stylesheet" href="', resource_url($srcs), '">', "\n";
+        }
+    }
+
+    function script($srcs)
+    {
+        if (is_array($srcs)) {
+            foreach ($srcs as $src) {
+                echo '<script src="', resource_url($src), '"></script>', "\n";
+            }
+        }
+        else {
+            echo '<script src="', resource_url($srcs), '"></script>', "\n";
+        }
+    }
+
+    function refresh($seconds)
+    {
+        echo '<meta http-equiv="refresh" content="', $seconds, '">', "\n";
+    }
+} // end namespace cg\html
 ?>
