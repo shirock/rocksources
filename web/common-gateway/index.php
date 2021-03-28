@@ -1,29 +1,4 @@
 <?php
-/**
-resource 註記:
-
- 用法: @resource [資源名稱]
- 若省略資源名稱，則視其同屬性名稱。
-
-@resource request_document_type:
-
-CommonGateway 會分析客戶送來的 Accept 標頭，以第一個項目做為 view 的文件型態。
-並將分析出的文件型態，取名為  request_document_type。
-此資源可用註記 @resource request_document_type 注入控制項指定的屬性。
-
-request_document_type 之值，是 'html', 'json', 'xml' 等文件型態的延伸名稱。
-CommonGateway 會自己依據 request_document_type 載入對應的 view 。
-若控制項需要自行處理回傳資料，可參考屬性 request_document_type 判別回傳的文件
-型態。
-
-@resource request:
-
-CommonGateway 會分析 HTTP 方法，自適當的資料來源中取出表單資料，取名為 request 資源。
-此資源可用註記 @resource request 注入控制項指定的屬性。
-
-傳統上，我們可以從 $_GET, $_POST 中取得表單資料。
-但是 PUT 方法送來的表單，並沒有對應的全域變數。此時就需要透過 request 取得。
- */
 namespace {
 // Mock data, TEST ONLY
 if (PHP_SAPI == 'cli') {
@@ -326,6 +301,8 @@ class CommonGateway
             return;
         }
 
+        $app_config = $this->loadAppConfig();
+
         $this->segments = explode('/', $_SERVER['PATH_INFO']);
         array_shift($this->segments); // first element always is an empty string.
 
@@ -387,7 +364,6 @@ class CommonGateway
             break;
         }
 
-        $app_config = $this->loadAppConfig();
         $this->injectResource($this->control, 'config', $app_config);
 
         $this->injectResource($this->control, 'request', $request_vars);
@@ -689,6 +665,12 @@ class CommonGateway
         $arguments = $this->segments;
 
         $ref_method = new ReflectionMethod(get_class($this->control), $method);
+        if (!$ref_method->isPublic()) {
+            // I only invoke public method of control.
+            // ps. In PHP, method will be defined as public if there is no declaration.
+            HttpResponse::bad_request();
+        }
+
         $this->authorize($ref_method, true);
 
         $method_parameters = $ref_method->getParameters();
