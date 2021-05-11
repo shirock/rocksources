@@ -297,17 +297,24 @@ class CommonGateway
     function __construct()
     {
         if ( !isset($_SERVER['PATH_INFO']) or $_SERVER['PATH_INFO'] == '/') {
-            // $this->control = $this->segments = false;
-            return;
+            // 未指定 controller 時，嘗試找 Home controller 負責首頁。
+            // 找不到 Home controller ，將會呼叫 index() 顯示預設首頁。
+            if ($this->detectAppName('Home')) {
+                $this->segments = array('Home');
+            }
+            else {
+                return;
+            }
+        }
+        else {
+            $this->segments = explode('/', $_SERVER['PATH_INFO']);
+            array_shift($this->segments); // first element always is an empty string.
+
+            if ($this->segments[count($this->segments)-1] == '')
+                array_pop($this->segments);
         }
 
         $app_config = $this->loadAppConfig();
-
-        $this->segments = explode('/', $_SERVER['PATH_INFO']);
-        array_shift($this->segments); // first element always is an empty string.
-
-        if ($this->segments[count($this->segments)-1] == '')
-            array_pop($this->segments);
 
         $control_seg = array_shift($this->segments);
 
@@ -542,7 +549,7 @@ class CommonGateway
         return;
     }
 
-    protected function detectAppName($path, $name)
+    protected function detectAppName($name)
     {
         if (!ctype_alnum(str_replace('_', '', $name))) { // invalid name.
             return false;
@@ -588,8 +595,7 @@ class CommonGateway
 
     protected function loadControl($name)
     {
-        #$this->_load_component('controllers/', $name);
-        $this->app_name = $this->detectAppName('controllers/', $name);
+        $this->app_name = $this->detectAppName($name);
         if ($this->app_name == false) {
             HttpResponse::not_found();
         }
@@ -676,7 +682,15 @@ class CommonGateway
         $method_parameters = $ref_method->getParameters();
         // 若定義了第一個參數為array，則PATH參數陣列將會直接傳入。
         // 其他情形則一律展開參數後傳入，此時函數內部可透過參數列名稱或 func_get_arg() 取得參數內容。
-        if (isset($method_parameters[0]) and $method_parameters[0]->isArray()) {
+        $first_parameter_is_array = false;
+        if (isset($method_parameters[0])) {
+            $p0 = $method_parameters[0]->getType(); // 未明定型態，則為 null
+            if ($p0 and $p0->getName() == 'array')
+                $first_parameter_is_array = true;
+        }
+
+        // if (isset($method_parameters[0]) and $method_parameters[0]->isArray()) {
+        if ($first_parameter_is_array) {
             $model = $this->control->$method($arguments);
         } 
         else {
@@ -853,6 +867,22 @@ class Controller
 } // end namespace cg
 
 namespace cg\html {
+    // base on index.php/$controller_path
+    function request_url($controller_path = false)
+    {
+        $root = '//' . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'];
+        if ($controller_path) {
+            $root .= '/' . $controller_path;
+        }
+        return $root;
+    }
+
+    // redirect to $fullpath/index.php or $fullpath/index.php/controller_path
+    function redirect($controller_path = false)
+    {
+        header('Location: ' . request_url($controller_path));
+    }
+
     function resource_url($path = false)
     {
         $root = dirname($_SERVER['SCRIPT_NAME']);
