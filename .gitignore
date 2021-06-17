@@ -2,3 +2,5 @@
 *.pyc
 bin
 obj
+linux/fcitx-table-array30plus/array30plus_v1.txt
+linux/fcitx-table-array30plus/array30plus_v2.txt

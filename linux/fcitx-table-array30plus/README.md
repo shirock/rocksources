@@ -2,7 +2,7 @@
 
 fcitx-table-array30 所採用的字根表中，包含行列30特別碼以及1996年新增特別碼。但不含一、二級簡碼和 w 特殊符號。
 
-一級簡碼的使用率實在很高，沒它很難用。所以我將以前設計 TouchIME 時整理的行列30簡碼表拿出來，與 fcitx-table-array30 的字根合併。
+一級簡碼的使用率實在很高，沒它很難用。所以我將以前設計 [TouchIME](https://rocksaying.github.io/archives/25452026.html) 時整理的行列30簡碼表拿出來，與 fcitx-table-array30 的字根合併。
 **All the data file is now in public domain.**
 
 不過我在合併過程中，發現一些問題，所以我最後只加入一級簡碼，放棄二級簡碼。
@@ -19,6 +19,18 @@ fcitx-table-array30 所採用的字根表中，包含行列30特別碼以及1996
 ## 使用說明
 
 合併程式：[https://github.com/shirock/rocksources/tree/master/linux/fcitx-table-array30plus](https://github.com/shirock/rocksources/tree/master/linux/fcitx-table-array30plus)。
+
+修改 merge.py 的 `MIX_LV2_CODE` 這一行。 *False* 為取消二級簡碼， *True* 則合併二級簡碼。
+
+~~~python
+
+# 只合併一級簡碼
+MIX_LV2_CODE = False
+
+# 合併二級簡碼
+MIX_LV2_CODE = True
+
+~~~
 
 先執行 merge.py 將簡碼表和字根表合併，產生 array30plus.txt 。
 再執行 fcitx-tools 的 txt2mb 轉換字根表。
