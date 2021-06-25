@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace StructConvert
+namespace Example
 {
     /*
     .net framework 4.5.1 淘汰非泛型方法，用泛型方法改寫。

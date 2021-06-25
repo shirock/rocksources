@@ -7,7 +7,7 @@ SIGTERM => AppDomain.CurrentDomain.ProcessExit 。
 SIGINT/SIGQUIT => Console.CancelKeyPress 。
 */
 
-namespace sigterm_sigquit
+namespace Example
 {
     class Program
     {

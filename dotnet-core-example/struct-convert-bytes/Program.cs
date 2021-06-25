@@ -6,7 +6,7 @@ Struct <=> Bytes 轉換範例
 */
 using System;
 
-namespace StructConvert
+namespace Example
 {
     // example 1
     public struct Packet1

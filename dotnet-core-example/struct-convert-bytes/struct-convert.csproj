@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <RootNamespace>struct_convert</RootNamespace>
+    <RootNamespace>Example</RootNamespace>
   </PropertyGroup>
 
 </Project>
