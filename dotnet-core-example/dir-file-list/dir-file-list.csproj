@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.2</TargetFramework>
-    <RootNamespace>dir_file_list</RootNamespace>
+    <RootNamespace>Example</RootNamespace>
   </PropertyGroup>
 
 </Project>

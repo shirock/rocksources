@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO; // Directory
 
-namespace dir_file_list
+namespace Example
 {
     class Program
     {
