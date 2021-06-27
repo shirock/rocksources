@@ -6,6 +6,9 @@
 否則建議用 TryParse() 。因為例外的處理成本比較貴。
 
 2. 時間字串格式 [ISO 8601](https://zh.wikipedia.org/wiki/ISO_8601)
+自訂日期與時間格式字串
+https://docs.microsoft.com/zh-tw/dotnet/standard/base-types/custom-date-and-time-format-strings?view=netcore-3.0
+
 */
 /* Microsoft Docs
 https://docs.microsoft.com/zh-tw/dotnet/api/system.datetime?view=netcore-3.0
