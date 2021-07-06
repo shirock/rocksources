@@ -38,7 +38,8 @@ namespace Example
 
         private void BtnPlay_Click(object sender, EventArgs s)
         {
-            Button btn = (Button) sender;
+            // Button btn = (Button) sender;
+            var btn = sender as Button;
             
             var i = Int32.Parse(btn.Text.Split(' ')[1]) - 1;
             players[i].Play();
