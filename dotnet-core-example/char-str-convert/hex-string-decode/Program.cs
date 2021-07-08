@@ -35,7 +35,7 @@ namespace Example
             
             foreach (var c in Encoding.UTF8.GetBytes(str))
             {
-                sb.Append(String.Format("{0:X2}", c));
+                sb.Append(c.ToString("X2"));
             }
 
             return sb.ToString();
