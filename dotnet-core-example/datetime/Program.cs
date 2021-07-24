@@ -24,15 +24,24 @@ namespace Example
         static void Main(string[] args)
         {
             DateTime datetime;
+            string text;
 
             // Unix紀元起始時間 1970-01-01 00:00:00
             Console.WriteLine($"Unix Epoch: {DateTime.UnixEpoch}"); 
 
             // 今天(不含時間)
             Console.WriteLine($"Today: {DateTime.Today}");  
+            // = DateTime.Today.ToString();
+            
 
-            // 現在本地時間 (日期與時間)
-            Console.WriteLine($"Now: {DateTime.Now}"); 
+            // 現在本地時間 (日期與時間) - 格式依文化特性。
+            Console.WriteLine($"預設格式: {DateTime.Now}"); 
+
+            // ISO 8601 標準格式。無文化特性。
+            Console.WriteLine(string.Format("ISO 8601 標準格式: {0}", DateTime.Now.ToString("s")));
+
+            text = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss");
+            Console.WriteLine($"自定格式: {text}"); 
 
             // 現在統一標準時間 (日期與時間)
             Console.WriteLine($"UtcNow: {DateTime.UtcNow}"); 
