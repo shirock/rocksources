@@ -71,6 +71,10 @@ namespace Example
                     }
                     catch (TimeoutException) 
                     { }
+                    // InvalidOperationException: The port is closed
+                    //   呼叫 Read(),ReadLine() 等方法時，設備已關閉。
+                    // OperationCanceledException: Operation is canceled
+                    //   Read(),ReadLine()等方法正在等待資料時，關閉設備。
                 }
                 else 
                 {
