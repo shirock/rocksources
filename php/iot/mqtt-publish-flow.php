@@ -76,8 +76,8 @@ $variable_header = implode('', $variable_header);
 # CONNECT cmd: 0x10
 $fixed_header = chr(0x10) . chr(strlen($variable_header));
 
-fwrite($socket, $fixed_header);
-fwrite($socket,  $variable_header);
+fwrite($socket, $fixed_header . $variable_header);
+#fwrite($socket,  $variable_header);
 
 $rb = fread($socket, 4);
 
@@ -134,8 +134,8 @@ for ($i = 0; $i < strlen($fixed_header); ++$i)
     echo dechex(ord($fixed_header[$i])), ',';
 echo "\n";
 
-fwrite($socket, $fixed_header);
-fwrite($socket, $payload);
+fwrite($socket, $fixed_header . $payload);
+#fwrite($socket, $payload);
 $data_count += strlen($fixed_header) + strlen($payload);
 echo "message $msg \n";
 
@@ -156,8 +156,8 @@ if ($qos > 0) {
     }
     if ($qos == 2) {
         $fixed_header = "\x62\x02"; // PUBREL
-        fwrite($socket, $fixed_header);
-        fwrite($socket, $packet_id);
+        fwrite($socket, $fixed_header . $packet_id);
+        #fwrite($socket, $packet_id);
         $rb = fread($socket, 4);
         $data_count += 8;
         // 0x70 PUBCOMP

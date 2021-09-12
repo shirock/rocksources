@@ -77,8 +77,8 @@ variable_header += str_content(password.encode())
 # CONNECT cmd: 0x10
 fixed_header = bytearray((0x10, len(variable_header)))
 
-sock.send(fixed_header)
-sock.send(variable_header)
+sock.send(fixed_header + variable_header)
+# sock.send(variable_header)
 
 rb = sock.recv(4)
 
@@ -124,8 +124,8 @@ cmd = 0x30 + (qos << 1)
 fixed_header = bytearray(chr(cmd).encode())
 fixed_header += digest
 
-sock.send(fixed_header)
-sock.send(payload)
+sock.send(fixed_header + payload)
+# sock.send(payload)
 data_count += len(fixed_header) + len(payload)
 #echo "message $msg \n";
 
@@ -146,8 +146,8 @@ if qos > 0:
 
     if qos == 2:
         fixed_header = b'\x62\x02' # PUBREL
-        sock.send(fixed_header)
-        sock.send(packet_id)
+        sock.send(fixed_header + packet_id)
+        # sock.send(packet_id)
         rb = sock.recv(4)
         data_count += 8
         # 0x70 PUBCOMP
