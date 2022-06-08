@@ -1,11 +1,14 @@
-﻿using System;
-/*
+﻿/*
 .NET 沒有 signal handler 機制。
 但 .NET 將 SIGTERM, SIGINT, SIGQUIT 這三個訊號處理工作設計成處理程序事件。
 
 SIGTERM => AppDomain.CurrentDomain.ProcessExit 。
+https://docs.microsoft.com/zh-tw/dotnet/api/system.appdomain.processexit
+
 SIGINT/SIGQUIT => Console.CancelKeyPress 。
+https://docs.microsoft.com/zh-tw/dotnet/api/system.console.cancelkeypress
 */
+using System;
 
 namespace Example
 {
