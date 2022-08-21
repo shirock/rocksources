@@ -26,9 +26,9 @@ namespace Example
             // 此處的 Main() 沒有宣告 async ，所以 connect 不用 await 的寫法。
             // var sessionState = await mqClient.ConnectAsync();
 
-            mqClient.PublishAsync("tw/test", Encoding.UTF8.GetBytes("hello"));
+            _ = mqClient.PublishAsync("tw/test", Encoding.UTF8.GetBytes("hello"));
 
-            mqClient.SubscribeAsync("tw/test/#");
+            _ = mqClient.SubscribeAsync("tw/test/#");
 
             // observer 設計模式
             // Subscribe 可以串好幾個。

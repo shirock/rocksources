@@ -94,16 +94,16 @@ namespace Example
         */
         public SessionState Connect()
         {
-             // Task.Run(()=>this.Client.ConnectAsync(Credentials)).Wait();
-            return Client.ConnectAsync(Credentials).Result;
-        }
+            // Task.Run(()=>this.Client.ConnectAsync(Credentials)).Wait();
+            return Client.ConnectAsync(Credentials, cleanSession: true).Result;
+       }
 
         public async Task<SessionState> ConnectAsync()
         {
             return await Client.ConnectAsync(Credentials);
         }
 
-        public async Task DisconnectAsync()
+        public async void DisconnectAsync()
         {
             await Client.DisconnectAsync();
         }
