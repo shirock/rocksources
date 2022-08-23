@@ -1,5 +1,5 @@
 ﻿/*
-dotnet add package System.Net.Mqtt --version 0.6.3-beta
+dotnet add package System.Net.Mqtt --version 0.6.16-beta
 
 See https://www.nuget.org/packages/System.Net.Mqtt
 Project site: https://github.com/xamarin/mqtt
@@ -20,7 +20,8 @@ namespace Example
         public SimpleMqttClient(string broker, int port)
         {
             var configuration = new MqttConfiguration {
-                Port = port
+                Port = port,
+                MaximumQualityOfService = MqttQualityOfService.ExactlyOnce
             };
             this.Client = MqttClient.CreateAsync(broker, configuration).Result;
 
