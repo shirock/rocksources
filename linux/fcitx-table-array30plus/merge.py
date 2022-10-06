@@ -1,6 +1,16 @@
 #!/usr/bin/python3
+'''
+FCITX4 的 array30.txt 碼表不含簡碼和W特殊符號，而且還摻了錯誤編碼。
+此程式載入舊的碼表後，將合併簡碼和W特殊符號，並剔除錯誤編碼字，產生新的 array30plus.txt 碼表。
+'''
 import os
 import sys
+
+print(__doc__)
+print('按 Y 繼續，否則取消: ')
+line = input().upper()
+if not line.startswith('Y'):
+    sys.exit(0)
 
 # 試驗中! 是否合併二級簡碼。
 MIX_LV2_CODE = True
@@ -56,24 +66,63 @@ if MIX_LV2_CODE:
 
 ofh = open('array30plus.txt', 'w', encoding='utf8')
 
-with open('array30.txt', 'r', encoding='utf8') as fh:
-    ofh.write(fh.readline())
-    ofh.write(fh.readline())
-    ofh.write(fh.readline())
-    while True:
-        line = fh.readline()
-        if not line:
-            break
-        
-        key, word = line.strip().split()
-        #print(key, word)
+ofh.write(''';行列30輸入法加強版碼表(含特別碼、簡碼、特殊符號)
+Length=5
+KeyCode=abcdefghijklmnopqrstuvwxyz./;,
+Prompt=&
+[Data]
+&q 1^
+&w 2^
+&e 3^
+&r 4^
+&t 5^
+&y 6^
+&u 7^
+&i 8^
+&o 9^
+&p 0^
+&a 1-
+&s 2-
+&d 3-
+&f 4-
+&g 5-
+&h 6-
+&j 7-
+&k 8-
+&l 9-
+&; 0-
+&z 1v
+&x 2v
+&c 3v
+&v 4v
+&b 5v
+&n 6v
+&m 7v
+&, 8v
+&. 9v
+&/ 0v
+''')
 
-        if table.get(key):
-            if word not in table[key]:
-                table[key].append(word)
-        else:
-            table[key] = [word]
+ifh = open('array30.txt', 'r', encoding='utf8')
+while True: # skip old header
+    line = ifh.readline().strip()
+    if line == '' or line == '[Data]':
+        break
 
+while True:
+    line = ifh.readline().strip()
+    if line == '':
+        break
+    
+    key, word = line.split()
+    #print(key, word)
+
+    if table.get(key):
+        if word not in table[key]:
+            table[key].append(word)
+    else:
+        table[key] = [word]
+ifh.close()
 
 if not MIX_LV2_CODE:
     # 作為踢出一級簡碼位置的補償，我把'隨'加到它首二碼的候選字清單
@@ -178,9 +227,9 @@ check_keys = [
     'zg','tz','uj','z,'
 ]
 
-for key in check_keys:
-    print(key, lv2_table[key])
-    print(key, table[key])
+# for key in check_keys:
+#     print(key, lv2_table[key])
+#     print(key, table[key])
 
 for key in table:
     if len(table[key]) < 1:
@@ -189,3 +238,4 @@ for key in table:
         ofh.write('{0}\t{1}\n'.format(key, word))
 
 ofh.close()
+print('處理完成。加強版碼表是 array30plus.txt 。')
