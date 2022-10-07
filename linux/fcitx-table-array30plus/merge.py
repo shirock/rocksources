@@ -68,7 +68,7 @@ ofh = open('array30plus.txt', 'w', encoding='utf8')
 
 ofh.write(''';行列30輸入法加強版碼表(含特別碼、簡碼、特殊符號)
 Length=5
-KeyCode=abcdefghijklmnopqrstuvwxyz./;,
+KeyCode=abcdefghijklmnopqrstuvwxyz./;,0123456789
 Prompt=&
 [Data]
 &q 1^
@@ -102,6 +102,13 @@ Prompt=&
 &. 9v
 &/ 0v
 ''')
+
+with open('w-symbolics.txt', 'r', encoding='utf8') as fh:
+    while True:
+        line = fh.readline()
+        if line == '':
+            break
+        ofh.write(line)
 
 ifh = open('array30.txt', 'r', encoding='utf8')
 while True: # skip old header

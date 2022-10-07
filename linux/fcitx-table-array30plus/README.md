@@ -1,6 +1,6 @@
 # FCITX 行列30加強版 (fcitx-array30plus)
 
-加強版就是添加一、二級簡碼。由於 fcitx-table 規則限制，未加入 w 特殊符號組。
+加強版就是添加一、二級簡碼和 w 特殊符號組。
 
 fcitx-table-array30 所採用的字根表中，包含行列30特別碼以及1996年新增特別碼。但不含一、二級簡碼和 w 特殊符號。
 
@@ -25,6 +25,7 @@ fcitx-table-array30 所採用的字根表中，包含行列30特別碼以及1996
 * [array30.txt 取自 fcitx-table-extra](https://github.com/fcitx/fcitx-table-extra/tree/master/tables)。來源有錯誤編碼，我這兒的 array30.txt 已經刪掉那些字了。
 * [行列30簡碼表 ar30_hw.txt ，取自 TouchIME](https://github.com/shirock/rocksources/tree/master/web/touch-ime/array30)
 * [行列小站](http://www.array30.com/)
+* [w符號](https://louis3c.blogspot.com/2018/01/ubuntufcitx.html)
 
 ## 下載與安裝
 
