@@ -2,9 +2,10 @@
 /**
  * TempId::make(): string
  * 
- * 產生一個具唯一性的 id ，固定 8 個字元。
- * 此 id 是按時序產生，故可排序。
- * 但理論上，任何方法產生的 id 都不保證順序性。
+ * It's a Time-Sorted ID function.
+ * 
+ * 產生一個具唯一性的 id ，固定 8 個字元 (32 bits)。
+ * 此 id 是按時序產生 (Time-Sorted ID)，故可排序 。
  */
 class TempId
 {
@@ -62,7 +63,17 @@ class TempId
         return $id1.$id2.$id3;
     }
 }
+
+/**
+ * Alias, short name.
+ */
+function tsid()
+{
+    return TempId::make();
+}
+
 // echo TempId::make(), "\n";
 // echo TempId::make(), "\n";
-// echo TempId::make(), "\n";
+// echo tsid(), "\n";
+// echo tsid(), "\n";
 ?>
