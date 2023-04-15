@@ -31,6 +31,8 @@ namespace Example
             Console.CancelKeyPress += (sender, e) =>
             {
                 System.Console.WriteLine("SIGINT/SIGQUIT received");
+                // 等程序跑完事件處理程序後，作業系統就會結束程序。
+                // 不需要程序自行呼叫exit。
             };
 
             Console.WriteLine("press Ctrl+C to break program.");
