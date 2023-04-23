@@ -55,7 +55,10 @@ namespace Example
             Console.WriteLine("press any key to end");
             Console.Read();
 
-            mqClient.DisconnectAsync();
+            if (mqClient.Client.IsConnected)
+            {
+                mqClient.DisconnectAsync();
+            }
             return;
         }
 

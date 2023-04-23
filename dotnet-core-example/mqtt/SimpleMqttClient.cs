@@ -106,6 +106,11 @@ namespace Example
 
         public async void DisconnectAsync()
         {
+            // 若遠端連接已中斷，則呼叫 DisconnectAsync() 會 Stack overflow (不擲出例外)
+            // 故先確認連接狀態
+            if (!Client.IsConnected)
+                return;
+
             await Client.DisconnectAsync();
         }
     } // end class
