@@ -1,0 +1,533 @@
+#!/usr/bin/python
+"""
+make-package Copyright (C) 2012 rock <shirock.tw@gmail.com>.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+You should see https://github.com/shirock/rocksources to get more
+information about this.
+
+An utility to help you make a package.
+
+Usage:
+ make-package [arguments ...] [commands ...]
+
+Arguments:
+  --directory=where
+    Change to directory.
+  --dest=where
+    The destination directory to put package.
+    The default destination directory is 'dist'.
+  --head=file
+    Specify the package head file. Default is 'README'.
+  --rule=file
+    Specify the install rule. Default is 'INSTALL-rule'.
+
+Commands:
+* show-package-name
+* show-package-version
+* show-arch
+* show-revision
+* generate
+  Generate a set of package information files.
+  There are two information files.
+  1. README: The descriptions of package.
+  2. INSTALL-rule: The packing actions.
+* debian
+  According to the actions of 'INSTALL-rule' to make a Debian package.
+* dist
+  It is the ame as command 'debian'.
+
+INSTALL-rule:
+* The line that begins with # or ; will be thought as comment.
+* Support variables interpolation. For example,
+  WWWDIR=var/www
+  pack homepage $WWWDIR/service
+* If you want to copy a file or pack a folder to package's control folder,
+  using $CONTROLS instead of 'DEBIAN'.
+* Auto-rule for Debain (you don't need to write these rules):
+  * It will copy ChangeLog to DEBIAN/changelog.
+  * It will copy conffiles/preinst/prerm/postinst/postrm in
+    base directory, 'data' sub-directory, or 'scripts' sub-directory to
+    'DEBIAN' directory.
+  * It will copy install.sh to postinst, uninstall.sh to prerm.
+* Provides the following actions:
+  * pack directory [dist_target_directory]
+    default is root of dist directory.
+  * mkdir directory
+  * copy file dist_target [mode]
+  * chmod mode file
+  * symlink target link_name
+  * remove dist_file
+  * replace dist_file [from] [to]
+
+Debian's control:
+* It will add 'Installed-Size' field.
+* It will add 'Architecture' field if you don't specify.
+* If there is a %r in 'Version' field, that will be substitute
+  as revision number.
+
+Example: To make a debian package file of make-package (pack self).
+ $ make-package generate debian
+
+"""
+import os, sys, re, glob
+from os.path import *
+from subprocess import *
+from distutils.util import subst_vars
+
+MAKE_PACKAGE_VERSION = "1.6.1"
+
+PkgType = 'deb'
+PkgCtrlDir = 'DEBIAN'
+
+README_Tmpl = '''Package: make-package
+Version: %s
+Maintainer: rock <shirock.tw@gmail.com>
+Architecture: all
+Debian_Depends: python (>= 2.6), coreutils, findutils, file, tar, dpkg
+Debian_Section: misc
+Priority: optional
+Description: Package Make Utility.''' % (MAKE_PACKAGE_VERSION)
+
+INSTALL_RULE_Tmpl = '''# install rule file
+BINDIR=/usr/local/bin
+# Will install make-package in /usr/local/bin/
+copy %s $BINDIR/
+'''
+
+Install_Vars = dict(os.environ)
+Install_Vars['CONTROLS'] = PkgCtrlDir
+# also add ARCH, PACKAGE_NAME, PACKAGE_VERSION, REVISION
+
+def get_architecture():
+    output = Popen(["uname", "-m"], stdout=PIPE).communicate()[0].strip()
+    if output == "x86_64":
+        arch = "amd64"
+    else:
+        arch = "i386"
+    return arch
+
+def get_revision():
+    try:
+        output = Popen(["svnversion", "-n"], stdout=PIPE).communicate()[0].strip()
+        m = re.match(r'\d+M?', output)
+        revision = m.group(0)
+    except:
+        revision = False
+    if not revision:
+        try:
+            revision = Popen(["git", "rev-parse", "--short", "HEAD"], stdout=PIPE).communicate()[0].strip()
+        except:
+            revision = '0'
+    return revision
+
+def is_exist(dst_name):
+    target = "dist/%s/%s" % (PkgType, dst_name)
+    if os.access(target, os.R_OK):
+        return True
+    else:
+        return False
+
+def pack_data(d, dist_dir=''):
+    dist_dir = dist_dir.lstrip('/')
+    dist_path = "dist/" + PkgType + "/" + dist_dir
+    #print(dist_dir)
+    if dist_dir != '':
+        make_dist_dir(dist_dir)
+    strip_components = len(d.replace('../', '').strip('/').split('/'))
+    cmd = "tar --exclude-vcs -cf - %s | tar -C %s --strip-components=%d -xf -" \
+          % (d, dist_path, strip_components)
+    #cmd = "tar --exclude-vcs -cf - %s | tar -C %s --strip-components=1 -xf -" % (d, dist_path)
+    #print(cmd)
+    rc = call(['sh', '-c', cmd])
+    if rc != 0:
+        print("Pack directory '%s' failed!" % d)
+        quit(1)
+
+def make_dist_dir(d):
+    d = d.lstrip('/')
+    dist_path = "dist/" + PkgType
+    cmd = "mkdir -p -m755 %s/%s" % (dist_path, d)
+    #print(cmd)
+    rc = call(cmd.split())
+    if rc != 0:
+        print("Make directory '%s' failed!" % d)
+        quit(1)
+
+def copy_file_to_dist(source, target, mode=None):
+    target = target.lstrip('/')
+    dist_path = "dist/" + PkgType
+    dist_target_filepath = "%s/%s" % (dist_path, target)
+
+    make_dist_dir(dirname(target))
+    output = Popen(["file", "-b", source], stdout=PIPE).communicate()[0].strip()
+    if output.startswith('ELF') and 'stripped' not in output:
+        cmd = "install -s %s %s" % (source, dist_target_filepath)
+    else:
+        cmd = "cp -af %s %s" % (source, dist_target_filepath)
+    #print(cmd)
+    if '*' in cmd or '?' in cmd:
+        # include wild-char, call shell to execute.
+        rc = call(cmd, shell=True)
+    else:
+        rc = call(cmd.split())
+    if rc != 0:
+        print("Copy '%s' failed!" % source)
+        quit(1)
+    if mode:
+        if os.path.isdir(dist_target_filepath):
+            source_filename = source.split('/').pop()
+            #print("pad file name %s" % source_filename)
+            target = "%s/%s" % (target, source_filename)
+        change_file_mode(mode, target)
+
+def create_symbolic_link(target, link_name):
+    link_name = link_name.lstrip('/')
+    dist_path = "dist/" + PkgType
+    make_dist_dir(dirname(link_name))
+    cmd = "ln -s %s %s/%s" % (target, dist_path, link_name)
+    #print(cmd)
+    rc = call(cmd.split())
+    if rc != 0:
+        print("Create symbolic '%s' link to '%s' failed!" % (link_name, target))
+        quit(1)
+
+def remove_dist_file(d):
+    d = d.lstrip('/')
+    dist_path = "dist/" + PkgType
+    files = glob.glob("%s/%s" % (dist_path, d))
+    cmd = ["rm", "-rf"] + files
+    #print(' '.join(cmd))
+    rc = call(cmd)
+    if rc != 0:
+        print("Remove file or directory '%s' failed!" % d)
+        quit(1)
+
+def change_file_mode(mode, target):
+    target = target.lstrip('/')
+    dist_path = "dist/" + PkgType
+    make_dist_dir(dirname(target))
+    files = glob.glob("%s/%s" % (dist_path, target))
+    cmd = ["chmod", "-R", mode] + files
+    #print(' '.join(cmd))
+    rc = call(cmd)
+    if rc != 0:
+        print("Change mode of '%s' to %s failed!" % (target, mode))
+        quit(1)
+
+def replace_var_in_file(target, from_str=None, to_str=None):
+    '''
+    If there is no from_str and to_str, it will apply shell script's
+    environment variables role to replace the content of file.
+    For example, replace '$HOME' to the value of environ HOME.
+    There are four extra variables could be replaced. They are
+    ARCH, PACKAGE_NAME, PACKAGE_VERSION and REVISION.
+
+    It you give from_str and to_str, it will apply normal replacing role.
+    It simply replace from_str to to_str.
+    For example, replace 'abc' to 'XYZ'.
+    '''
+    target = target.lstrip('/')
+    dist_file = "dist/%s/%s" % (PkgType, target)
+    #print("replace file %s" % dist_file)
+    #print "%s to %s" % (from_str, to_str)
+    with open(dist_file, "r") as fh:
+        s = fh.read()
+        #fh.truncate(0) # bug.
+        if from_str and to_str:
+            s = s.replace(from_str, to_str)
+        else:
+            s = subst_vars(s, Install_Vars)
+    with open(dist_file, "w") as fh:
+        fh.write(s)
+
+def make_chksum():
+    dist_path = "dist/" + PkgType
+    #if PkgType == 'deb':
+    meta_path = "%s/DEBIAN" % dist_path
+    cmd = "find %s -type f -exec md5sum {} ;" % dist_path
+    output = Popen(cmd.split(), stdout=PIPE).communicate()[0]
+    output = re.sub(r'\s%s/' % dist_path, ' ', output)
+    print("\nMD5 sums:")
+    print(output)
+    with open("%s/md5sums" % meta_path, "w") as fh:
+        fh.write(output)
+
+def make_debian_meta_file():
+    check_fields_flag = True
+    # by order
+    deb_required_field_keys = ('Package', 'Version', 'Maintainer', 'Description')
+
+    for k in deb_required_field_keys:
+        if not fields.has_key(k):
+            print("The field '%s' is not available." % k)
+            check_fields_flag = False
+
+    if not check_fields_flag:
+        quit(1)
+
+    deb_required_fields = {}
+    deb_option_fields = {}
+
+    for k in deb_required_field_keys:
+        deb_required_fields[k] = fields[k]
+
+    deb_required_fields['Version'] = Install_Vars['PACKAGE_VERSION']
+
+    if not fields.has_key('Architecture') or fields['Architecture'] == "@ARCH@" or fields['Architecture'] == "$ARCH":
+        fields['Architecture'] = Install_Vars['ARCH']
+
+    for k in fields.keys():
+        if not k.startswith('Debian_'):
+            continue
+        k2 = k[7:]
+        deb_option_fields[k2] = fields[k]
+
+    #print fields
+    #print deb_required_fields
+    #print deb_option_fields
+
+    debian_filepath = "dist/deb/DEBIAN"
+    control_filepath = "%s/control" % debian_filepath
+
+    f_control = open(control_filepath, "w")
+    for k in deb_required_field_keys:
+        if k != 'Description':
+            f_control.write("%s: %s\n" % (k, deb_required_fields[k]))
+
+    for k in deb_option_fields.keys():
+        f_control.write("%s: %s\n" % (k, deb_option_fields[k]))
+
+    for k in fields.keys():
+        if k in deb_required_field_keys:
+            continue
+        if k.find('_') > 0:
+            continue
+        f_control.write("%s: %s\n" % (k, fields[k]))
+
+    disk_usage = Popen("du -sk --exclude=deb/DEBIAN dist/deb".split(),
+                    stdout=PIPE).communicate()[0].strip()
+    f_control.write("Installed-Size: %s\n" % disk_usage.split()[0])
+
+    f_control.write("Description: %s\n" % deb_required_fields['Description'])
+    for s in long_desc:
+        f_control.write(" %s\n" % s)
+    f_control.close()
+
+    ### Auto-rule ##
+    # GNU code standard save change log as ChangeLog.
+    # So make-package will copy ChangeLog as debian's changelog.
+    if os.access("ChangeLog", os.R_OK) and not is_exist("DEBIAN/changelog"):
+        copy_file_to_dist("ChangeLog", "DEBIAN/changelog")
+
+    # debian meta files.
+    # if there is one of meta_files, make_package will copy it to DEBIAN folder.
+    meta_files = {
+        # filename       control name, attr
+        "conffiles":    ["conffiles", "0644"],
+        "postinst":     ["postinst", "0755"],
+        "install.sh":   ["postinst", "0755"],
+        "prerm":        ["prerm", "0755"],
+        "uninstall.sh": ["prerm", "0755"],
+        "preinst":      ["preinst", "0755"],
+        "postrm":       ["postrm", "0755"]
+    }
+
+    for meta_file in meta_files:
+        alter1 = "data/%s" % meta_file  # also check data/???
+        alter2 = "scripts/%s" % meta_file  # also check scripts/???
+        dst_name = "DEBIAN/%s" % meta_files[meta_file][0]
+        dst_attr = meta_files[meta_file][1]
+
+        if is_exist(dst_name):
+            continue
+        if os.access(meta_file, os.R_OK): # check base dir
+            copy_file_to_dist(meta_file, dst_name, dst_attr)
+        elif os.access(alter1, os.R_OK):   # check data subdir.
+            copy_file_to_dist(alter1, dst_name, dst_attr)
+        elif os.access(alter2, os.R_OK):   # check scripts subdir.
+            copy_file_to_dist(alter2, dst_name, dst_attr)
+
+
+def set_arg_file(arg):
+    (_, filepath) = arg.split("=")
+    if not os.access(filepath, os.R_OK):
+        print("%s is not readable!" % filepath)
+        quit(1)
+    return filepath
+
+def usage():
+    print __doc__
+    print "make-package version: %s\n" % MAKE_PACKAGE_VERSION
+
+if __name__ == "__main__":
+    unknown_command = True
+
+    if len(sys.argv) < 2:
+        usage()
+        quit(0)
+
+    destination_dirpath = "dist"
+    head_file = "README"
+    rule_file = "INSTALL-rule"
+
+    #Cwd = os.getcwd()
+    for arg in sys.argv:
+        if arg.startswith("--directory="):
+            (_, d) = arg.split("=")
+            os.chdir(d)
+        elif arg.startswith("--dest="):
+            (_, d) = arg.split("=")
+            destination_dirpath = d
+            cmd = "mkdir -p -m755 %s" % d
+            rc = call(cmd.split())
+            if rc != 0:
+                print("Make directory '%s' failed!" % d)
+                quit(1)
+        elif arg.startswith("--head="):
+            head_file = set_arg_file(arg)
+        elif arg.startswith("--rule="):
+            rule_file = set_arg_file(arg)
+
+    if not Install_Vars.has_key('ARCH'):
+        Install_Vars['ARCH'] = get_architecture()
+    if "show-arch" in sys.argv:
+        print Install_Vars['ARCH']
+        unknown_command = False
+
+    revision = get_revision()
+
+    if not Install_Vars.has_key('REVISION'):
+        Install_Vars['REVISION'] = revision
+    if "show-revision" in sys.argv:
+        print Install_Vars['REVISION']
+        unknown_command = False
+
+    if "generate" in sys.argv:
+        unknown_command = False
+        if not os.access(head_file, os.R_OK):
+            with open(head_file, "w") as fh:
+                fh.write(README_Tmpl)
+                fh.write(__doc__)
+        else:
+            print "README is existence, skip."
+        if not os.access(rule_file, os.R_OK):
+            with open(rule_file, "w") as fh:
+                fh.write(INSTALL_RULE_Tmpl % os.path.realpath(__file__))
+        else:
+            print "INSTALL-rule is existence, skip."
+
+    if not os.access(head_file, os.R_OK):
+        print("%s not found." % head_file)
+        print("You may run 'make-package generate' to generate a README template.")
+        print("Or use '--directory=<dir>' to specify the working folder.")
+        quit(1)
+
+    f_readme = open(head_file)
+    fields = {}
+    while True:
+        s = f_readme.readline().strip()
+        if not s:
+            break
+        results = s.split(": ")
+        if len(results) >= 2:
+            fields[results[0]] = results[1]
+        if s.startswith("Description:"):
+            break
+
+    long_desc = []
+    while True:
+        s = f_readme.readline() #.rstrip()
+        if not s:
+            break
+        s = s.rstrip()
+        if not s:
+            s = '.' # an empty line.
+        long_desc.append(s)
+    if len(long_desc) < 1:
+        print("%s needs at least one line of long description." % head_file)
+        quit(1)
+    f_readme.close()
+
+    if not Install_Vars.has_key('PACKAGE_NAME'):
+        Install_Vars['PACKAGE_NAME'] = fields['Package'].strip()
+    if "show-package-name" in sys.argv:
+        print(Install_Vars['PACKAGE_NAME'])
+        unknown_command = False
+
+    if not Install_Vars.has_key('PACKAGE_VERSION'):
+        Install_Vars['PACKAGE_VERSION'] = fields['Version'].strip()
+    if "%r" in Install_Vars['PACKAGE_VERSION']:
+        Install_Vars['PACKAGE_VERSION'] = re.sub(r'%r', Install_Vars['REVISION'], Install_Vars['PACKAGE_VERSION'])
+    if "show-package-version" in sys.argv:
+        print(Install_Vars['PACKAGE_VERSION'])
+        unknown_command = False
+
+    if "debian" in sys.argv or "dist" in sys.argv:
+        unknown_command = False
+        PkgType = 'deb'
+        call("rm -rf dist".split())
+        make_dist_dir("DEBIAN")
+
+        cmd_tbl = {
+            'pack'  : pack_data,
+            'mkdir' : make_dist_dir,
+            'copy'  : copy_file_to_dist,
+            'remove': remove_dist_file,
+            'chmod' : change_file_mode,
+            'symlink': create_symbolic_link,
+            'replace': replace_var_in_file
+        }
+
+        if os.access(rule_file, os.R_OK):
+            with open(rule_file) as f_rule:
+                while True:
+                    s = f_rule.readline()
+                    if not s:
+                        break
+                    s = s.strip()
+                    if not s or s.startswith("#") or s.startswith(";"):
+                        continue
+                    m = re.match(r'(\w+)=(\S+)', s)
+                    if m:
+                        Install_Vars[m.group(1)] = subst_vars(m.group(2), Install_Vars)
+                        continue
+                    s= subst_vars(s, Install_Vars)
+                    args = s.split()
+                    #print(args)
+                    if len(args) < 2:
+                        continue
+                    print s
+
+                    if args[0] in cmd_tbl:
+                        cmd_tbl[args[0]](*args[1:])
+        else:
+            print "No INSTALL-rule"
+
+        make_debian_meta_file()
+        call("chmod -f a+x dist/deb/DEBIAN/postinst dist/deb/DEBIAN/preinst dist/deb/DEBIAN/postrm dist/deb/DEBIAN/prerm".split())
+        make_chksum()
+
+        cmd = "dpkg -b dist/deb %s" % destination_dirpath
+        rc = call(cmd.split())
+        if rc != 0:
+            print("Build debian file failed.")
+            quit(1)
+
+    if unknown_command:
+        usage()
+
+    quit(0)
+

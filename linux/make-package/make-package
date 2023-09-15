@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 """
 make-package Copyright (C) 2012 rock <shirock.tw@gmail.com>.
 
@@ -71,6 +71,7 @@ INSTALL-rule:
   * symlink target link_name
   * remove dist_file
   * replace dist_file [from] [to]
+    replace text in dist_file.
 
 Debian's control:
 * It will add 'Installed-Size' field.
@@ -79,7 +80,7 @@ Debian's control:
   as revision number.
 
 Example: To make a debian package file of make-package (pack self).
- $ make-package generate debian
+ $ make-package generate dist
 
 """
 import os, sys, re, glob
@@ -87,19 +88,19 @@ from os.path import *
 from subprocess import *
 from distutils.util import subst_vars
 
-MAKE_PACKAGE_VERSION = "1.6.1"
+MAKE_PACKAGE_VERSION = "3.0.0"
 
 PkgType = 'deb'
 PkgCtrlDir = 'DEBIAN'
 
 README_Tmpl = '''Package: make-package
-Version: %s
+Version: {0}
 Maintainer: rock <shirock.tw@gmail.com>
 Architecture: all
-Debian_Depends: python (>= 2.6), coreutils, findutils, file, tar, dpkg
+Debian_Depends: python (>= 3.0), coreutils, findutils, file, tar, dpkg
 Debian_Section: misc
 Priority: optional
-Description: Package Make Utility.''' % (MAKE_PACKAGE_VERSION)
+Description: Package Make Utility.'''.format(MAKE_PACKAGE_VERSION)
 
 INSTALL_RULE_Tmpl = '''# install rule file
 BINDIR=/usr/local/bin
@@ -112,7 +113,7 @@ Install_Vars['CONTROLS'] = PkgCtrlDir
 # also add ARCH, PACKAGE_NAME, PACKAGE_VERSION, REVISION
 
 def get_architecture():
-    output = Popen(["uname", "-m"], stdout=PIPE).communicate()[0].strip()
+    output = Popen(["uname", "-m"], stdout=PIPE).communicate()[0].strip().decode()
     if output == "x86_64":
         arch = "amd64"
     else:
@@ -121,14 +122,16 @@ def get_architecture():
 
 def get_revision():
     try:
-        output = Popen(["svnversion", "-n"], stdout=PIPE).communicate()[0].strip()
+        output = Popen(["svnversion", "-n"], stdout=PIPE).communicate()[0].strip().decode()
         m = re.match(r'\d+M?', output)
         revision = m.group(0)
     except:
         revision = False
     if not revision:
         try:
-            revision = Popen(["git", "rev-parse", "--short", "HEAD"], stdout=PIPE).communicate()[0].strip()
+            revision = Popen(["git", "rev-parse", "--short", "HEAD"], stdout=PIPE, stderr=PIPE).communicate()[0].strip().decode()
+            if not revision:
+                revision = '0'
         except:
             revision = '0'
     return revision
@@ -172,7 +175,7 @@ def copy_file_to_dist(source, target, mode=None):
     dist_target_filepath = "%s/%s" % (dist_path, target)
 
     make_dist_dir(dirname(target))
-    output = Popen(["file", "-b", source], stdout=PIPE).communicate()[0].strip()
+    output = Popen(["file", "-b", source], stdout=PIPE).communicate()[0].strip().decode()
     if output.startswith('ELF') and 'stripped' not in output:
         cmd = "install -s %s %s" % (source, dist_target_filepath)
     else:
@@ -241,8 +244,8 @@ def replace_var_in_file(target, from_str=None, to_str=None):
     '''
     target = target.lstrip('/')
     dist_file = "dist/%s/%s" % (PkgType, target)
-    #print("replace file %s" % dist_file)
-    #print "%s to %s" % (from_str, to_str)
+    # print("replace file %s" % dist_file)
+    # print("%s to %s" % (from_str, to_str))
     with open(dist_file, "r") as fh:
         s = fh.read()
         #fh.truncate(0) # bug.
@@ -258,7 +261,7 @@ def make_chksum():
     #if PkgType == 'deb':
     meta_path = "%s/DEBIAN" % dist_path
     cmd = "find %s -type f -exec md5sum {} ;" % dist_path
-    output = Popen(cmd.split(), stdout=PIPE).communicate()[0]
+    output = Popen(cmd.split(), stdout=PIPE).communicate()[0].decode()
     output = re.sub(r'\s%s/' % dist_path, ' ', output)
     print("\nMD5 sums:")
     print(output)
@@ -271,7 +274,7 @@ def make_debian_meta_file():
     deb_required_field_keys = ('Package', 'Version', 'Maintainer', 'Description')
 
     for k in deb_required_field_keys:
-        if not fields.has_key(k):
+        if k not in fields:
             print("The field '%s' is not available." % k)
             check_fields_flag = False
 
@@ -286,7 +289,7 @@ def make_debian_meta_file():
 
     deb_required_fields['Version'] = Install_Vars['PACKAGE_VERSION']
 
-    if not fields.has_key('Architecture') or fields['Architecture'] == "@ARCH@" or fields['Architecture'] == "$ARCH":
+    if 'Architecture' not in fields or fields['Architecture'] == "@ARCH@" or fields['Architecture'] == "$ARCH":
         fields['Architecture'] = Install_Vars['ARCH']
 
     for k in fields.keys():
@@ -318,7 +321,7 @@ def make_debian_meta_file():
         f_control.write("%s: %s\n" % (k, fields[k]))
 
     disk_usage = Popen("du -sk --exclude=deb/DEBIAN dist/deb".split(),
-                    stdout=PIPE).communicate()[0].strip()
+                    stdout=PIPE).communicate()[0].strip().decode()
     f_control.write("Installed-Size: %s\n" % disk_usage.split()[0])
 
     f_control.write("Description: %s\n" % deb_required_fields['Description'])
@@ -369,8 +372,8 @@ def set_arg_file(arg):
     return filepath
 
 def usage():
-    print __doc__
-    print "make-package version: %s\n" % MAKE_PACKAGE_VERSION
+    print(__doc__)
+    print("make-package version: %s\n" % MAKE_PACKAGE_VERSION)
 
 if __name__ == "__main__":
     unknown_command = True
@@ -401,18 +404,18 @@ if __name__ == "__main__":
         elif arg.startswith("--rule="):
             rule_file = set_arg_file(arg)
 
-    if not Install_Vars.has_key('ARCH'):
+    if 'ARCH' not in Install_Vars:
         Install_Vars['ARCH'] = get_architecture()
     if "show-arch" in sys.argv:
-        print Install_Vars['ARCH']
+        print(Install_Vars['ARCH'])
         unknown_command = False
 
     revision = get_revision()
 
-    if not Install_Vars.has_key('REVISION'):
+    if 'REVISION' not in Install_Vars:
         Install_Vars['REVISION'] = revision
     if "show-revision" in sys.argv:
-        print Install_Vars['REVISION']
+        print(Install_Vars['REVISION'])
         unknown_command = False
 
     if "generate" in sys.argv:
@@ -422,12 +425,12 @@ if __name__ == "__main__":
                 fh.write(README_Tmpl)
                 fh.write(__doc__)
         else:
-            print "README is existence, skip."
+            print("README is existence, skip.")
         if not os.access(rule_file, os.R_OK):
             with open(rule_file, "w") as fh:
                 fh.write(INSTALL_RULE_Tmpl % os.path.realpath(__file__))
         else:
-            print "INSTALL-rule is existence, skip."
+            print("INSTALL-rule is existence, skip.")
 
     if not os.access(head_file, os.R_OK):
         print("%s not found." % head_file)
@@ -461,13 +464,13 @@ if __name__ == "__main__":
         quit(1)
     f_readme.close()
 
-    if not Install_Vars.has_key('PACKAGE_NAME'):
+    if 'PACKAGE_NAME' not in Install_Vars:
         Install_Vars['PACKAGE_NAME'] = fields['Package'].strip()
     if "show-package-name" in sys.argv:
         print(Install_Vars['PACKAGE_NAME'])
         unknown_command = False
 
-    if not Install_Vars.has_key('PACKAGE_VERSION'):
+    if 'PACKAGE_VERSION' not in Install_Vars:
         Install_Vars['PACKAGE_VERSION'] = fields['Version'].strip()
     if "%r" in Install_Vars['PACKAGE_VERSION']:
         Install_Vars['PACKAGE_VERSION'] = re.sub(r'%r', Install_Vars['REVISION'], Install_Vars['PACKAGE_VERSION'])
@@ -509,12 +512,12 @@ if __name__ == "__main__":
                     #print(args)
                     if len(args) < 2:
                         continue
-                    print s
+                    print(s)
 
                     if args[0] in cmd_tbl:
                         cmd_tbl[args[0]](*args[1:])
         else:
-            print "No INSTALL-rule"
+            print("No INSTALL-rule")
 
         make_debian_meta_file()
         call("chmod -f a+x dist/deb/DEBIAN/postinst dist/deb/DEBIAN/preinst dist/deb/DEBIAN/postrm dist/deb/DEBIAN/prerm".split())
