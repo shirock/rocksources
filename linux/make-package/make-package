@@ -83,12 +83,12 @@ Example: To make a debian package file of make-package (pack self).
  $ make-package generate dist
 
 """
-import os, sys, re, glob
+import os, sys, re, glob, platform
 from os.path import *
 from subprocess import *
 from distutils.util import subst_vars
 
-MAKE_PACKAGE_VERSION = "3.0.0"
+MAKE_PACKAGE_VERSION = "3.0.1"
 
 PkgType = 'deb'
 PkgCtrlDir = 'DEBIAN'
@@ -113,11 +113,12 @@ Install_Vars['CONTROLS'] = PkgCtrlDir
 # also add ARCH, PACKAGE_NAME, PACKAGE_VERSION, REVISION
 
 def get_architecture():
-    output = Popen(["uname", "-m"], stdout=PIPE).communicate()[0].strip().decode()
-    if output == "x86_64":
-        arch = "amd64"
-    else:
-        arch = "i386"
+    try:
+        arch = Popen(["dpkg", "--print-architecture"], stdout=PIPE).communicate()[0].strip().decode()
+    except:
+        #print('call platform.machine', platform.machine())
+        mach2arch_tbl = {'i386': 'i386', 'i686': 'i386', 'x86_64': 'amd64'}
+        arch = mach2arch_tbl.get(platform.machine(), 'all')
     return arch
 
 def get_revision():
@@ -408,7 +409,8 @@ if __name__ == "__main__":
         Install_Vars['ARCH'] = get_architecture()
     if "show-arch" in sys.argv:
         print(Install_Vars['ARCH'])
-        unknown_command = False
+        #unknown_command = False
+        quit(0)
 
     revision = get_revision()
 
@@ -416,7 +418,7 @@ if __name__ == "__main__":
         Install_Vars['REVISION'] = revision
     if "show-revision" in sys.argv:
         print(Install_Vars['REVISION'])
-        unknown_command = False
+        quit(0)
 
     if "generate" in sys.argv:
         unknown_command = False
@@ -468,7 +470,7 @@ if __name__ == "__main__":
         Install_Vars['PACKAGE_NAME'] = fields['Package'].strip()
     if "show-package-name" in sys.argv:
         print(Install_Vars['PACKAGE_NAME'])
-        unknown_command = False
+        quit(0)
 
     if 'PACKAGE_VERSION' not in Install_Vars:
         Install_Vars['PACKAGE_VERSION'] = fields['Version'].strip()
@@ -476,7 +478,7 @@ if __name__ == "__main__":
         Install_Vars['PACKAGE_VERSION'] = re.sub(r'%r', Install_Vars['REVISION'], Install_Vars['PACKAGE_VERSION'])
     if "show-package-version" in sys.argv:
         print(Install_Vars['PACKAGE_VERSION'])
-        unknown_command = False
+        quit(0)
 
     if "debian" in sys.argv or "dist" in sys.argv:
         unknown_command = False
@@ -533,4 +535,3 @@ if __name__ == "__main__":
         usage()
 
     quit(0)
-
