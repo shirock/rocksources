@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+    
+<body>
+<h1>Hello JavaScript</h1>
+
+<script type="module" myname="module1">
+console.log("module space 1");
+import { abc } from './modules/abc-script-type-module.js';
+
+
+abc();
+</script>
+
+<script type="module" myname="module2">
+console.log("module space 2");
+abc(); // Error
+</script>
+
+<script type="module" myname="module3">
+console.log("module space 3");
+
+import * as MyModule from './modules/abc-script-type-module.js';
+// 存取已冠名的 module 的內容時，要帶上名稱
+MyModule.abc();
+
+import { abc as def } from './modules/abc-script-type-module.js';
+// 匯入項目 abc 取別名 def
+def();
+</script>
+
+</body>
+</html>
