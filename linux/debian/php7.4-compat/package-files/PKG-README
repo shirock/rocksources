@@ -1,0 +1,24 @@
+Package: php7.4-compat
+Version: 7.4.33
+Maintainer: shirock.tw@gmail.com
+Homepage: http://www.php.net/
+Section: php
+Priority: optional
+Depends: libmagic1, media-types | mime-support, procps, systemd | systemd-tmpfiles, tzdata, ucf, libacl1 (>= 2.2.23), libapparmor1 (>= 2.7.0~beta1+bzr1772), libargon2-1 (>= 0~20171227), libc6 (>= 2.35), libonig5, libpcre2-8-0 (>= 10.32), libpq5, libsodium23 (>= 1.0.18), libssl3 (>= 3.0.0), libsystemd0, libxml2 (>= 2.8.0), libzip4, zlib1g (>= 1:1.1.4)
+Description: server-side, HTML-embedded scripting language.
+ Debian 12 deprecated PHP 7.4. In order to run old program, I build
+ this package on Debian 12. This includes openssl 1.1.1 since PHP 7.4 uses it. 
+ .
+ PREFIX is /usr/local.
+ .
+ This package include:
+ php-fpm
+ php-cgi
+ php (php-cli)
+ openssl 1.1.1
+ .
+ The following extensions are built in: Core bcmath calendar ctype curl date dom exif
+ FFI fileinfo filter gd gettext hash iconv intl json libxml mbstring mysqli mysqlnd
+ openssl pcntl pcre PDO pdo_mysql pdo_sqlite pgsql Phar posix readline Reflection
+ session shmop SimpleXML sockets sodium SPL sqlite3 standard sysvmsg sysvsem sysvshm
+ tokenizer xml xmlreader xmlwriter zip zlib OPcache.

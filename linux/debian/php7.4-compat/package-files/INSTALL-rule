@@ -1,0 +1,30 @@
+PREFIX=/usr/local
+BINDIR=$PREFIX/bin
+
+pack $PREFIX/php 			$PREFIX/php 
+pack $PREFIX/lib/php		$PREFIX/lib/php 
+pack $PREFIX/include/php	$PREFIX/incllude/php 
+
+copy $BINDIR/phar.phar  	$BINDIR/
+symlink $BINDIR/phar.phar	$BINDIR/phar
+copy $BINDIR/php  			$BINDIR/
+copy $BINDIR/php-cgi  		$BINDIR/
+copy $BINDIR/php-config  	$BINDIR/
+copy $BINDIR/phpize			$BINDIR/
+copy $BINDIR/phpdbg         $BINDIR/
+
+copy $PREFIX/sbin/php-fpm	$PREFIX/sbin/
+copy php-fpm.conf		    $PREFIX/etc/
+copy www.conf	            $PREFIX/etc/php-fpm.d/
+copy php7.4-fpm.service	/lib/systemd/system/php7.4-fpm.service
+
+copy /usr/lib/apache2/modules/libphp7.so 	/usr/lib/apache2/modules/libphp7.so
+copy /etc/apache2/mods-available/php7.load 	/etc/apache2/mods-available/php7.load
+
+copy php.ini $PREFIX/lib/
+
+## openssl 1.1.1
+pack $PREFIX/include/openssl			$PREFIX/include/openssl	
+pack $PREFIX/include/x86_64-linux-gnu  	$PREFIX/include/x86_64-linux-gnu
+pack $PREFIX/lib/openssl/				$PREFIX/lib/openssl/
+copy openssl_1.1.1.conf                 /etc/ld.so.conf.d/

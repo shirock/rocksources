@@ -1,0 +1,16 @@
+# /lib/systemd/system/php7.4-fpm.service
+# install: systemctl enable php7.4-fpm.service
+[Unit]
+Description=The PHP 7.4 FastCGI Process Manager
+Documentation=man:php-fpm8.2(8)
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/local/sbin/php-fpm
+ExecStop=/bin/kill /var/run/php7.4-fpm.pid
+ExecReload=/bin/kill -USR2 /var/run/php7.4-fpm.pid
+GuessMainPID=no
+
+[Install]
+WantedBy=multi-user.target
