@@ -101,7 +101,7 @@ sudo make install
 最後就是把它們抓出來打包成 .deb 檔案。
 
 這個工作用了我寫的工具 [make-package](https://github.com/shirock/rocksources/tree/master/linux/make-package)。
-打包工作需要的資料檔案，含 make-package 工具，我都放在目錄 [package-files](package-files)。
+打包工作需要的資料檔案，含 make-package 工具，我都放在目錄 [package-files](package-files)。下載[package-files.zip](package-files.zip)。
 
 進入這個目錄後，執行下列的指令:
 
