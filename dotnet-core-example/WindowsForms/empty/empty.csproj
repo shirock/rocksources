@@ -1,10 +1,12 @@
-﻿<!-- dotnet new winforms --name YourProjectName -->
-<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+<!--Project Sdk="Microsoft.NET.Sdk.WindowsDesktop"-->
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <!--TargetFramework>netcoreapp3.1</TargetFramework-->
     <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
 </Project>

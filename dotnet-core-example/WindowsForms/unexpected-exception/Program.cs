@@ -1,9 +1,11 @@
-using System;
-using System.Threading;
+/*
+本範例: 自行處理「未處理的例外狀況」事件，而不是彈出訊息視窗。
+
+1. dotnet build 偵錯組態 (建置時的預設組態) 會彈出訊息視窗。
+2. dotnet build -c Release 之類的組態不會彈出視窗。
+*/
 using System.Windows.Forms;
 
-namespace Example
-{
     static class Program
     {
         static int unexpected_count = 0;
@@ -29,9 +31,12 @@ namespace Example
         [STAThread]
         static void Main()
         {
-            Application.SetHighDpiMode(HighDpiMode.SystemAware);
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+            // Application.SetHighDpiMode(HighDpiMode.SystemAware);
+            // Application.EnableVisualStyles();
+            // Application.SetCompatibleTextRenderingDefault(false);
+            // To customize application configuration such as set high DPI settings or default font,
+            // see https://aka.ms/applicationconfiguration.
+            ApplicationConfiguration.Initialize();
 
             // Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
             /*
@@ -76,4 +81,3 @@ namespace Example
             Application.Run(new Form1());
         }
     }
-}

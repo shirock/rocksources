@@ -1,10 +1,7 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace Example
-{
     partial class Form1
     {
         /// <summary>
@@ -51,7 +48,6 @@ namespace Example
                 AutoSize = true,
                 UseMnemonic = false
             };
-            Label1.Click += new EventHandler(this.Label1_Click);
             this.Controls.Add(Label1);
 
             Button1 = new Button()
@@ -66,4 +62,3 @@ namespace Example
 
         #endregion
     }
-}

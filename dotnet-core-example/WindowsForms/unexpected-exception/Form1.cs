@@ -1,10 +1,7 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace Example
-{
     public partial class Form1 : Form
     {
         public Label Label1;
@@ -23,10 +20,6 @@ namespace Example
         {
         }
 
-        private void Label1_Click(object sender, EventArgs e)
-        {
-        }
-
         private void Button1_Click(object sender, EventArgs s)
         {
             // 故意觸發未預期例外。
@@ -36,4 +29,3 @@ namespace Example
             Label1.Text = $"button click {i}";
         }
     }
-}
