@@ -1,11 +1,8 @@
 <?php
 /**
- * TempId::make(): string
+ * Time-Sorted ID functions.
  * 
- * It's a Time-Sorted ID function.
- * 
- * 產生一個具唯一性的 id ，固定 8 個字元 (32 bits)。
- * 此 id 是按時序產生 (Time-Sorted ID)，故可排序 。
+ * ID 是按時序產生 (Time-Sorted ID)，故可排序 。
  */
 class TempId
 {
@@ -24,6 +21,10 @@ class TempId
         return;
     }
 
+    /**
+     * 產生一個具唯一性的 id ，固定 8 個字元 (32 bits)。
+     * 可排序 。
+     */
     static function make()
     {
         $tmp_path = getenv('TMP');
@@ -62,6 +63,28 @@ class TempId
 
         return $id1.$id2.$id3;
     }
+
+    /**
+     * 產生一個具唯一性的 id ，固定 16 個字元，全部為數字字元。
+     * 可排序 。
+     */
+    static function make16()
+    {
+        $tmp_path = getenv('TMP');
+        if (!$tmp_path)
+            $tmp_path = getenv('TEMP');
+        $tmp_file = ($tmp_path ? $tmp_path . '/' : '') . '~tempid16.lock';
+
+        $fp = fopen($tmp_file, 'w');
+        flock($fp, LOCK_EX);
+        $now = new DateTime();
+        usleep(20000);
+        fclose($fp);
+
+        $ts = $now->format('YmdHisv');
+        // echo $ts, "\n";
+        return substr($ts, 0, 16);
+    }
 }
 
 /**
@@ -73,7 +96,8 @@ function tsid()
 }
 
 // echo TempId::make(), "\n";
-// echo TempId::make(), "\n";
 // echo tsid(), "\n";
-// echo tsid(), "\n";
+// date_default_timezone_set('Asia/Taipei');
+// echo TempId::make16(), "\n";
+// echo TempId::make16(), "\n";
 ?>
