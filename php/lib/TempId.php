@@ -20,23 +20,24 @@ class TempId
             $s[] = self::CHARS[$q];
         return;
     }
-
-    /**
-     * 產生一個具唯一性的 id ，固定 8 個字元 (32 bits)。
-     * 可排序 。
-     */
-    static function make()
+    
+    private static function temp_file($fname)
     {
         $tmp_path = getenv('TMP');
         if (!$tmp_path)
             $tmp_path = getenv('TEMP');
-        $tmp_file = ($tmp_path ? $tmp_path . '/' : '') . '~tempid.lock';
+        return ($tmp_path ? $tmp_path . '/' : '') . $fname;
+    }
 
-        $fp = fopen($tmp_file, 'w');
-        flock($fp, LOCK_EX);
-        $now = new DateTime();
-        usleep(1000);
-        fclose($fp);
+    /**
+     * 產生一個具唯一性的 id ，長度為 8 個字元 (32 bits)。
+     * 可排序 。
+     */
+    static function make()
+    {
+        $tmp_file = self::temp_file('~tempid.lock');
+
+        $now = new DateTimeImmutable();
 
         $ts = $now->format('y,m,d,h,i,s,v');
         // echo $ts, "\n";
@@ -50,6 +51,28 @@ class TempId
         $v = (int)$ts[6];
         $ss = $m + $d + $h + $i + $s;
         // echo "y = $y, ss = $ss, v = $v\n";
+
+        if (file_exists($tmp_file)) {
+            $fp = fopen($tmp_file, 'r+');
+            flock($fp, LOCK_EX);
+            $vid = fgets($fp);
+            fseek($fp, 0);
+        }
+        else {
+            $fp = fopen($tmp_file, 'w');
+            flock($fp, LOCK_EX);
+            $vid = 0;
+        }
+        // echo "vid = $vid\n";
+        if ($vid == $v) {
+            usleep(1000);
+            $now = new DateTimeImmutable();
+            $v = (int)$now->format('v');
+            // echo "new v = $v\n";
+        }
+        fwrite($fp, sprintf('%03d', $v));
+        fflush($fp);
+        fclose($fp);
 
         $id1 = self::CHARS[$y];
 
@@ -65,25 +88,42 @@ class TempId
     }
 
     /**
-     * 產生一個具唯一性的 id ，固定 16 個字元，全部為數字字元。
+     * 產生一個具唯一性的 id ，長度為 16 個字元。
+     * 第一個字元是指定內容，其他15個字元全部是數字字元。
      * 可排序 。
      */
-    static function make16()
+    static function make16($first='0')
     {
-        $tmp_path = getenv('TMP');
-        if (!$tmp_path)
-            $tmp_path = getenv('TEMP');
-        $tmp_file = ($tmp_path ? $tmp_path . '/' : '') . '~tempid16.lock';
+        $tmp_file = self::temp_file('~tempid16.lock');
 
-        $fp = fopen($tmp_file, 'w');
-        flock($fp, LOCK_EX);
-        $now = new DateTime();
-        usleep(20000);
+        if (file_exists($tmp_file)) {
+            $fp = fopen($tmp_file, 'r+');
+            flock($fp, LOCK_EX);
+            $vid = fgets($fp);
+            fseek($fp, 0);
+        }
+        else {
+            $fp = fopen($tmp_file, 'w');
+            flock($fp, LOCK_EX);
+            $vid = '';
+        }
+
+        $now = new DateTimeImmutable();
+        $ts = substr($now->format('YmdHisv'), 2, 15);
+        // echo "\t$ts\n";
+
+        if ($vid == $ts) {
+            usleep(1000);
+            $now = new DateTimeImmutable();
+            $ts = substr($now->format('YmdHisv'), 2, 15);
+            // echo "\tnew ts = $ts\n";
+        }
+
+        fwrite($fp, $ts);
+        fflush($fp);
         fclose($fp);
 
-        $ts = $now->format('YmdHisv');
-        // echo $ts, "\n";
-        return substr($ts, 0, 16);
+        return $first.$ts;
     }
 }
 
@@ -95,9 +135,20 @@ function tsid()
     return TempId::make();
 }
 
+function tsid16($first='0')
+{
+    return TempId::make16($first);
+}
+
 // echo TempId::make(), "\n";
 // echo tsid(), "\n";
+// echo tsid(), "\n";
+// echo tsid(), "\n";
+// echo tsid(), "\n";
 // date_default_timezone_set('Asia/Taipei');
-// echo TempId::make16(), "\n";
-// echo TempId::make16(), "\n";
+// echo TempId::make16('p'), "\n";
+// echo TempId::make16('P'), "\n";
+// echo tsid16('X'), "\n";
+// echo tsid16(), "\n";
+// echo tsid16(), "\n";
 ?>
