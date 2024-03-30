@@ -3,6 +3,10 @@
  * Time-Sorted ID functions.
  * 
  * ID 是按時序產生 (Time-Sorted ID)，故可排序 。
+ *
+ * @author: shirock.tw@gmail.com
+ * @site: https://www.rocksaying.tw/archives/2021/sql-temp-id.html
+ * @license: GNU LGPL
  */
 class TempId
 {
@@ -26,7 +30,7 @@ class TempId
         $tmp_path = getenv('TMP');
         if (!$tmp_path)
             $tmp_path = getenv('TEMP');
-        return ($tmp_path ? $tmp_path . '/' : '') . $fname;
+        return ($tmp_path ? $tmp_path . '/' : '/tmp/') . $fname;
     }
 
     /**
