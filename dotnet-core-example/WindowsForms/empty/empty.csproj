@@ -3,8 +3,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
-    <!--TargetFramework>netcoreapp3.1</TargetFramework-->
+    <TargetFrameworks>netcoreapp3.1;net6.0-windows;net8.0-windows</TargetFrameworks>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
