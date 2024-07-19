@@ -116,15 +116,13 @@ class RockPDO extends PDO
         $fs = [];
         $vs = [];
         foreach ($values as $k => $v) {
-            if (!empty($v)) {
-                $fs[] = $this->quote_identifier($k);
-                $vs[] = $this->quote($v);
-            }
+            $fs[] = $this->quote_identifier($k);
+            $vs[] = is_null($v) ? 'NULL' : $this->quote($v);
         }
         $fs = implode(',', $fs);
         $vs = implode(',', $vs);
 
-        $sqlstr = sprintf('INSERT INTO "%s" (%s) VALUES (%s);', $table, $fs, $vs);
+        $sqlstr = sprintf('INSERT INTO %s (%s) VALUES (%s);', $this->quote_identifier($table), $fs, $vs);
         // echo $sqlstr, "\n";
         return $this->exec($sqlstr);
     }
@@ -134,9 +132,7 @@ class RockPDO extends PDO
         $fs = implode(
             ',',
             array_map(
-                function($k){
-                    return $this->quote_identifier($k);
-                },
+                function($k){ return $this->quote_identifier($k); },
                 array_keys($values[0])
             )
         );
@@ -153,13 +149,13 @@ class RockPDO extends PDO
         foreach ($values as $row) {
             $rs = [];
             foreach ($row as $v) {
-                $rs[] = $this->quote($v);
+                $rs[] = is_null($v) ? 'NULL' : $this->quote($v);
             }
             $vs[] = sprintf('(%s)', implode(',', $rs));
         }
         $vs = implode(',', $vs);
 
-        $sqlstr = sprintf('INSERT INTO "%s" (%s) VALUES %s;', $table, $fs, $vs);
+        $sqlstr = sprintf('INSERT INTO %s (%s) VALUES %s;', $this->quote_identifier($table), $fs, $vs);
         // echo $sqlstr, "\n";
         return $this->exec($sqlstr);
     }
@@ -173,7 +169,8 @@ class RockPDO extends PDO
 
         $vs = [];
         foreach ($values as $k => $v) {
-            $vs[] = sprintf('%s=%s', $this->quote_identifier($k), $this->quote($v));
+            $v = is_null($v) ? 'NULL' : $this->quote($v);
+            $vs[] = sprintf('%s=%s', $this->quote_identifier($k), $v);
         }
         $vs = implode(',', $vs);
 
