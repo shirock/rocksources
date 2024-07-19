@@ -20,14 +20,75 @@ class RockPDO extends PDO
     SQLite: https://sqlite.org/lang_keywords.html
     MySQL: set ANSI_QUOTES. See https://dev.mysql.com/doc/refman/8.0/en/sql-mode.html#sqlmode_ansi_quotes
      */
-    public function quote_identifier($k) {
+    public function quote_identifier(string $k): string
+    {
         return sprintf('"%s"', str_replace('"', '""', $k));
+    }
+
+    /**
+    query_formatted() 呼叫的字串格式化方法。
+    為了方便除錯，才設為公開方法。
+     */
+    public function sprintf(string $format, mixed ...$args): string
+    {
+        $i = 0;
+
+        $callback = function ($match) use ($args, &$i) {
+            // print_r($match);
+            if ($match[1]) // 指定位置
+                $v = $args[$match[1]];
+            else // 不指定位置
+                $v = $args[$i++];
+
+            if (str_starts_with($match[0], '??')) // identifier
+                $v = $this->quote_identifier($v);
+            else
+                $v = $this->quote($v);
+
+            return $v;
+        };
+
+        $query_string = preg_replace_callback('/\?{1,2}(\d*)/', $callback, $format);
+        // echo $query_string, "\n";
+        return $query_string;
+    }
+
+    /**
+    送出可以代入參數的查詢句。
+    
+    @param string $format
+    參數位置的格式是 ?? 或 ?。
+    ?? 表示此位置的參數為 identifier； ? 表示此位置的參數為 value。
+    預設是按順序代入參數。
+
+    例如: query_formatted('SELECT * FROM ?? WHERE id = ?', 'TableName', 100);
+    將向 Database 送出查詢句: SELECT * FROM "TableName" WHERE id = '100'.
+
+    若是參數位置後綴數字，則此數字為參數索引值，表示代入第幾個參數。
+    索引值從 0 開始。
+
+    例如: query_formatted('SELECT * FROM ??0 WHERE id1 = ?1 OR id2 = ?1', 'TableName', 100);
+    將向 Database 送出查詢句: SELECT * FROM "TableName" WHERE id1 = '100' OR id2 = '100'.
+
+    @param mixed $args
+    參數清單。
+
+    @return PDOStatement|false
+    同 query().
+
+    @see https://www.php.net/manual/en/pdo.query.php query().
+    @see https://www.php.net/manual/en/function.sprintf.php sprintf().
+     */
+    public function query_formatted(string $format, mixed ...$args): PDOStatement|false
+    {
+        $query_string = $this->sprintf($format, ...$args);
+        return $this->query($query_string);
     }
 
     /**
     WHERE ... AND ...
      */
-    protected function prepare_where($conditions): string|false
+    protected function prepare_where(?array $conditions): string|false
     {
         if (empty($conditions))
             return '';
@@ -64,10 +125,10 @@ class RockPDO extends PDO
      */
     public function select(
         string $table,
-        $fields=null,
-        array $conditions=null,
-        $order_by=null,
-        $order_method=self::ORDER_ASC
+        ?array $fields=null,
+        ?array $conditions=null,
+        ?string $order_by=null,
+        int $order_method=self::ORDER_ASC
         ): PDOStatement|false
     {
         $sqlstr = '';
