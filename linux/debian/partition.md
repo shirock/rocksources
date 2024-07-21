@@ -22,11 +22,13 @@
 ESP
 ----
 
-就算用 BIOS/MBR 開機，也應該保留 ESP 分割區。
-日後需要轉換到 UEFI/GPT 時，不用切出新分割區。
+不能放 LVM。
 
-ESP (EFI 保留區)，既然 Windows 10 安裝時也只會建 *100 MB*，那就 100MB 。
-它的檔案系統格式規定為 *FAT32*。不能放 LVM。
+就算用 Legacy BIOS/MBR 開機，也應該保留 ESP 分割區。
+日後需要轉換到 UEFI/GPT 時，就不用切出新分割區。
+
+既然 Windows 10 安裝時也只會建 *100 MB* ESP (EFI 保留區)，那就 100 MB 。
+它的檔案系統格式規定為 *FAT32*。
 
 Boot
 ----
@@ -42,6 +44,8 @@ Debian 引導安裝時，/boot 會配置 *512 MB*，檔案系統 Ext2。
 /boot 單獨配置分割區還有一個原因，方便日後使用 LVM 或 RAID。
 在開機管理程式中，大概只有 grub 認得 LVM。
 
+分割區配置為 UEFI/GPT ，搭配 grub2 時，可以把 /boot 放在 LVM 或 MDADM RAID 。
+
 Swap
 ----
 
@@ -51,7 +55,7 @@ Swap 的使用彈性很大。Debian 引導安裝時，會配置 1 GB。
 Root
 ----
 
-檔案系統格式沒有限制，預設 Ext4。用 Brtfs 或配合 LVM 也行。
+檔案系統格式沒有限制，預設 Ext4。用 Brtfs 或 LVM 也行。
 
 Debian 9 ~ 12 基本使用空間:
 
