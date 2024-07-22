@@ -5,6 +5,9 @@
 * make-package 配合 Python 3.x 。
 * make-package2 配合 Python 2.x 。
 
+> distutils 已於 Python 3.12 廢棄。
+> Debian 安裝套件 python3-setuptools 取代。
+
 ## 用法
 
 ```bash

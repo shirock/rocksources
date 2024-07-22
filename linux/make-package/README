@@ -1,5 +1,5 @@
 Package: make-package
-Version: 1.6.1
+Version: 3.0.1
 Maintainer: rock <shirock.tw@gmail.com>
 Architecture: all
 Debian_Depends: python (>= 2.6), coreutils, findutils, file, tar, dpkg
@@ -28,62 +28,3 @@ An utility to help you make a package.
 
 Usage:
  make-package [arguments ...] [commands ...]
-
-Arguments:
-  --directory=where
-    Change to directory.
-  --dest=where
-    The destination directory to put package.
-    The default destination directory is 'dist'.
-  --head=file
-    Specify the package head file. Default is 'README'.
-  --rule=file
-    Specify the install rule. Default is 'INSTALL-rule'.
-
-Commands:
-* show-package-name
-* show-package-version
-* show-arch
-* show-revision
-* generate
-  Generate a set of package information files.
-  There are two information files.
-  1. README: The descriptions of package.
-  2. INSTALL-rule: The packing actions.
-* debian
-  According to the actions of 'INSTALL-rule' to make a Debian package.
-* dist
-  It is the ame as command 'debian'.
-
-INSTALL-rule:
-* The line that begins with # or ; will be thought as comment.
-* Support variables interpolation. For example,
-  WWWDIR=var/www
-  pack homepage $WWWDIR/service
-* If you want to copy a file or pack a folder to package's control folder,
-  using $CONTROLS instead of 'DEBIAN'.
-* Auto-rule for Debain (you don't need to write these rules):
-  * It will copy ChangeLog to DEBIAN/changelog.
-  * It will copy conffiles/preinst/prerm/postinst/postrm in
-    base directory, 'data' sub-directory, or 'scripts' sub-directory to
-    'DEBIAN' directory.
-  * It will copy install.sh to postinst, uninstall.sh to prerm.
-* Provides the following actions:
-  * pack directory [dist_target_directory]
-    default is root of dist directory.
-  * mkdir directory
-  * copy file dist_target [mode]
-  * chmod mode file
-  * symlink target link_name
-  * remove dist_file
-  * replace dist_file [from] [to]
-
-Debian's control:
-* It will add 'Installed-Size' field.
-* It will add 'Architecture' field if you don't specify.
-* If there is a %r in 'Version' field, that will be substitute
-  as revision number.
-
-Example: To make a debian package file of make-package (pack self).
- $ make-package generate debian
-
