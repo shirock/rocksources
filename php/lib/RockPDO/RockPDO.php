@@ -40,8 +40,8 @@ class RockPDO extends PDO
         $i = 0;
 
         $callback = function ($match) use ($args, &$i) {
-            // print_r($match);
-            if ($match[1]) // 指定位置
+            // var_dump($match);
+            if ($match[1] != '') // 指定位置
                 $v = $args[$match[1]];
             else // 不指定位置
                 $v = $args[$i++];
