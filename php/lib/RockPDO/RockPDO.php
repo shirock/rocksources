@@ -10,6 +10,12 @@ class RockPDO extends PDO
     public const ORDER_DESC = 1;
 
     /**
+     IS NULL 和 IS NOT NULL 另外處理。
+    '!=' is not standard operator. 允許使用，視為 '<>'
+     */
+    public const Comparisons = ['<', '>', '=', '<>', '<=', '>='];
+
+    /**
     PDOStatement 不能處理欄位名稱為中文或任何多位元文字的情況。
     碰到這種情況，需要自己準備 SQL 語句。
     我一向採用 ANSI/ISO 原則。
@@ -61,8 +67,8 @@ class RockPDO extends PDO
     ?? 表示此位置的參數為 identifier； ? 表示此位置的參數為 value。
     預設是按順序代入參數。
 
-    例如: query_formatted('SELECT * FROM ?? WHERE id = ?', 'TableName', 100);
-    將向 Database 送出查詢句: SELECT * FROM "TableName" WHERE id = '100'.
+    例如: query_formatted('SELECT * FROM ?? WHERE ?? = ?', 'TableName', '編號', 100);
+    將向 Database 送出查詢句: SELECT * FROM "TableName" WHERE "編號" = '100'.
 
     若是參數位置後綴數字，則此數字為參數索引值，表示代入第幾個參數。
     索引值從 0 開始。
@@ -95,7 +101,8 @@ class RockPDO extends PDO
 
         $cs = [];
         foreach ($conditions as $k => $v) {
-            if (is_string($v) and ($v[0] == '<' or $v[0] == '>')) {
+            // 取消不可靠的表達方式
+            /*if (is_string($v) and ($v[0] == '<' or $v[0] == '>')) {
                 if ($v[1] == '=' or $v[1] == '>') {
                     $op = substr($v, 0, 2);
                     $skip = 2;
@@ -106,9 +113,28 @@ class RockPDO extends PDO
                 }
                 $v = $this->quote(trim(substr($v, $skip)));
             }
-            else if (is_null($v)) {
+            else*/
+            if (is_null($v)) {
                 $op = 'IS';
                 $v = 'NULL';
+            }
+            else if (is_array($v)) {
+                // [comparsion, value]
+                if (is_null($v[1])) {
+                    $op = ($v[0] == '=' ? 'IS' : 'IS NOT');
+                    $v = 'NULL';
+                }
+                else if (in_array($v[0], self::Comparisons)) {
+                    $op = $v[0];
+                    $v = $this->quote($v[1]);
+                }
+                else if ($v[0] == '!=') {
+                    $op = '<>';
+                    $v = $this->quote($v[1]);
+                }
+                else {
+                    return false;
+                }
             }
             else {
                 $op = '=';
@@ -122,10 +148,19 @@ class RockPDO extends PDO
 
     /**
     SELECT fields FROM table WHERE ... AND ... ORDER BY field ASC
+    @param string $table
+    @param mixed $fields
+    用陣列寫出要選取的欄位名稱。
+    或 null, '', 或 '*' 表示所有欄位。
+    @param ?array $conditions
+    @param ?string $order_by
+    排序基準的欄位名稱。
+    @param int $order_method
+    RockPDO::ORDER_ASC 或 RockPDO::ORDER_DESC
      */
     public function select(
         string $table,
-        ?array $fields=null,
+        mixed $fields=null,
         ?array $conditions=null,
         ?string $order_by=null,
         int $order_method=self::ORDER_ASC
@@ -144,6 +179,9 @@ class RockPDO extends PDO
         }
 
         $cs = $this->prepare_where($conditions);
+        if ($cs === false) {
+            return false;
+        }
 
         if ($order_by) {
             $os = sprintf(
