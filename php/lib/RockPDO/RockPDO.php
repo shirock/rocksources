@@ -32,6 +32,24 @@ class RockPDO extends PDO
     }
 
     /**
+    PDO::quote() 的 $value 已明確宣告為 string 。
+    當 $value 的型態不是字串時，PHP 會按隱式轉型方法轉為字串。
+    碰到 null, false 時，將不會得到 SQL 語法預期的結果。
+
+    @param mixed $value
+    null return NULL,
+    true return '1', false return '0',
+    others return PDO::quote($value).
+    @return string
+     */
+    public function quote_value(mixed $value): string
+    {
+        if (is_bool($value))
+            return $this->quote($value ? '1' : '0'); // false will implicitly to ''
+        return is_null($value) ? 'NULL' : $this->quote($value);
+    }
+
+    /**
     query_formatted() 呼叫的字串格式化方法。
     為了方便除錯，才設為公開方法。
      */
@@ -49,7 +67,7 @@ class RockPDO extends PDO
             if (str_starts_with($match[0], '??')) // identifier
                 $v = $this->quote_identifier($v);
             else
-                $v = $this->quote($v);
+                $v = $this->quote_value($v);
 
             return $v;
         };
@@ -126,11 +144,11 @@ class RockPDO extends PDO
                 }
                 else if (in_array($v[0], self::Comparisons)) {
                     $op = $v[0];
-                    $v = $this->quote($v[1]);
+                    $v = $this->quote_value($v[1]);
                 }
                 else if ($v[0] == '!=') {
                     $op = '<>';
-                    $v = $this->quote($v[1]);
+                    $v = $this->quote_value($v[1]);
                 }
                 else {
                     return false;
@@ -138,7 +156,7 @@ class RockPDO extends PDO
             }
             else {
                 $op = '=';
-                $v = $this->quote($v);
+                $v = $this->quote_value($v);
             }
             $cs[] = sprintf('%s %s %s', $this->quote_identifier($k), $op, $v);
         }
@@ -216,7 +234,7 @@ class RockPDO extends PDO
         $vs = [];
         foreach ($values as $k => $v) {
             $fs[] = $this->quote_identifier($k);
-            $vs[] = is_null($v) ? 'NULL' : $this->quote($v);
+            $vs[] = $this->quote_value($v);
         }
         $fs = implode(',', $fs);
         $vs = implode(',', $vs);
@@ -248,7 +266,7 @@ class RockPDO extends PDO
         foreach ($values as $row) {
             $rs = [];
             foreach ($row as $v) {
-                $rs[] = is_null($v) ? 'NULL' : $this->quote($v);
+                $rs[] = $this->quote_value($v);
             }
             $vs[] = sprintf('(%s)', implode(',', $rs));
         }
@@ -268,7 +286,7 @@ class RockPDO extends PDO
 
         $vs = [];
         foreach ($values as $k => $v) {
-            $v = is_null($v) ? 'NULL' : $this->quote($v);
+            $v = $this->quote_value($v);
             $vs[] = sprintf('%s=%s', $this->quote_identifier($k), $v);
         }
         $vs = implode(',', $vs);

@@ -64,6 +64,10 @@ $stat = $db->select('table1', '*', ['name'=>['<>', null]]);
 $stat = $db->select('table1', '*', ['id'=>['>=', 2], 'name'=>'def']);
 $stat = $db->select('table1', null, null, 'id');
 
+// field is bool
+$stat = $db->select('table1', '*', ['A"B'=>true]);
+$stat = $db->select('table1', '*', ['A"B'=>false]);
+
 // print_r($stat->fetchAll(PDO::FETCH_OBJ));
 
 echo $db->sprintf('select * from ?? where id = ? and name = ?', 'table1', 3, 'ghi'), "\n";
