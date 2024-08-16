@@ -216,9 +216,49 @@ class RockPDO extends PDO
         return $this->query($sqlstr);
     }
 
+    /**
+    簡化 RockPDO::select($table, '*', ...)->fetchAll(PDO::FETCH_OBJ);
+     */
+    public function fetch_all_objects(
+        string $table,
+        ?array $conditions=null,
+        ?string $order_by=null,
+        int $order_method=self::ORDER_ASC): array|false
+    {
+        $stat = $this->select($table, null, $conditions, $order_by, $order_method);
+        return $stat ? $stat->fetchAll(PDO::FETCH_OBJ) : false;
+    }
+
+    /**
+    從表格讀出枚舉清單。
+    用於表格欄位具有 id 和 name 類似組合，而使用者需要 array(key=>value, ...) 的清單。
+     */
+    public function enumerate(string $table, string $key='id', string $value_field='name'): array
+    {
+        $stat = $this->select($table, [$key, $value_field], null, $key);
+        return $stat ? $stat->fetchAll(PDO::FETCH_KEY_PAIR) : [];
+    }
+
     public function select_by_id(string $table, $id): PDOStatement|false
     {
         return $this->select($table, null, ['id'=>$id]);
+    }
+
+    /**
+    RockPDO::select_by_id()->fetchObject() 的連鎖操作使用率太高了。
+    增加簡化方法。
+
+    @param ?string $class See PDOStatement::fetchObject().
+    @param array $constructorArgs See PDOStatement::fetchObject().
+     */
+    public function fetch_object(
+        string $table, 
+        $id, 
+        ?string $class=null, 
+        array $constructorArgs=[]): object|false
+    {
+        $stat = $this->select_by_id($table, $id);
+        return $stat ? $stat->fetchObject($class, $constructorArgs) : false;
     }
 
     /**

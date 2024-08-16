@@ -32,6 +32,7 @@ $rows = [
 // $db->update('table1', ['id'=>'<> 1', 'name'=>'abbc'], ['name'=>'Rock']);
 
 $stat = $db->select('table1');
+
 $stat = $db->select('table1', ['id', 'name']);
 
 // id = 1
@@ -77,4 +78,13 @@ $stat = $db->query_formatted('select * from ?? where id = ? and name = ?', 'tabl
 $stat = $db->query_formatted('select * from ??0 where id = ?2 and name = ?1', 'table1', 'ghi', 3);
 $row = $stat->fetchObject();
 print_r($row);
+
+$rows = $db->fetch_all_objects('table1');
+print_r($rows);
+
+$row = $db->fetch_object('table1', 2);
+print_r($row);
+
+$enum = $db->enumerate('table1');
+print_r($enum);
 ?>
