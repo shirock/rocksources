@@ -14,6 +14,10 @@ class RockPDO extends PDO
     '!=' is not standard operator. 允許使用，視為 '<>'
      */
     public const Comparisons = ['<', '>', '=', '<>', '<=', '>='];
+    public const Likes  = [
+        'contains'    => '%V%',
+        'starts_with' => 'V%',
+        'ends_with'   => '%V'];
 
     /**
     PDOStatement 不能處理欄位名稱為中文或任何多位元文字的情況。
@@ -149,6 +153,15 @@ class RockPDO extends PDO
                 else if ($v[0] == '!=') {
                     $op = '<>';
                     $v = $this->quote_value($v[1]);
+                }
+                else if (is_callable($v[0])) {
+                    // callback($value): [$op, $new_value]
+                    list($op, $v) = $v[0]($v[1]);
+                    $v = $this->quote_value($v);
+                }
+                else if (isset(self::Likes[$v[0]])) {
+                    $op = 'LIKE';
+                    $v = $this->quote_value(str_replace('V', $v[1], self::Likes[$v[0]]));
                 }
                 else {
                     return false;

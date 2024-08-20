@@ -62,6 +62,13 @@ $stat = $db->select('table1', '*', ['name'=>['=', null]]);
 // field IS NOT NULL
 $stat = $db->select('table1', '*', ['name'=>['<>', null]]);
 
+$rows = $db->fetch_all_objects('table1', ['name' => [fn($v)=>['LIKE', '%'.$v.'%'], 'e']]);
+// 最初覺得用 arrow function 解決 LIKE 語法就夠了，但語義不夠清楚
+// 所以還是加了'contains','starts_with','ends_with'條件敘述
+$rows = $db->fetch_all_objects('table1', ['name' => ['contains',   'e']]);
+$rows = $db->fetch_all_objects('table1', ['name' => ['starts_with', 'd']]);
+$rows = $db->fetch_all_objects('table1', ['name' => ['ends_with',   'f']]);
+
 $stat = $db->select('table1', '*', ['id'=>['>=', 2], 'name'=>'def']);
 $stat = $db->select('table1', null, null, 'id');
 
