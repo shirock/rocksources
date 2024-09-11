@@ -27,9 +27,10 @@ class TempId
     
     private static function temp_file($fname)
     {
-        $tmp_path = getenv('TMP');
-        if (!$tmp_path)
-            $tmp_path = getenv('TEMP');
+        $tmp_path = sys_get_temp_dir();
+        // $tmp_path = getenv('TMP');
+        // if (!$tmp_path)
+        //     $tmp_path = getenv('TEMP');
         return ($tmp_path ? $tmp_path . '/' : '/tmp/') . $fname;
     }
 
