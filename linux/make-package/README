@@ -2,7 +2,7 @@ Package: make-package
 Version: 3.0.1
 Maintainer: rock <shirock.tw@gmail.com>
 Architecture: all
-Debian_Depends: python (>= 2.6), coreutils, findutils, file, tar, dpkg
+Debian_Depends: python3, coreutils, findutils, file, tar, dpkg, python3-setuptools|python3-distutils
 Debian_Section: misc
 Priority: optional
 Description: Package Make Utility.

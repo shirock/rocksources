@@ -3,7 +3,9 @@
 套件打包工具。目前只會打包 DEB 套件。
 
 * make-package 配合 Python 3.x 。
+  * 套件需求: python3, coreutils, findutils, file, tar, dpkg, python3-setuptools
 * make-package2 配合 Python 2.x 。
+  * 套件需求: python (>= 2.6), coreutils, findutils, file, tar, dpkg, python-distutils
 
 > distutils 已於 Python 3.12 廢棄。
 > Debian 安裝套件 python3-setuptools 取代。
