@@ -1,8 +1,23 @@
 <?php
 /**
- * @author: shirock.tw@gmail.com
- * @site: https://rocksaying.tw/
- * @license: GNU LGPL
+This file is part of RockPDO.
+
+RockPDO is free software: you can redistribute it and/or modify it under the 
+terms of the GNU Lesser General Public License as published by the Free Software 
+Foundation, either version 3 of the License, or (at your option) any later version.
+
+RockPDO is distributed in the hope that it will be useful, but WITHOUT ANY 
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License along with 
+this program. If not, see <https://www.gnu.org/licenses/>. 
+
+Copyright 2024 shirock.tw@gmail.com
+
+@author shirock.tw@gmail.com
+@site https://rocksaying.github.io/
+@license GNU LGPL
  */
 class RockPDO extends PDO
 {
@@ -18,6 +33,15 @@ class RockPDO extends PDO
         'contains'    => '%V%',
         'starts_with' => 'V%',
         'ends_with'   => '%V'];
+
+    /**
+    double_quote()是靜態方法，一律用雙引號作為分隔符號。
+    quote_identifier()是實例方法，按理會依PDO driver決定分隔符號。
+     */
+    public static function double_quote(string $k): string
+    {
+        return sprintf('"%s"', str_replace('"', '""', $k));
+    }
 
     /**
     PDOStatement 不能處理欄位名稱為中文或任何多位元文字的情況。
@@ -39,6 +63,7 @@ class RockPDO extends PDO
     PDO::quote() 的 $value 已明確宣告為 string 。
     當 $value 的型態不是字串時，PHP 會按隱式轉型方法轉為字串。
     碰到 null, false 時，將不會得到 SQL 語法預期的結果。
+    ps. false will implicitly to ''.
 
     @param mixed $value
     null return NULL,
@@ -49,13 +74,65 @@ class RockPDO extends PDO
     public function quote_value(mixed $value): string
     {
         if (is_bool($value))
-            return $this->quote($value ? '1' : '0'); // false will implicitly to ''
+            return $this->quote($value ? '1' : '0');
         return is_null($value) ? 'NULL' : $this->quote($value);
     }
 
     /**
-    query_formatted() 呼叫的字串格式化方法。
-    為了方便除錯，才設為公開方法。
+    產生查詢句。是 query_formatted() 呼叫的方法之一。
+
+    @param string $format
+      1. :name 自 $options 取得鍵為 name 的值，替換為查詢句的欄位值 (單引號)。
+      2. !name 直接將 name 視為資料庫識別符，改用雙引號括起 (不是用 $options 的值)。
+         但若 $options 查得到鍵，且值的型態為 object，則視為變數，替換為值。
+    @param array $options
+      Example:
+      $options = ['find_field' => (object)'id', 'id' => 123];
+      echo $pdo->interpolate('SELECT * FROM !Member WHERE !find_field = :id', $options);
+      Output:  SELECT * FROM "Member" WHERE "id" = '123'
+     */
+    public function interpolate(string $format, array $options): string
+    {
+        $callback = function ($match) use ($options) {
+            // var_dump($match); // [0: all, 1: type, 2:key]
+            list($_, $t, $k) = $match;
+            if ($t == ':' and isset($options[$k])) {
+                return $this->quote_value($options[$k]);
+            }
+            else if ($t == '!') {
+                // scalar: https://www.php.net/manual/en/language.types.object.php
+                $v = is_object($options[$k]??false) ? $options[$k]->scalar : $k;
+                return $this->quote_identifier($v);
+            }
+            return $_; // do nothing
+        };
+
+        $query_string = preg_replace_callback('/(:|!)(\S+)/', $callback, $format);
+        return $query_string;
+    }
+
+    /**
+    產生查詢句。是 query_formatted() 呼叫的方法之一。
+
+    @param string $format
+    參數位置的格式是 ?? 或 ?。
+    ?? 表示此位置的參數為 identifier； ? 表示此位置的參數為 value。
+    預設是按順序代入參數。
+
+    例如: query_formatted('SELECT * FROM ?? WHERE ?? = ?', 'TableName', '編號', 100);
+    將向 Database 送出查詢句: SELECT * FROM "TableName" WHERE "編號" = '100'.
+
+    若是參數位置後綴數字，則此數字為參數索引值，表示代入第幾個參數。
+    索引值從 0 開始。
+
+    例如: query_formatted('SELECT * FROM ??0 WHERE id1 = ?1 OR id2 = ?1', 'TableName', 100);
+    將向 Database 送出查詢句: SELECT * FROM "TableName" WHERE id1 = '100' OR id2 = '100'.
+
+    @param mixed $args
+    參數清單。
+
+    @see https://www.php.net/manual/en/pdo.query.php query().
+    @see https://www.php.net/manual/en/function.sprintf.php sprintf().
      */
     public function sprintf(string $format, mixed ...$args): string
     {
@@ -82,34 +159,25 @@ class RockPDO extends PDO
     }
 
     /**
-    送出可以代入參數的查詢句。
+    送出可以代入參數的查詢句給資料庫，回傳資料庫查詢結果。
     
     @param string $format
-    參數位置的格式是 ?? 或 ?。
-    ?? 表示此位置的參數為 identifier； ? 表示此位置的參數為 value。
-    預設是按順序代入參數。
-
-    例如: query_formatted('SELECT * FROM ?? WHERE ?? = ?', 'TableName', '編號', 100);
-    將向 Database 送出查詢句: SELECT * FROM "TableName" WHERE "編號" = '100'.
-
-    若是參數位置後綴數字，則此數字為參數索引值，表示代入第幾個參數。
-    索引值從 0 開始。
-
-    例如: query_formatted('SELECT * FROM ??0 WHERE id1 = ?1 OR id2 = ?1', 'TableName', 100);
-    將向 Database 送出查詢句: SELECT * FROM "TableName" WHERE id1 = '100' OR id2 = '100'.
+    依參數方式決定。
+    如果參數是一個陣列，那呼叫 $this->interpolate() 產生查詢句。
+    否則會呼叫 $this->sprintf() 產生查詢句。
 
     @param mixed $args
     參數清單。
 
     @return PDOStatement|false
     同 query().
-
-    @see https://www.php.net/manual/en/pdo.query.php query().
-    @see https://www.php.net/manual/en/function.sprintf.php sprintf().
      */
     public function query_formatted(string $format, mixed ...$args): PDOStatement|false
     {
-        $query_string = $this->sprintf($format, ...$args);
+        if (isset($args[0]) and is_array($args[0]))
+            $query_string = $this->interpolate($format, $args[0]);
+        else
+            $query_string = $this->sprintf($format, ...$args);
         return $this->query($query_string);
     }
 

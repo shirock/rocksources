@@ -79,13 +79,18 @@ $stat = $db->select('table1', '*', ['A"B'=>false]);
 // print_r($stat->fetchAll(PDO::FETCH_OBJ));
 
 echo $db->sprintf('select * from ?? where id = ? and name = ?', 'table1', 3, 'ghi'), "\n";
+echo $db->interpolate('select * from !table1 where !id = :id and !name = :name', 
+    ['id'=>3, 'name'=>'ghi']), "\n";
 
-$stat = $db->query_formatted('select * from ?? where id = ? and name = ?', 'table1', 3, 'ghi');
-
-$stat = $db->query_formatted('select * from ??0 where id = ?2 and name = ?1', 'table1', 'ghi', 3);
+$stat = $db->query_formatted('select * from ??0 where id = ?1 and name = ?2', 'table1', 3, 'ghi');
 $row = $stat->fetchObject();
 print_r($row);
 
+$stat = $db->query_formatted('select * from !tbl where !id = :id and !name = :name', 
+    ['tbl' => (object)'table1', 'id'=> 3, 'name' => 'ghi']);
+$row = $stat->fetchObject();
+print_r($row);
+    
 $rows = $db->fetch_all_objects('table1');
 print_r($rows);
 
