@@ -12,25 +12,9 @@ class TempId
 {
     const CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwxy';
 
-    static function division(int $n, &$s)
-    {
-        $r = $n % 60;
-        $q = (int)($n / 60);
-
-        $s[] = self::CHARS[$r];
-        if ($q >= 60)
-            self::division($q, $s);
-        else if ($q > 0)
-            $s[] = self::CHARS[$q];
-        return;
-    }
-    
     private static function temp_file($fname)
     {
         $tmp_path = sys_get_temp_dir();
-        // $tmp_path = getenv('TMP');
-        // if (!$tmp_path)
-        //     $tmp_path = getenv('TEMP');
         return ($tmp_path ? $tmp_path . '/' : '/tmp/') . $fname;
     }
 
@@ -42,9 +26,69 @@ class TempId
     {
         $tmp_file = self::temp_file('~tempid.lock');
 
+        while (true) {
+            $now = new DateTimeImmutable();
+
+            $ts = $now->format('y,n,j,G,i,s,v');
+            // echo $ts, "\n";
+            $ts = explode(',', $ts);
+            $y = self::CHARS[(int)$ts[0] - 21]; // 21 ~ 80
+            $m = self::CHARS[(int)$ts[1] - 1];  // 1 ~ 12
+            $d = self::CHARS[(int)$ts[2] - 1];  // 1 ~ 31
+            $h = self::CHARS[(int)$ts[3]];      // 0 ~ 23
+            $i = self::CHARS[(int)$ts[4]];      // 0 ~ 59
+            $s = self::CHARS[(int)$ts[5]];      // 0 ~ 59
+            $v = (int)$ts[6];                   // 0 ~ 999
+
+            if (file_exists($tmp_file)) {
+                $fp = fopen($tmp_file, 'r+');
+                flock($fp, LOCK_EX);
+                $vid = (int)fgets($fp);
+                fseek($fp, 0);
+            }
+            else {
+                $fp = fopen($tmp_file, 'w');
+                flock($fp, LOCK_EX);
+                $vid = 0;
+            }
+
+            // echo $v, "\n";
+            if ($vid == $v) {
+                // echo "renew\n";
+                usleep(500);
+                continue;
+            }
+            fwrite($fp, sprintf('%03d', $v));
+            fflush($fp);
+            fclose($fp);
+
+            $q = self::CHARS[(int)($v / 60)];
+            $r = self::CHARS[$v % 60];
+            break;
+        }
+        return sprintf('%s%s%s%s%s%s%s%s', $y, $m, $d, $h, $i, $s, $q, $r);
+    }
+
+/*
+    static function division(int $n, &$s)
+    {
+        $r = $n % 60;
+        $q = (int)($n / 60);
+        $s[] = self::CHARS[$r];
+        if ($q >= 60)
+            self::division($q, $s);
+        else if ($q > 0)
+            $s[] = self::CHARS[$q];
+        return;
+    }
+
+    static function make()
+    {
+        $tmp_file = self::temp_file('~tempid.lock');
+
         $now = new DateTimeImmutable();
 
-        $ts = $now->format('y,m,d,h,i,s,v');
+        $ts = $now->format('y,m,d,H,i,s,v');
         // echo $ts, "\n";
         $ts = explode(',', $ts);
         $y = ((int)$ts[0]) - 21;
@@ -91,6 +135,7 @@ class TempId
 
         return $id1.$id2.$id3;
     }
+*/
 
     /**
      * 產生一個具唯一性的 id ，長度為 16 個字元。
@@ -145,12 +190,12 @@ function tsid16($first='0')
     return TempId::make16($first);
 }
 
+// date_default_timezone_set('Asia/Taipei');
 // echo TempId::make(), "\n";
 // echo tsid(), "\n";
 // echo tsid(), "\n";
 // echo tsid(), "\n";
 // echo tsid(), "\n";
-// date_default_timezone_set('Asia/Taipei');
 // echo TempId::make16('p'), "\n";
 // echo TempId::make16('P'), "\n";
 // echo tsid16('X'), "\n";
