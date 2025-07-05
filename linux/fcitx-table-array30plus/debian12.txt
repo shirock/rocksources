@@ -1,0 +1,3 @@
+Debian 12 沒辦法正確找到自訂的icon檔。
+只能挑內建的icon名稱。
+IconName=chn
